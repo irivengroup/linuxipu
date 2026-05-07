@@ -5,6 +5,7 @@
     - uip_precheck
     - uip_precheck_sys
     - uip_preupgrade
+
 - name: Include RHEL precheck tasks
   ansible.builtin.import_tasks: tasks.d/rhel.yml
   when: uip_os == "rhel"
@@ -12,6 +13,7 @@
     - uip_precheck
     - uip_precheck_rhel
     - uip_preupgrade
+
 - name: Include Debian or Ubuntu precheck tasks
   ansible.builtin.import_tasks: tasks.d/debian.yml
   when: uip_os in ["debian", "ubuntu"]
@@ -19,18 +21,11 @@
     - uip_precheck
     - uip_precheck_apt
     - uip_preupgrade
+
 - name: Include SUSE precheck tasks
   ansible.builtin.import_tasks: tasks.d/suse.yml
   when: uip_os == "sles"
   tags:
     - uip_precheck
     - uip_precheck_suse
-    - uip_preupgrade
-- name: Run baseline update after successful prechecks
-  ansible.builtin.include_role:
-    name: uip-update
-  when:
-    - uip_update_before_upgrade | bool
-  tags:
-    - uip_precheck
     - uip_preupgrade

@@ -5,3 +5,12 @@
   tags:
     - uip_snapshot
     - uip_preupgrade
+
+- name: Run baseline update after snapshot completion
+  ansible.builtin.include_role:
+    name: uip-update
+  when:
+    - uip_update_before_upgrade | bool
+  tags:
+    - uip_snapshot
+    - uip_preupgrade
