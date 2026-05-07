@@ -37,8 +37,8 @@
     name: uip-reboot
   vars:
     uip_reboot_reason: "baseline_update"
-    uip_reboot_current_step: "uip-update"
-    uip_reboot_next_step: "uip-remediate"
+uip_reboot_current_step: "uip-update"
+uip_reboot_next_step: "uip-remediate"
   when:
     - uip_update_reboot_required | default(false) | bool
     - uip_allow_reboot | bool

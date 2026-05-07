@@ -1,253 +1,361 @@
-# linux-uip v6
+# Linux UIP — Enterprise In-Place Upgrade Framework
 
-Enterprise-grade Linux in-place upgrade framework.
+## Overview
 
-## v6 changes
+Linux UIP (Upgrade In-Place) is an enterprise-grade Ansible framework designed to perform controlled, resilient, and repeatable in-place operating system upgrades across heterogeneous Linux estates.
 
-- `uip_repo_mgr` defaults to `auto`.
-- Repository manager is detected from existing repo files and platform markers:
-  - Satellite / Katello / Capsule
-  - Artifactory / JFrog
-  - Nexus / Sonatype
-  - Pulp
-  - Landscape
-  - SUSE Manager
-  - Uyuni
-  - air-gapped `file://` repos
-  - fallback to `native`
-- Target OS repository URLs are enforced after repo configuration and again during postcheck.
-- Repo files must point to target-version URLs after the upgrade.
+It supports strict **N → N+1** upgrade paths only, ensuring predictable transitions and eliminating uncontrolled version jumps.
+
+The framework is built for production environments where reliability, rollback readiness, repository governance, auditability, and operational recovery are mandatory.
+
+It is designed for:
+
+- Red Hat Enterprise Linux
+- CentOS / Rocky Linux / AlmaLinux
+- Ubuntu LTS
+- Debian
+- SUSE Linux Enterprise Server (SLES)
+
+and integrates with enterprise repository ecosystems such as:
+
+- Red Hat Satellite / Katello / Capsule
+- JFrog Artifactory
+- Sonatype Nexus
+- Pulp
+- Ubuntu Landscape
+- SUSE Manager
+- Uyuni
+- Air-gapped repositories
+- Native vendor repositories
+
+---
+
+## Core Design Principles
+
+### 1. Controlled Upgrade Path
+
+Only explicitly mapped upgrade paths are allowed.
+
+Examples:
+
+- RHEL 6 → 7
+- RHEL 7 → 8
+- RHEL 8 → 9
+- Ubuntu 18.04 → 20.04
+- Ubuntu 20.04 → 22.04
+- Debian 11 → 12
+- SLES 15 SP4 → 15 SP5
+
+Direct jumps such as:
+
+- RHEL 6 → 8
+- Ubuntu 18.04 → 22.04
+
+are intentionally blocked.
+
+---
+
+### 2. Stateful Execution
+
+The framework maintains persistent execution state using:
+
+```text
+/var/lib/uip/upgrade.lock
+/var/lib/uip/state.yml
+/var/lib/uip/reboot-state.yml
+```
+
+This guarantees:
+
+- restartability after failure
+- exact workflow resumption after reboot
+- protection against duplicate or conflicting executions
+- operational traceability
+
+---
+
+### 3. Idempotent and Replay-Safe
+
+Every major phase is tag-driven and can be replayed independently.
+
+This allows safe recovery after interruption without restarting the entire workflow.
+
+---
+
+### 4. Repository Governance
+
+Repository manager detection is automatic.
+
+The framework detects:
+
+- Satellite
+- Artifactory
+- Nexus
+- Pulp
+- Landscape
+- SUSE Manager
+- Uyuni
+- Air-gap repositories
+
+and enforces final repository URLs aligned with the target OS version.
+
+This prevents post-upgrade repository drift.
+
+---
 
 ## Workflow
 
 ```text
 uip-common
-uip-lock
-uip-discovery
-uip-repos
-uip-snapshot
-uip-precheck
-uip-update
-uip-remediate
-uip-upgrade
-uip-reboot
-uip-postcheck
-uip-report
+→ uip-lock
+→ uip-discovery
+→ uip-repos
+→ uip-snapshot
+→ uip-precheck
+→ uip-update
+→ uip-remediate
+→ uip-upgrade
+    → uip-reboot (internal call)
+→ uip-postcheck
+→ uip-report
 ```
 
-## Run with automatic repo manager detection
+### Important Rule
 
-```bash
-ansible-playbook playbooks/uip.yml -l srv01 -e uip_dst_ver=20.04
+`uip-reboot` is never called directly from the main playbook.
+
+It is invoked internally by:
+
+- `uip-update`
+- `uip-upgrade`
+
+This guarantees deterministic workflow recovery.
+
+---
+
+## Role Architecture
+
+All roles are prefixed with:
+
+```text
+uip-
 ```
 
-## Override repo manager when needed
+### Main Roles
 
-```bash
-ansible-playbook playbooks/uip.yml -l srv01 -e uip_dst_ver=20.04 -e uip_repo_mgr=artifactory
+| Role | Purpose |
+|---|---|
+| uip-common | Central configuration, mappings, normalization |
+| uip-lock | Execution lock and protection |
+| uip-discovery | System inventory and package discovery |
+| uip-repos | Repository detection and enforcement |
+| uip-snapshot | Snapshot orchestration before upgrade |
+| uip-precheck | Vendor and system prerequisite validation |
+| uip-update | Baseline package update before upgrade |
+| uip-remediate | Automated remediation actions |
+| uip-upgrade | OS upgrade execution |
+| uip-reboot | Stateful reboot orchestration |
+| uip-postcheck | Validation after upgrade |
+| uip-report | Final reporting |
+| uip-rollback | Rollback workflow |
+
+---
+
+## Repository Mapping Strategy
+
+No `group_vars/` directory is used.
+
+All global mappings are centralized in:
+
+```text
+roles/uip-common/defaults/main.yml
+roles/uip-common/vars/main.yml
 ```
 
-## Re-run only repo enforcement
+including:
 
-```bash
-ansible-playbook playbooks/uip.yml -l srv01 -e uip_resume=true --tags uip_repos_enforce_target
+- `uip_paths`
+- `uip_repo_map`
+- repository manager detection rules
+- reboot orchestration
+- global workflow controls
+
+This ensures strict governance and full platform consistency.
+
+---
+
+## Reboot Orchestration
+
+Before every reboot, the framework stores:
+
+- current workflow step
+- next expected step
+- reboot reason
+- upgrade path
+- repository manager
+- execution state
+
+Example:
+
+```yaml
+current_step: uip-upgrade
+next_step: uip-postcheck
+state: reboot_started
 ```
 
+During reboot:
 
-## New transverse tags
+- server availability is monitored
+- timeout is set to 45 minutes
 
-- `uip_preupgrade` : all operations before `uip_upgrade`
-- `uip_postupgrade` : all operations after `uip_upgrade`
+After reboot:
+
+- connectivity is verified
+- facts are refreshed
+- resume point is validated
+- workflow continues exactly where expected
+
+---
+
+## Prechecks
+
+Prechecks validate:
+
+- disk space
+- DNS resolution
+- default route
+- failed systemd units
+- rpmdb / dpkg consistency
+- package manager locks
+- held packages
+- repository consistency
+- vendor pre-upgrade tools
+
+Examples:
+
+- `leapp preupgrade`
+- `preupg`
+- `do-release-upgrade -c`
+- `apt-get -s dist-upgrade`
+- `zypper migration --dry-run`
+
+Upgrade execution is blocked until all mandatory prerequisites pass.
+
+---
+
+## Tags
+
+### Functional Tags
+
+Examples:
+
+```text
+uip_precheck
+uip_update
+uip_upgrade
+uip_postcheck
+uip_report
+```
+
+### Transversal Tags
+
+```text
+uip_preupgrade
+uip_postupgrade
+```
 
 Examples:
 
 ```bash
-ansible-playbook playbooks/uip.yml -l srv01 --tags uip_preupgrade
+ansible-playbook playbooks/uip.yml --tags uip_preupgrade
+ansible-playbook playbooks/uip.yml --tags uip_postupgrade
 ```
 
-```bash
-ansible-playbook playbooks/uip.yml -l srv01 --tags uip_postupgrade
-```
-
+---
 
 ## CI/CD
 
-The project includes GitHub Actions workflows:
+Included:
 
-- `.github/workflows/ci.yml`
-  - YAML lint
-  - Ansible lint
-  - Ansible syntax-check
-  - framework structure checks
-  - package artifact generation
+- GitHub Actions
+- yamllint
+- ansible-lint
+- syntax-check
+- structural validation
+- packaging workflow
+- release workflow
+- Scrutinizer configuration
 
-- `.github/workflows/release.yml`
-  - builds ZIP and TAR.GZ release archives on `v*.*.*` tags
+This ensures production-grade governance and continuous validation.
 
-Scrutinizer configuration is provided via:
+---
 
-- `.scrutinizer.yml`
+## Example Execution
 
-Local validation:
+### Standard Run
 
 ```bash
-pip install ansible-core ansible-lint yamllint
-ansible-galaxy collection install -r requirements.yml
-yamllint .
-ansible-lint playbooks/*.yml roles
-ansible-playbook --syntax-check playbooks/uip.yml
+ansible-playbook playbooks/uip.yml   -l srv01   -e uip_dst_ver=20.04
 ```
 
+### Forced Repository Manager
 
-## Update role behavior
-
-After baseline package update (`uip-update`), the framework checks whether a reboot is required:
-
-- Debian / Ubuntu: `/var/run/reboot-required`
-- RHEL / SLES: `needs-restarting -r`
-
-If a reboot is required, `uip-update` automatically calls `uip-reboot`
-before continuing to `uip-remediate` and `uip-upgrade`.
-
-
-## `uip-update` reboot handling
-
-`uip-update` is now structured with explicit subtasks:
-
-```text
-roles/uip-update/tasks/main.yml
-roles/uip-update/tasks/tasks.d/rhel.yml
-roles/uip-update/tasks/tasks.d/apt.yml
-roles/uip-update/tasks/tasks.d/suse.yml
+```bash
+ansible-playbook playbooks/uip.yml   -l srv01   -e uip_dst_ver=20.04   -e uip_repo_mgr=artifactory
 ```
 
-After the baseline package update, it checks whether a reboot is required:
+### Resume After Failure
 
-- Debian / Ubuntu: `/var/run/reboot-required`
-- RHEL: `needs-restarting -r`
-- SUSE/SLES: `/var/run/reboot-needed` and `zypper ps --requires-reboot`
-
-If required, it calls:
-
-```yaml
-ansible.builtin.include_role:
-  name: uip-reboot
+```bash
+ansible-playbook playbooks/uip.yml   -l srv01   -e uip_resume=true   --tags uip_update,uip_upgrade,uip_postcheck
 ```
 
-before continuing to remediation and upgrade.
+---
 
+## Enterprise Recommendations
 
-## `uip-update` reboot handling organization
+Recommended execution platforms:
 
-Reboot-required checks are implemented inside each ecosystem file:
+- Red Hat Ansible Automation Platform
+- AWX
+- GitHub Actions
+- GitLab CI/CD
+- Jenkins
 
-```text
-roles/uip-update/tasks/tasks.d/rhel.yml
-roles/uip-update/tasks/tasks.d/apt.yml
-roles/uip-update/tasks/tasks.d/suse.yml
-```
+Recommended controls:
 
-`roles/uip-update/tasks/main.yml` only orchestrates the flow and calls `uip-reboot`
-when `uip_update_reboot_required` is true.
+- maintenance window governance
+- CMDB integration
+- approval workflow
+- backup validation
+- snapshot validation
+- CAB process integration
+- change ticket linkage
 
+---
 
-## Stateful reboot orchestration
+## License
 
-`uip-reboot` now persists workflow progress before every reboot.
+Internal enterprise usage.
 
-State file:
+Adapt according to your governance, compliance, and security standards.
 
-```text
-/var/lib/uip/reboot-state.yml
-```
+---
 
-Before reboot it stores:
+## Maintainers
 
-- `current_step`
-- `next_step`
-- `reason`
-- `path`
-- lock/state file paths
-- timestamp
+Platform Engineering / Linux Engineering / Infrastructure Automation Teams
 
-During reboot it waits up to 45 minutes:
+Designed for enterprise operations where upgrade failure is not acceptable.
 
-```yaml
-uip_reboot_timeout: 2700
-```
+## Authors
 
-After reboot it:
+**Alfred TCHONDJO**  
+Project Initiator — IRIVEN Group
 
-- waits for the server connection
-- refreshes Ansible facts
-- reloads `/var/lib/uip/reboot-state.yml`
-- validates the expected `next_step`
-- marks the active lock as `reboot_done`
+---
 
-Known resume points:
+## Copyright
 
-```text
-baseline update reboot:
-  current_step: uip-update
-  next_step: uip-remediate
+© IRIVEN Group — All Rights Reserved
 
-OS upgrade reboot:
-  current_step: uip-upgrade
-  next_step: uip-postcheck
-```
-
-
-Global workflow state is also maintained in:
-
-```text
-/var/lib/uip/state.yml
-```
-
-Before reboot:
-
-```yaml
-state: reboot_started
-```
-
-After successful reboot:
-
-```yaml
-state: reboot_completed
-```
-
-This keeps the historical global workflow progression in addition to
-`/var/lib/uip/reboot-state.yml`.
-
-
-## Reboot orchestration rule
-
-`uip-reboot` is not called directly from the main playbook.
-
-It is invoked only by workflow roles:
-
-- `uip-update` after baseline system update if a reboot is required
-- `uip-upgrade` after the OS upgrade
-
-The main playbook flow is now:
-
-```text
-uip-common
-uip-lock
-uip-discovery
-uip-repos
-uip-snapshot
-uip-precheck
-uip-update
-uip-remediate
-uip-upgrade
-uip-postcheck
-uip-report
-```
-
-`uip-upgrade` calls `uip-reboot` with:
-
-```yaml
-uip_reboot_reason: os_upgrade
-uip_reboot_current_step: uip-upgrade
-uip_reboot_next_step: uip-postcheck
-```
