@@ -167,8 +167,7 @@
   ansible.builtin.assert:
     that:
       - uip_reboot_state.next_step | default('unknown') == uip_reboot_next_step | default('unknown')
-    fail_msg: Reboot resume point mismatch. Expected next_step={{ uip_reboot_next_step | default('unknown') }}, found={{ uip_reboot_state.next_step
-      | default('unknown') }} . 
+    fail_msg: Reboot resume point mismatch. Expected next_step={{ uip_reboot_next_step | default('unknown') }}, found={{ uip_reboot_state.next_step| default('unknown') }} .
     success_msg: Reboot completed. Workflow resumes at {{ uip_reboot_state.next_step }}.
   when:
     - uip_allow_reboot | bool
