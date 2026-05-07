@@ -14,17 +14,20 @@ jobs:
   release:
     name: Create GitHub release archive
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
       - name: Build release archives
         run: |
           set -euo pipefail
-          git archive             --format=zip             --output="${RUNNER_TEMP}/linux-uip.zip"             HEAD
-          git archive             --format=tar.gz             --output="${RUNNER_TEMP}/linux-uip.tar.gz"             HEAD
-
+          git archive \
+            --format=zip \
+            --output="${RUNNER_TEMP}/linux-uip.zip" \
+            HEAD
+          git archive \
+            --format=tar.gz \
+            --output="${RUNNER_TEMP}/linux-uip.tar.gz" \
+            HEAD
       - name: Publish release
         uses: softprops/action-gh-release@v2
         with:

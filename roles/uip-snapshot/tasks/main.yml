@@ -1,7 +1,7 @@
 ---
 - name: Snapshot placeholder
   ansible.builtin.debug:
-    msg: "Snapshot type={{ uip_snap_type }} enabled={{ uip_snap_enabled }}"
+    msg: Snapshot type={{ uip_snap_type }} enabled={{ uip_snap_enabled }}
   tags:
     - uip_snapshot
     - uip_preupgrade

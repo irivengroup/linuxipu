@@ -2,65 +2,54 @@
 - name: Include common repository checks
   ansible.builtin.import_tasks: tasks.d/common.yml
   tags:
-  - uip_repos_common
-  - uip_preupgrade
+    - uip_preupgrade
 - name: Include Satellite repository handling
   ansible.builtin.import_tasks: tasks.d/satellite.yml
   when: uip_repo_mgr == "satellite"
   tags:
-  - uip_repos_satellite
-  - uip_preupgrade
+    - uip_preupgrade
 - name: Include Artifactory repository handling
   ansible.builtin.import_tasks: tasks.d/artifactory.yml
   when: uip_repo_mgr == "artifactory"
   tags:
-  - uip_repos_artifactory
-  - uip_preupgrade
+    - uip_preupgrade
 - name: Include Nexus repository handling
   ansible.builtin.import_tasks: tasks.d/nexus.yml
   when: uip_repo_mgr == "nexus"
   tags:
-  - uip_repos_nexus
-  - uip_preupgrade
+    - uip_preupgrade
 - name: Include Pulp repository handling
   ansible.builtin.import_tasks: tasks.d/pulp.yml
   when: uip_repo_mgr == "pulp"
   tags:
-  - uip_repos_pulp
-  - uip_preupgrade
+    - uip_preupgrade
 - name: Include Landscape repository handling
   ansible.builtin.import_tasks: tasks.d/landscape.yml
   when: uip_repo_mgr == "landscape"
   tags:
-  - uip_repos_landscape
-  - uip_preupgrade
+    - uip_preupgrade
 - name: Include SUSE Manager repository handling
   ansible.builtin.import_tasks: tasks.d/suse_mgr.yml
   when: uip_repo_mgr == "suse_mgr"
   tags:
-  - uip_repos_suse_mgr
-  - uip_preupgrade
+    - uip_preupgrade
 - name: Include Uyuni repository handling
   ansible.builtin.import_tasks: tasks.d/uyuni.yml
   when: uip_repo_mgr == "uyuni"
   tags:
-  - uip_repos_uyuni
-  - uip_preupgrade
+    - uip_preupgrade
 - name: Include air-gapped repository handling
   ansible.builtin.import_tasks: tasks.d/airgap.yml
   when: uip_repo_mgr == "airgap"
   tags:
-  - uip_repos_airgap
-  - uip_preupgrade
+    - uip_preupgrade
 - name: Include native repository handling
   ansible.builtin.import_tasks: tasks.d/native.yml
   when: uip_repo_mgr == "native"
   tags:
-  - uip_repos_native
-  - uip_preupgrade
+    - uip_preupgrade
 - name: Include target repository enforcement
   ansible.builtin.import_tasks: tasks.d/enforce_target.yml
   when: uip_repo_enforce_target | bool
   tags:
-  - uip_repos_enforce_target
-  - uip_preupgrade
+    - uip_preupgrade

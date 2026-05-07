@@ -4,7 +4,7 @@
   register: uip_ubuntu_upgrade
   changed_when: true
   tags:
-  - uip_upgrade
-  - uip_upgrade_ubuntu
-  - uip_postupgrade
-  - uip_ubuntu
+    - uip_upgrade
+    - uip_upgrade_ubuntu
+    - uip_postupgrade
+    - uip_ubuntu

@@ -1,56 +1,41 @@
 ---
-uip_mode: "enforce"
+uip_mode: enforce
 uip_resume: false
 uip_serial: 1
-
-uip_lock_dir: "/var/lib/uip"
-uip_lock_file: "/var/lib/uip/upgrade.lock"
-uip_done_file: "/var/lib/uip/upgrade.done"
-uip_state_file: "/var/lib/uip/state.yml"
-
-uip_log_dir: "/var/log/uip"
-uip_report_dir: "/var/log/uip/reports"
-
+uip_lock_dir: /var/lib/uip
+uip_lock_file: /var/lib/uip/upgrade.lock
+uip_done_file: /var/lib/uip/upgrade.done
+uip_state_file: /var/lib/uip/state.yml
+uip_log_dir: /var/log/uip
+uip_report_dir: /var/log/uip/reports
 uip_allow_skip: false
 uip_allow_reboot: true
-
-# If set to "auto", uip-common detects Satellite, Landscape, SUSE Manager/Uyuni,
-# Artifactory, Nexus, Pulp, airgap, or native repositories.
-uip_repo_mgr: "auto"
+uip_repo_mgr: auto
 uip_repo_detect: true
 uip_repo_validate: true
 uip_repo_gpg: true
 uip_repo_freeze: true
 uip_repo_enforce_target: true
-
 uip_snap_enabled: true
-uip_snap_type: "none"
+uip_snap_type: none
 uip_snap_ttl_h: 72
-
 uip_pre_min_root_mb: 4096
 uip_pre_min_boot_mb: 512
 uip_pre_min_var_mb: 4096
-
 uip_svc_crit:
   - sshd
-
 uip_ports_crit:
   - 22
-
 uip_health_cmds:
-  - "systemctl is-system-running || true"
-  - "systemctl --failed || true"
-
+  - systemctl is-system-running || true
+  - systemctl --failed || true
 uip_update_before_upgrade: true
 uip_update_autoremove: false
 uip_update_clean_cache: true
-
-
-# Reboot orchestration
 uip_reboot_timeout: 2700
 uip_reboot_connect_timeout: 30
 uip_reboot_pre_delay: 5
 uip_reboot_post_delay: 20
-uip_reboot_state_file: "/var/lib/uip/reboot-state.yml"
-uip_reboot_current_step: "unknown"
-uip_reboot_next_step: "unknown"
+uip_reboot_state_file: /var/lib/uip/reboot-state.yml
+uip_reboot_current_step: unknown
+uip_reboot_next_step: unknown

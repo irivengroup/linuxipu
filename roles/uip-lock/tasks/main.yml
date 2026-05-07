@@ -4,30 +4,30 @@
     path: '{{ uip_lock_file }}'
   register: uip_lock_stat
   tags:
-  - uip_preupgrade
+    - uip_preupgrade
 - name: Read existing lock - uip_preupgrade
   ansible.builtin.slurp:
     src: '{{ uip_lock_file }}'
   register: uip_lock_raw
   when: uip_lock_stat.stat.exists
   tags:
-  - uip_preupgrade
+    - uip_preupgrade
 - name: Decode existing lock
   ansible.builtin.set_fact:
     uip_lock_data: '{{ uip_lock_raw.content | b64decode | from_yaml }}'
   when: uip_lock_stat.stat.exists
   tags:
-  - uip_preupgrade
+    - uip_preupgrade
 - name: Assert existing lock matches current upgrade path
   ansible.builtin.assert:
     that:
-    - uip_resume | bool
-    - uip_lock_data.path == uip_path_key
-    - uip_lock_data.dst_ver | string == uip_dst_ver | string
+      - uip_resume | bool
+      - uip_lock_data.path == uip_path_key
+      - uip_lock_data.dst_ver | string == uip_dst_ver | string
     fail_msg: Existing lock blocks this run. Use uip_resume=true only for the same path.
   when: uip_lock_stat.stat.exists
   tags:
-  - uip_preupgrade
+    - uip_preupgrade
 - name: Create upgrade lock
   ansible.builtin.copy:
     dest: '{{ uip_lock_file }}'
@@ -57,4 +57,4 @@
       '
   when: not uip_lock_stat.stat.exists
   tags:
-  - uip_preupgrade
+    - uip_preupgrade

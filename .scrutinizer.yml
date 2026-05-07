@@ -1,7 +1,7 @@
 ---
 build:
   environment:
-    python: "3.11"
+    python: '3.11'
   dependencies:
     before:
       - pip install --upgrade pip
@@ -13,12 +13,10 @@ build:
       - ansible-lint playbooks/*.yml roles
       - ansible-playbook --syntax-check playbooks/uip.yml
       - ansible-playbook --syntax-check playbooks/uip-rollback.yml
-
 checks:
   python: true
-
 filter:
   excluded_paths:
-    - ".github/*"
-    - ".git/*"
-    - ".venv/*"
+    - .github/*
+    - .git/*
+    - .venv/*

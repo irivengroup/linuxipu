@@ -2,17 +2,17 @@
 - name: Include common postcheck tasks
   ansible.builtin.import_tasks: tasks.d/common.yml
   tags:
-  - uip_postcheck
-  - uip_postupgrade
+    - uip_postcheck
+    - uip_postupgrade
 - name: Re-enforce target repositories after upgrade
   ansible.builtin.include_role:
     name: uip-repos
   vars:
     uip_repo_enforce_target: true
   tags:
-  - uip_postcheck
-  - uip_repos_enforce_target
-  - uip_postupgrade
+    - uip_postcheck
+    - uip_repos_enforce_target
+    - uip_postupgrade
 - name: Run health commands
   ansible.builtin.command: '{{ item }}'
   loop: '{{ uip_health_cmds }}'
@@ -20,8 +20,8 @@
   changed_when: false
   failed_when: false
   tags:
-  - uip_postcheck
-  - uip_postupgrade
+    - uip_postcheck
+    - uip_postupgrade
 - name: Write done marker
   ansible.builtin.copy:
     dest: '{{ uip_done_file }}'
@@ -38,12 +38,12 @@
 
       '
   tags:
-  - uip_postcheck
-  - uip_postupgrade
+    - uip_postcheck
+    - uip_postupgrade
 - name: Remove active lock after successful postcheck
   ansible.builtin.file:
     path: '{{ uip_lock_file }}'
     state: absent
   tags:
-  - uip_postcheck
-  - uip_postupgrade
+    - uip_postcheck
+    - uip_postupgrade

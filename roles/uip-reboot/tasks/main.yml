@@ -7,8 +7,8 @@
     group: root
     mode: '0750'
   tags:
-  - uip_preupgrade
-  - uip_postupgrade
+    - uip_preupgrade
+    - uip_postupgrade
 - name: Persist workflow progress before reboot
   ansible.builtin.copy:
     dest: '{{ uip_reboot_state_file }}'
@@ -33,11 +33,11 @@
 
       '
   when:
-  - uip_allow_reboot | bool
-  - uip_mode == "enforce"
+    - uip_allow_reboot | bool
+    - uip_mode == "enforce"
   tags:
-  - uip_preupgrade
-  - uip_postupgrade
+    - uip_preupgrade
+    - uip_postupgrade
 - name: Update UIP global state to reboot_started
   ansible.builtin.copy:
     dest: '{{ uip_state_file }}'
@@ -68,11 +68,11 @@
 
       '
   when:
-  - uip_allow_reboot | bool
-  - uip_mode == "enforce"
+    - uip_allow_reboot | bool
+    - uip_mode == "enforce"
   tags:
-  - uip_preupgrade
-  - uip_postupgrade
+    - uip_preupgrade
+    - uip_postupgrade
 - name: Persist active lock state before reboot
   ansible.builtin.copy:
     dest: '{{ uip_lock_file }}'
@@ -105,77 +105,77 @@
 
       '
   when:
-  - uip_allow_reboot | bool
-  - uip_mode == "enforce"
+    - uip_allow_reboot | bool
+    - uip_mode == "enforce"
   tags:
-  - uip_preupgrade
-  - uip_postupgrade
+    - uip_preupgrade
+    - uip_postupgrade
 - name: Reboot host and wait for availability
   ansible.builtin.reboot:
-    msg: UIP reboot requested. Reason={{ uip_reboot_reason | default('unspecified') }}. Resume next_step={{ uip_reboot_next_step | default('unknown')
-      }}
+    msg: UIP reboot requested. Reason={{ uip_reboot_reason | default('unspecified') }}. Resume next_step={{ uip_reboot_next_step
+      | default('unknown') }}
     reboot_timeout: '{{ uip_reboot_timeout }}'
     connect_timeout: '{{ uip_reboot_connect_timeout }}'
     pre_reboot_delay: '{{ uip_reboot_pre_delay }}'
     post_reboot_delay: '{{ uip_reboot_post_delay }}'
     test_command: whoami
   when:
-  - uip_allow_reboot | bool
-  - uip_mode == "enforce"
+    - uip_allow_reboot | bool
+    - uip_mode == "enforce"
   tags:
-  - uip_preupgrade
-  - uip_postupgrade
+    - uip_preupgrade
+    - uip_postupgrade
 - name: Wait for server connection after reboot
   ansible.builtin.wait_for_connection:
     timeout: '{{ uip_reboot_timeout }}'
     connect_timeout: '{{ uip_reboot_connect_timeout }}'
     sleep: 10
   when:
-  - uip_allow_reboot | bool
-  - uip_mode == "enforce"
+    - uip_allow_reboot | bool
+    - uip_mode == "enforce"
   tags:
-  - uip_preupgrade
-  - uip_postupgrade
+    - uip_preupgrade
+    - uip_postupgrade
 - name: Refresh facts after reboot
   ansible.builtin.setup: null
   when:
-  - uip_allow_reboot | bool
-  - uip_mode == "enforce"
+    - uip_allow_reboot | bool
+    - uip_mode == "enforce"
   tags:
-  - uip_preupgrade
-  - uip_postupgrade
+    - uip_preupgrade
+    - uip_postupgrade
 - name: Read persisted reboot workflow state
   ansible.builtin.slurp:
     src: '{{ uip_reboot_state_file }}'
   register: uip_reboot_state_raw
   when:
-  - uip_allow_reboot | bool
-  - uip_mode == "enforce"
+    - uip_allow_reboot | bool
+    - uip_mode == "enforce"
   tags:
-  - uip_preupgrade
-  - uip_postupgrade
+    - uip_preupgrade
+    - uip_postupgrade
 - name: Decode persisted reboot workflow state
   ansible.builtin.set_fact:
     uip_reboot_state: '{{ uip_reboot_state_raw.content | b64decode | from_yaml }}'
   when:
-  - uip_allow_reboot | bool
-  - uip_mode == "enforce"
+    - uip_allow_reboot | bool
+    - uip_mode == "enforce"
   tags:
-  - uip_preupgrade
-  - uip_postupgrade
+    - uip_preupgrade
+    - uip_postupgrade
 - name: Validate workflow resume point after reboot
   ansible.builtin.assert:
     that:
-    - uip_reboot_state.next_step | default('unknown') == uip_reboot_next_step | default('unknown')
+      - uip_reboot_state.next_step | default('unknown') == uip_reboot_next_step | default('unknown')
     fail_msg: Reboot resume point mismatch. Expected next_step={{ uip_reboot_next_step | default('unknown') }}, found={{ uip_reboot_state.next_step
       | default('unknown') }}.
     success_msg: Reboot completed. Workflow resumes at {{ uip_reboot_state.next_step }}.
   when:
-  - uip_allow_reboot | bool
-  - uip_mode == "enforce"
+    - uip_allow_reboot | bool
+    - uip_mode == "enforce"
   tags:
-  - uip_preupgrade
-  - uip_postupgrade
+    - uip_preupgrade
+    - uip_postupgrade
 - name: Mark lock as reboot_done
   ansible.builtin.copy:
     dest: '{{ uip_lock_file }}'
@@ -208,11 +208,11 @@
 
       '
   when:
-  - uip_allow_reboot | bool
-  - uip_mode == "enforce"
+    - uip_allow_reboot | bool
+    - uip_mode == "enforce"
   tags:
-  - uip_preupgrade
-  - uip_postupgrade
+    - uip_preupgrade
+    - uip_postupgrade
 - name: Update UIP global state to reboot_completed
   ansible.builtin.copy:
     dest: '{{ uip_state_file }}'
@@ -243,8 +243,8 @@
 
       '
   when:
-  - uip_allow_reboot | bool
-  - uip_mode == "enforce"
+    - uip_allow_reboot | bool
+    - uip_mode == "enforce"
   tags:
-  - uip_preupgrade
-  - uip_postupgrade
+    - uip_preupgrade
+    - uip_postupgrade

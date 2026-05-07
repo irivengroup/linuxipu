@@ -5,17 +5,17 @@
   changed_when: false
   failed_when: false
   tags:
-  - uip_precheck_suse
-  - uip_precheck
-  - uip_preupgrade
-  - uip_suse
+    - uip_precheck_suse
+    - uip_precheck
+    - uip_preupgrade
+    - uip_suse
 - name: Run SUSE migration dry-run
   ansible.builtin.command: '{{ uip_pre_tool }}'
   register: uip_vendor_precheck
   changed_when: false
   failed_when: false
   tags:
-  - uip_precheck_suse
-  - uip_precheck
-  - uip_preupgrade
-  - uip_suse
+    - uip_precheck_suse
+    - uip_precheck
+    - uip_preupgrade
+    - uip_suse

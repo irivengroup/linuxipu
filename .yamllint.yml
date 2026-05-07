@@ -3,12 +3,15 @@ extends: default
 
 rules:
   comments-indentation: false
-  indentation: disable
   braces:
     max-spaces-inside: 1
   octal-values:
     forbid-implicit-octal: true
     forbid-explicit-octal: true
+  indentation:
+    spaces: 2
+    indent-sequences: true
+    check-multi-line-strings: false
   line-length:
     max: 160
     level: warning

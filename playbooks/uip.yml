@@ -5,38 +5,37 @@
   gather_facts: true
   serial: '{{ uip_serial }}'
   roles:
-  - role: uip-common
-    tags:
-    - always
-    - uip_common
-    - uip_preupgrade
-  - role: uip-discovery
-    tags:
-    - uip_discovery
-    - uip_preupgrade
-  - role: uip-snapshot
-    tags:
-    - uip_snapshot
-    - uip_preupgrade
-  - role: uip-precheck
-    tags:
-    - uip_precheck
-    - uip_preupgrade
-  - role: uip-remediate
-    tags:
-    - uip_remediate
-    - uip_preupgrade
-  - role: uip-upgrade
-    tags:
-    - uip_upgrade
-    - uip_postupgrade
-  - role: uip-postcheck
-    tags:
-    - uip_postcheck
-    - uip_postupgrade
-    - uip_repos_enforce_target
-  - role: uip-report
-    tags:
-    - always
-    - uip_report
-    - uip_postupgrade
+    - role: uip-common
+      tags:
+        - always
+        - uip_common
+        - uip_preupgrade
+    - role: uip-discovery
+      tags:
+        - uip_discovery
+        - uip_preupgrade
+    - role: uip-snapshot
+      tags:
+        - uip_snapshot
+        - uip_preupgrade
+    - role: uip-precheck
+      tags:
+        - uip_precheck
+        - uip_preupgrade
+    - role: uip-remediate
+      tags:
+        - uip_remediate
+        - uip_preupgrade
+    - role: uip-upgrade
+      tags:
+        - uip_upgrade
+        - uip_postupgrade
+    - role: uip-postcheck
+      tags:
+        - uip_postcheck
+        - uip_postupgrade
+    - role: uip-report
+      tags:
+        - always
+        - uip_report
+        - uip_postupgrade

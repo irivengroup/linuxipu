@@ -2,43 +2,43 @@
 - name: Assert Satellite repository mapping is complete
   ansible.builtin.assert:
     that:
-    - uip_repo_def.repos_enable is defined
-    - uip_repo_def.repos_enable | length > 0
+      - uip_repo_def.repos_enable is defined
+      - uip_repo_def.repos_enable | length > 0
     fail_msg: Satellite mapping must define repos_enable for {{ uip_path_key }}.
   tags:
-  - uip_repos_satellite
-  - uip_preupgrade
+    - uip_repos_satellite
+    - uip_preupgrade
 - name: Check subscription-manager availability
   ansible.builtin.command: command -v subscription-manager
   register: uip_subman_cmd
   changed_when: false
   failed_when: uip_subman_cmd.rc != 0
   tags:
-  - uip_repos_satellite
-  - uip_preupgrade
+    - uip_repos_satellite
+    - uip_preupgrade
 - name: Check RHSM identity
   ansible.builtin.command: subscription-manager identity
   register: uip_rhsm_identity
   changed_when: false
   failed_when: false
   tags:
-  - uip_repos_satellite
-  - uip_preupgrade
+    - uip_repos_satellite
+    - uip_preupgrade
 - name: Fail when system is not registered to RHSM or Satellite
   ansible.builtin.fail:
     msg: Host is not registered to RHSM/Satellite. Register it before running UIP or select another uip_repo_mgr.
   when: uip_rhsm_identity.rc != 0
   tags:
-  - uip_repos_satellite
-  - uip_preupgrade
+    - uip_repos_satellite
+    - uip_preupgrade
 - name: Capture current RHSM status
   ansible.builtin.command: subscription-manager status
   register: uip_rhsm_status
   changed_when: false
   failed_when: false
   tags:
-  - uip_repos_satellite
-  - uip_preupgrade
+    - uip_repos_satellite
+    - uip_preupgrade
 - name: Save RHSM status report
   ansible.builtin.copy:
     dest: '{{ uip_report_dir }}/rhsm-status-before.txt'
@@ -57,17 +57,18 @@
 
       '
   tags:
-  - uip_repos_satellite
-  - uip_preupgrade
+    - uip_repos_satellite
+    - uip_preupgrade
 - name: Disable source RHSM repositories
   ansible.builtin.command: subscription-manager repos --disable={{ item }}
   loop: '{{ uip_repo_def.repos_disable | default([]) }}'
   register: uip_sat_disable
-  changed_when: '''is disabled'' in (uip_sat_disable.stdout | default('''')) or ''disabled'' in (uip_sat_disable.stdout | default(''''))'
+  changed_when: '''is disabled'' in (uip_sat_disable.stdout | default('''')) or ''disabled'' in (uip_sat_disable.stdout |
+    default(''''))'
   failed_when: false
   tags:
-  - uip_repos_satellite
-  - uip_preupgrade
+    - uip_repos_satellite
+    - uip_preupgrade
 - name: Enable target RHSM repositories
   ansible.builtin.command: subscription-manager repos --enable={{ item }}
   loop: '{{ uip_repo_def.repos_enable }}'
@@ -75,33 +76,33 @@
   changed_when: '''is enabled'' in (uip_sat_enable.stdout | default('''')) or ''enabled'' in (uip_sat_enable.stdout | default(''''))'
   failed_when: uip_sat_enable.rc != 0
   tags:
-  - uip_repos_satellite
-  - uip_preupgrade
+    - uip_repos_satellite
+    - uip_preupgrade
 - name: Refresh yum or dnf metadata after Satellite repo changes
   ansible.builtin.command: '{{ ''dnf makecache'' if uip_pkg_mgr == ''dnf'' else ''yum makecache'' }}'
   register: uip_sat_makecache
   changed_when: false
   failed_when: uip_sat_makecache.rc != 0
   tags:
-  - uip_repos_satellite
-  - uip_preupgrade
+    - uip_repos_satellite
+    - uip_preupgrade
 - name: Capture enabled RHSM repositories
   ansible.builtin.command: subscription-manager repos --list-enabled
   register: uip_sat_enabled_repos
   changed_when: false
   failed_when: uip_sat_enabled_repos.rc != 0
   tags:
-  - uip_repos_satellite
-  - uip_preupgrade
+    - uip_repos_satellite
+    - uip_preupgrade
 - name: Assert target Satellite repositories are enabled
   ansible.builtin.assert:
     that:
-    - item in uip_sat_enabled_repos.stdout
+      - item in uip_sat_enabled_repos.stdout
     fail_msg: Expected Satellite repository {{ item }} is not enabled.
   loop: '{{ uip_repo_def.repos_enable }}'
   tags:
-  - uip_repos_satellite
-  - uip_preupgrade
+    - uip_repos_satellite
+    - uip_preupgrade
 - name: Save enabled Satellite repositories report
   ansible.builtin.copy:
     dest: '{{ uip_report_dir }}/satellite-enabled-repos.txt'
@@ -110,5 +111,5 @@
     mode: '0640'
     content: '{{ uip_sat_enabled_repos.stdout }}'
   tags:
-  - uip_repos_satellite
-  - uip_preupgrade
+    - uip_repos_satellite
+    - uip_preupgrade

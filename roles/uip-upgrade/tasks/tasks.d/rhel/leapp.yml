@@ -4,7 +4,7 @@
   register: uip_leapp_upgrade
   changed_when: true
   tags:
-  - uip_upgrade
-  - uip_upgrade_rhel
-  - uip_postupgrade
-  - uip_rhel
+    - uip_upgrade
+    - uip_upgrade_rhel
+    - uip_postupgrade
+    - uip_rhel
