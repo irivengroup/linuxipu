@@ -9,10 +9,14 @@
       tags:
         - always
         - uip_common
+        - uip_rollback
+
     - role: uip-rollback
       tags:
         - uip_rollback
+
     - role: uip-report
       tags:
         - always
         - uip_report
+        - uip_rollback

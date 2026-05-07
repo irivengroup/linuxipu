@@ -15,6 +15,7 @@
       updated_at: "{{ ansible_date_time.iso8601 }}"
   tags:
     - uip_upgrade
+    - uip_postupgrade
 
 - name: Run OS upgrade command
   ansible.builtin.command: "{{ uip_upg_tool }}"
@@ -23,6 +24,7 @@
   when: uip_mode == "enforce"
   tags:
     - uip_upgrade
+    - uip_postupgrade
 
 - name: Save upgrade output
   ansible.builtin.copy:
@@ -36,7 +38,7 @@
   when: uip_mode == "enforce"
   tags:
     - uip_upgrade
-
+    - uip_postupgrade
 
 - name: Reboot after OS upgrade
   ansible.builtin.include_role:
@@ -50,5 +52,5 @@
     - uip_mode == "enforce"
   tags:
     - uip_upgrade
-    - uip_postupgrade
     - uip_reboot
+    - uip_postupgrade

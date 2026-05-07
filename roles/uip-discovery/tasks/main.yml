@@ -3,6 +3,7 @@
   ansible.builtin.include_role:
     name: uip-lock
   tags:
+    - always
     - uip_discovery
     - uip_lock
     - uip_preupgrade
@@ -19,9 +20,9 @@
   tags:
     - uip_discovery
     - uip_discovery_pkg
+    - uip_preupgrade
 
 - name: Save package inventory
-    - uip_preupgrade
   ansible.builtin.copy:
     dest: "{{ uip_report_dir }}/packages-before.txt"
     content: "{{ uip_pkg_inv.stdout }}"
@@ -29,6 +30,7 @@
   tags:
     - uip_discovery
     - uip_discovery_pkg
+    - uip_preupgrade
 
 - name: Run repository manager handling after discovery
   ansible.builtin.include_role:

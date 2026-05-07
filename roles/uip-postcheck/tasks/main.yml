@@ -12,6 +12,7 @@
     uip_repo_enforce_target: true
   tags:
     - uip_postcheck
+    - uip_repos
     - uip_repos_enforce_target
     - uip_postupgrade
 
