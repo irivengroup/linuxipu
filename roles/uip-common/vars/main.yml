@@ -25,6 +25,14 @@ uip_paths:
         upg_tool: "leapp"
         src_name: "rhel8"
         dst_name: "rhel9"
+    "9":
+      "10":
+        key: "rhel:9:10"
+        pkg_mgr: "dnf"
+        pre_tool: "leapp preupgrade"
+        upg_tool: "leapp"
+        src_name: "rhel9"
+        dst_name: "rhel10"
 
   ubuntu:
     "18.04":
@@ -51,6 +59,22 @@ uip_paths:
         upg_tool: "do-release-upgrade"
         src_name: "jammy"
         dst_name: "noble"
+    "24.04":
+      "25.04":
+        key: "ubuntu:24.04:25.04"
+        pkg_mgr: "apt"
+        pre_tool: "do-release-upgrade -c"
+        upg_tool: "do-release-upgrade"
+        src_name: "noble"
+        dst_name: "plucky"
+    "25.04":
+      "26.04":
+        key: "ubuntu:25.04:26.04"
+        pkg_mgr: "apt"
+        pre_tool: "do-release-upgrade -c"
+        upg_tool: "do-release-upgrade"
+        src_name: "plucky"
+        dst_name: "questing"
 
   debian:
     "10":
@@ -77,6 +101,22 @@ uip_paths:
         upg_tool: "apt-get dist-upgrade"
         src_name: "bookworm"
         dst_name: "trixie"
+    "13":
+      "14":
+        key: "debian:13:14"
+        pkg_mgr: "apt"
+        pre_tool: "apt-get -s dist-upgrade"
+        upg_tool: "apt-get dist-upgrade"
+        src_name: "trixie"
+        dst_name: "forky"
+    "14":
+      "15":
+        key: "debian:14:15"
+        pkg_mgr: "apt"
+        pre_tool: "apt-get -s dist-upgrade"
+        upg_tool: "apt-get dist-upgrade"
+        src_name: "forky"
+        dst_name: "duke"
 
   sles:
     "12-sp5":
@@ -167,32 +207,27 @@ uip_repo_map:
             - "rhel-6-server-rpms"
           target_urls:
             - "https://satellite.example.com/pulp/content/PROD/cv-rhel7-prod/content/dist/rhel/server/7/7Server/x86_64/os"
-
         artifactory:
           base_url: "https://artifactory.example.com/artifactory"
           src_repo: "rpm-rhel6-prod"
           dst_repo: "rpm-rhel7-prod"
           dst_url: "https://artifactory.example.com/artifactory/rpm-rhel7-prod"
           gpg_key: "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release"
-
         nexus:
           base_url: "https://nexus.example.com/repository"
           src_repo: "rhel6-prod"
           dst_repo: "rhel7-prod"
           dst_url: "https://nexus.example.com/repository/rhel7-prod"
-
         pulp:
           base_url: "https://pulp.example.com"
           src_repo: "rhel6-prod"
           dst_repo: "rhel7-prod"
           dst_url: "https://pulp.example.com/pulp/content/rhel7-prod"
-
         airgap:
           src_mount: "/mnt/repos/rhel6"
           dst_mount: "/mnt/repos/rhel7"
           dst_url: "file:///mnt/repos/rhel7"
           dst_repo_file: "/etc/yum.repos.d/uip-rhel7.repo"
-
         native:
           repos_enable:
             - "rhel-7-server-rpms"
@@ -219,32 +254,27 @@ uip_repo_map:
           target_urls:
             - "https://satellite.example.com/pulp/content/PROD/cv-rhel8-prod/content/dist/rhel8/8/x86_64/baseos/os"
             - "https://satellite.example.com/pulp/content/PROD/cv-rhel8-prod/content/dist/rhel8/8/x86_64/appstream/os"
-
         artifactory:
           base_url: "https://artifactory.example.com/artifactory"
           src_repo: "rpm-rhel7-prod"
           dst_repo: "rpm-rhel8-prod"
           dst_url: "https://artifactory.example.com/artifactory/rpm-rhel8-prod"
           gpg_key: "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release"
-
         nexus:
           base_url: "https://nexus.example.com/repository"
           src_repo: "rhel7-prod"
           dst_repo: "rhel8-prod"
           dst_url: "https://nexus.example.com/repository/rhel8-prod"
-
         pulp:
           base_url: "https://pulp.example.com"
           src_repo: "rhel7-prod"
           dst_repo: "rhel8-prod"
           dst_url: "https://pulp.example.com/pulp/content/rhel8-prod"
-
         airgap:
           src_mount: "/mnt/repos/rhel7"
           dst_mount: "/mnt/repos/rhel8"
           dst_url: "file:///mnt/repos/rhel8"
           dst_repo_file: "/etc/yum.repos.d/uip-rhel8.repo"
-
         native:
           repos_enable:
             - "rhel-8-for-x86_64-baseos-rpms"
@@ -270,32 +300,27 @@ uip_repo_map:
           target_urls:
             - "https://satellite.example.com/pulp/content/PROD/cv-rhel9-prod/content/dist/rhel9/9/x86_64/baseos/os"
             - "https://satellite.example.com/pulp/content/PROD/cv-rhel9-prod/content/dist/rhel9/9/x86_64/appstream/os"
-
         artifactory:
           base_url: "https://artifactory.example.com/artifactory"
           src_repo: "rpm-rhel8-prod"
           dst_repo: "rpm-rhel9-prod"
           dst_url: "https://artifactory.example.com/artifactory/rpm-rhel9-prod"
           gpg_key: "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release"
-
         nexus:
           base_url: "https://nexus.example.com/repository"
           src_repo: "rhel8-prod"
           dst_repo: "rhel9-prod"
           dst_url: "https://nexus.example.com/repository/rhel9-prod"
-
         pulp:
           base_url: "https://pulp.example.com"
           src_repo: "rhel8-prod"
           dst_repo: "rhel9-prod"
           dst_url: "https://pulp.example.com/pulp/content/rhel9-prod"
-
         airgap:
           src_mount: "/mnt/repos/rhel8"
           dst_mount: "/mnt/repos/rhel9"
           dst_url: "file:///mnt/repos/rhel9"
           dst_repo_file: "/etc/yum.repos.d/uip-rhel9.repo"
-
         native:
           repos_enable:
             - "rhel-9-for-x86_64-baseos-rpms"
@@ -303,6 +328,53 @@ uip_repo_map:
           repos_disable:
             - "rhel-8-for-x86_64-baseos-rpms"
             - "rhel-8-for-x86_64-appstream-rpms"
+
+    "9":
+      "10":
+        satellite:
+          src_cv: "cv-rhel9-prod"
+          dst_cv: "cv-rhel10-prod"
+          src_lce: "PROD"
+          dst_lce: "PROD"
+          src_ak: "ak-rhel9-prod"
+          dst_ak: "ak-rhel10-prod"
+          repos_enable:
+            - "rhel-10-for-x86_64-baseos-rpms"
+            - "rhel-10-for-x86_64-appstream-rpms"
+          repos_disable:
+            - "rhel-9-for-x86_64-baseos-rpms"
+            - "rhel-9-for-x86_64-appstream-rpms"
+          target_urls:
+            - "https://satellite.example.com/pulp/content/PROD/cv-rhel10-prod/content/dist/rhel10/10/x86_64/baseos/os"
+            - "https://satellite.example.com/pulp/content/PROD/cv-rhel10-prod/content/dist/rhel10/10/x86_64/appstream/os"
+        artifactory:
+          base_url: "https://artifactory.example.com/artifactory"
+          src_repo: "rpm-rhel9-prod"
+          dst_repo: "rpm-rhel10-prod"
+          dst_url: "https://artifactory.example.com/artifactory/rpm-rhel10-prod"
+          gpg_key: "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release"
+        nexus:
+          base_url: "https://nexus.example.com/repository"
+          src_repo: "rhel9-prod"
+          dst_repo: "rhel10-prod"
+          dst_url: "https://nexus.example.com/repository/rhel10-prod"
+        pulp:
+          base_url: "https://pulp.example.com"
+          src_repo: "rhel9-prod"
+          dst_repo: "rhel10-prod"
+          dst_url: "https://pulp.example.com/pulp/content/rhel10-prod"
+        airgap:
+          src_mount: "/mnt/repos/rhel9"
+          dst_mount: "/mnt/repos/rhel10"
+          dst_url: "file:///mnt/repos/rhel10"
+          dst_repo_file: "/etc/yum.repos.d/uip-rhel10.repo"
+        native:
+          repos_enable:
+            - "rhel-10-for-x86_64-baseos-rpms"
+            - "rhel-10-for-x86_64-appstream-rpms"
+          repos_disable:
+            - "rhel-9-for-x86_64-baseos-rpms"
+            - "rhel-9-for-x86_64-appstream-rpms"
 
   ubuntu:
     "18.04":
@@ -313,7 +385,6 @@ uip_repo_map:
           profile: "ubuntu-20.04-prod"
           target_urls:
             - "https://archive.ubuntu.com/ubuntu"
-
         artifactory:
           base_url: "https://artifactory.example.com/artifactory"
           src_repo: "deb-bionic-prod"
@@ -325,7 +396,6 @@ uip_repo_map:
             - "restricted"
             - "universe"
             - "multiverse"
-
         nexus:
           base_url: "https://nexus.example.com/repository"
           src_repo: "ubuntu-bionic"
@@ -337,7 +407,6 @@ uip_repo_map:
             - "restricted"
             - "universe"
             - "multiverse"
-
         pulp:
           base_url: "https://pulp.example.com"
           src_repo: "ubuntu-bionic"
@@ -349,7 +418,6 @@ uip_repo_map:
             - "restricted"
             - "universe"
             - "multiverse"
-
         airgap:
           src_mount: "/mnt/repos/ubuntu/bionic"
           dst_mount: "/mnt/repos/ubuntu/focal"
@@ -361,7 +429,6 @@ uip_repo_map:
             - "restricted"
             - "universe"
             - "multiverse"
-
         native:
           dst_url: "http://archive.ubuntu.com/ubuntu"
           dst_suite: "focal"
@@ -379,7 +446,6 @@ uip_repo_map:
           profile: "ubuntu-22.04-prod"
           target_urls:
             - "https://archive.ubuntu.com/ubuntu"
-
         artifactory:
           base_url: "https://artifactory.example.com/artifactory"
           src_repo: "deb-focal-prod"
@@ -391,7 +457,6 @@ uip_repo_map:
             - "restricted"
             - "universe"
             - "multiverse"
-
         nexus:
           base_url: "https://nexus.example.com/repository"
           src_repo: "ubuntu-focal"
@@ -403,7 +468,6 @@ uip_repo_map:
             - "restricted"
             - "universe"
             - "multiverse"
-
         pulp:
           base_url: "https://pulp.example.com"
           src_repo: "ubuntu-focal"
@@ -415,7 +479,6 @@ uip_repo_map:
             - "restricted"
             - "universe"
             - "multiverse"
-
         airgap:
           src_mount: "/mnt/repos/ubuntu/focal"
           dst_mount: "/mnt/repos/ubuntu/jammy"
@@ -427,7 +490,6 @@ uip_repo_map:
             - "restricted"
             - "universe"
             - "multiverse"
-
         native:
           dst_url: "http://archive.ubuntu.com/ubuntu"
           dst_suite: "jammy"
@@ -445,7 +507,6 @@ uip_repo_map:
           profile: "ubuntu-24.04-prod"
           target_urls:
             - "https://archive.ubuntu.com/ubuntu"
-
         artifactory:
           base_url: "https://artifactory.example.com/artifactory"
           src_repo: "deb-jammy-prod"
@@ -457,7 +518,6 @@ uip_repo_map:
             - "restricted"
             - "universe"
             - "multiverse"
-
         nexus:
           base_url: "https://nexus.example.com/repository"
           src_repo: "ubuntu-jammy"
@@ -469,7 +529,6 @@ uip_repo_map:
             - "restricted"
             - "universe"
             - "multiverse"
-
         pulp:
           base_url: "https://pulp.example.com"
           src_repo: "ubuntu-jammy"
@@ -481,7 +540,6 @@ uip_repo_map:
             - "restricted"
             - "universe"
             - "multiverse"
-
         airgap:
           src_mount: "/mnt/repos/ubuntu/jammy"
           dst_mount: "/mnt/repos/ubuntu/noble"
@@ -493,10 +551,131 @@ uip_repo_map:
             - "restricted"
             - "universe"
             - "multiverse"
-
         native:
           dst_url: "http://archive.ubuntu.com/ubuntu"
           dst_suite: "noble"
+          components:
+            - "main"
+            - "restricted"
+            - "universe"
+            - "multiverse"
+
+    "24.04":
+      "25.04":
+        landscape:
+          src_series: "noble"
+          dst_series: "plucky"
+          profile: "ubuntu-25.04-prod"
+          target_urls:
+            - "https://archive.ubuntu.com/ubuntu"
+        artifactory:
+          base_url: "https://artifactory.example.com/artifactory"
+          src_repo: "deb-noble-prod"
+          dst_repo: "deb-plucky-prod"
+          dst_url: "https://artifactory.example.com/artifactory/deb-plucky-prod"
+          dst_suite: "plucky"
+          components:
+            - "main"
+            - "restricted"
+            - "universe"
+            - "multiverse"
+        nexus:
+          base_url: "https://nexus.example.com/repository"
+          src_repo: "ubuntu-noble"
+          dst_repo: "ubuntu-plucky"
+          dst_url: "https://nexus.example.com/repository/ubuntu-plucky"
+          dst_suite: "plucky"
+          components:
+            - "main"
+            - "restricted"
+            - "universe"
+            - "multiverse"
+        pulp:
+          base_url: "https://pulp.example.com"
+          src_repo: "ubuntu-noble"
+          dst_repo: "ubuntu-plucky"
+          dst_url: "https://pulp.example.com/pulp/content/ubuntu-plucky"
+          dst_suite: "plucky"
+          components:
+            - "main"
+            - "restricted"
+            - "universe"
+            - "multiverse"
+        airgap:
+          src_mount: "/mnt/repos/ubuntu/noble"
+          dst_mount: "/mnt/repos/ubuntu/plucky"
+          dst_url: "file:/mnt/repos/ubuntu/plucky"
+          dst_suite: "plucky"
+          dst_list_file: "/etc/apt/sources.list.d/uip-plucky.list"
+          components:
+            - "main"
+            - "restricted"
+            - "universe"
+            - "multiverse"
+        native:
+          dst_url: "http://archive.ubuntu.com/ubuntu"
+          dst_suite: "plucky"
+          components:
+            - "main"
+            - "restricted"
+            - "universe"
+            - "multiverse"
+
+    "25.04":
+      "26.04":
+        landscape:
+          src_series: "plucky"
+          dst_series: "questing"
+          profile: "ubuntu-26.04-prod"
+          target_urls:
+            - "https://archive.ubuntu.com/ubuntu"
+        artifactory:
+          base_url: "https://artifactory.example.com/artifactory"
+          src_repo: "deb-plucky-prod"
+          dst_repo: "deb-questing-prod"
+          dst_url: "https://artifactory.example.com/artifactory/deb-questing-prod"
+          dst_suite: "questing"
+          components:
+            - "main"
+            - "restricted"
+            - "universe"
+            - "multiverse"
+        nexus:
+          base_url: "https://nexus.example.com/repository"
+          src_repo: "ubuntu-plucky"
+          dst_repo: "ubuntu-questing"
+          dst_url: "https://nexus.example.com/repository/ubuntu-questing"
+          dst_suite: "questing"
+          components:
+            - "main"
+            - "restricted"
+            - "universe"
+            - "multiverse"
+        pulp:
+          base_url: "https://pulp.example.com"
+          src_repo: "ubuntu-plucky"
+          dst_repo: "ubuntu-questing"
+          dst_url: "https://pulp.example.com/pulp/content/ubuntu-questing"
+          dst_suite: "questing"
+          components:
+            - "main"
+            - "restricted"
+            - "universe"
+            - "multiverse"
+        airgap:
+          src_mount: "/mnt/repos/ubuntu/plucky"
+          dst_mount: "/mnt/repos/ubuntu/questing"
+          dst_url: "file:/mnt/repos/ubuntu/questing"
+          dst_suite: "questing"
+          dst_list_file: "/etc/apt/sources.list.d/uip-questing.list"
+          components:
+            - "main"
+            - "restricted"
+            - "universe"
+            - "multiverse"
+        native:
+          dst_url: "http://archive.ubuntu.com/ubuntu"
+          dst_suite: "questing"
           components:
             - "main"
             - "restricted"
@@ -516,7 +695,6 @@ uip_repo_map:
             - "main"
             - "contrib"
             - "non-free"
-
         nexus:
           base_url: "https://nexus.example.com/repository"
           src_repo: "debian-buster"
@@ -527,7 +705,6 @@ uip_repo_map:
             - "main"
             - "contrib"
             - "non-free"
-
         pulp:
           base_url: "https://pulp.example.com"
           src_repo: "debian-buster"
@@ -538,7 +715,6 @@ uip_repo_map:
             - "main"
             - "contrib"
             - "non-free"
-
         airgap:
           src_mount: "/mnt/repos/debian/buster"
           dst_mount: "/mnt/repos/debian/bullseye"
@@ -549,7 +725,6 @@ uip_repo_map:
             - "main"
             - "contrib"
             - "non-free"
-
         native:
           dst_url: "http://deb.debian.org/debian"
           dst_suite: "bullseye"
@@ -571,7 +746,6 @@ uip_repo_map:
             - "contrib"
             - "non-free"
             - "non-free-firmware"
-
         nexus:
           base_url: "https://nexus.example.com/repository"
           src_repo: "debian-bullseye"
@@ -583,7 +757,6 @@ uip_repo_map:
             - "contrib"
             - "non-free"
             - "non-free-firmware"
-
         pulp:
           base_url: "https://pulp.example.com"
           src_repo: "debian-bullseye"
@@ -595,7 +768,6 @@ uip_repo_map:
             - "contrib"
             - "non-free"
             - "non-free-firmware"
-
         airgap:
           src_mount: "/mnt/repos/debian/bullseye"
           dst_mount: "/mnt/repos/debian/bookworm"
@@ -607,7 +779,6 @@ uip_repo_map:
             - "contrib"
             - "non-free"
             - "non-free-firmware"
-
         native:
           dst_url: "http://deb.debian.org/debian"
           dst_suite: "bookworm"
@@ -630,7 +801,6 @@ uip_repo_map:
             - "contrib"
             - "non-free"
             - "non-free-firmware"
-
         nexus:
           base_url: "https://nexus.example.com/repository"
           src_repo: "debian-bookworm"
@@ -642,7 +812,6 @@ uip_repo_map:
             - "contrib"
             - "non-free"
             - "non-free-firmware"
-
         pulp:
           base_url: "https://pulp.example.com"
           src_repo: "debian-bookworm"
@@ -654,7 +823,6 @@ uip_repo_map:
             - "contrib"
             - "non-free"
             - "non-free-firmware"
-
         airgap:
           src_mount: "/mnt/repos/debian/bookworm"
           dst_mount: "/mnt/repos/debian/trixie"
@@ -666,10 +834,119 @@ uip_repo_map:
             - "contrib"
             - "non-free"
             - "non-free-firmware"
-
         native:
           dst_url: "http://deb.debian.org/debian"
           dst_suite: "trixie"
+          components:
+            - "main"
+            - "contrib"
+            - "non-free"
+            - "non-free-firmware"
+
+    "13":
+      "14":
+        artifactory:
+          base_url: "https://artifactory.example.com/artifactory"
+          src_repo: "deb-trixie-prod"
+          dst_repo: "deb-forky-prod"
+          dst_url: "https://artifactory.example.com/artifactory/deb-forky-prod"
+          dst_suite: "forky"
+          components:
+            - "main"
+            - "contrib"
+            - "non-free"
+            - "non-free-firmware"
+        nexus:
+          base_url: "https://nexus.example.com/repository"
+          src_repo: "debian-trixie"
+          dst_repo: "debian-forky"
+          dst_url: "https://nexus.example.com/repository/debian-forky"
+          dst_suite: "forky"
+          components:
+            - "main"
+            - "contrib"
+            - "non-free"
+            - "non-free-firmware"
+        pulp:
+          base_url: "https://pulp.example.com"
+          src_repo: "debian-trixie"
+          dst_repo: "debian-forky"
+          dst_url: "https://pulp.example.com/pulp/content/debian-forky"
+          dst_suite: "forky"
+          components:
+            - "main"
+            - "contrib"
+            - "non-free"
+            - "non-free-firmware"
+        airgap:
+          src_mount: "/mnt/repos/debian/trixie"
+          dst_mount: "/mnt/repos/debian/forky"
+          dst_url: "file:/mnt/repos/debian/forky"
+          dst_suite: "forky"
+          dst_list_file: "/etc/apt/sources.list.d/uip-forky.list"
+          components:
+            - "main"
+            - "contrib"
+            - "non-free"
+            - "non-free-firmware"
+        native:
+          dst_url: "http://deb.debian.org/debian"
+          dst_suite: "forky"
+          components:
+            - "main"
+            - "contrib"
+            - "non-free"
+            - "non-free-firmware"
+
+    "14":
+      "15":
+        artifactory:
+          base_url: "https://artifactory.example.com/artifactory"
+          src_repo: "deb-forky-prod"
+          dst_repo: "deb-duke-prod"
+          dst_url: "https://artifactory.example.com/artifactory/deb-duke-prod"
+          dst_suite: "duke"
+          components:
+            - "main"
+            - "contrib"
+            - "non-free"
+            - "non-free-firmware"
+        nexus:
+          base_url: "https://nexus.example.com/repository"
+          src_repo: "debian-forky"
+          dst_repo: "debian-duke"
+          dst_url: "https://nexus.example.com/repository/debian-duke"
+          dst_suite: "duke"
+          components:
+            - "main"
+            - "contrib"
+            - "non-free"
+            - "non-free-firmware"
+        pulp:
+          base_url: "https://pulp.example.com"
+          src_repo: "debian-forky"
+          dst_repo: "debian-duke"
+          dst_url: "https://pulp.example.com/pulp/content/debian-duke"
+          dst_suite: "duke"
+          components:
+            - "main"
+            - "contrib"
+            - "non-free"
+            - "non-free-firmware"
+        airgap:
+          src_mount: "/mnt/repos/debian/forky"
+          dst_mount: "/mnt/repos/debian/duke"
+          dst_url: "file:/mnt/repos/debian/duke"
+          dst_suite: "duke"
+          dst_list_file: "/etc/apt/sources.list.d/uip-duke.list"
+          components:
+            - "main"
+            - "contrib"
+            - "non-free"
+            - "non-free-firmware"
+        native:
+          dst_url: "http://deb.debian.org/debian"
+          dst_suite: "duke"
           components:
             - "main"
             - "contrib"
@@ -686,7 +963,6 @@ uip_repo_map:
           migration_target: "SLES 15 SP3 x86_64"
           target_urls:
             - "https://susemanager.example.com/pub/repositories/sles15sp3"
-
         uyuni:
           src_channel: "sles12-sp5-prod"
           dst_channel: "sles15-sp3-prod"
@@ -694,31 +970,26 @@ uip_repo_map:
           migration_target: "SLES 15 SP3 x86_64"
           target_urls:
             - "https://uyuni.example.com/pub/repositories/sles15sp3"
-
         artifactory:
           base_url: "https://artifactory.example.com/artifactory"
           src_repo: "rpm-sles12sp5-prod"
           dst_repo: "rpm-sles15sp3-prod"
           dst_url: "https://artifactory.example.com/artifactory/rpm-sles15sp3-prod"
-
         nexus:
           base_url: "https://nexus.example.com/repository"
           src_repo: "sles12sp5-prod"
           dst_repo: "sles15sp3-prod"
           dst_url: "https://nexus.example.com/repository/sles15sp3-prod"
-
         pulp:
           base_url: "https://pulp.example.com"
           src_repo: "sles12sp5-prod"
           dst_repo: "sles15sp3-prod"
           dst_url: "https://pulp.example.com/pulp/content/sles15sp3-prod"
-
         airgap:
           src_mount: "/mnt/repos/sles/12sp5"
           dst_mount: "/mnt/repos/sles/15sp3"
           dst_url: "file:///mnt/repos/sles/15sp3"
           dst_repo_file: "/etc/zypp/repos.d/uip-sles15sp3.repo"
-
         native:
           migration_target: "SLES 15 SP3 x86_64"
 
@@ -731,7 +1002,6 @@ uip_repo_map:
           migration_target: "SLES 15 SP4 x86_64"
           target_urls:
             - "https://susemanager.example.com/pub/repositories/sles15sp4"
-
         uyuni:
           src_channel: "sles15-sp3-prod"
           dst_channel: "sles15-sp4-prod"
@@ -739,31 +1009,26 @@ uip_repo_map:
           migration_target: "SLES 15 SP4 x86_64"
           target_urls:
             - "https://uyuni.example.com/pub/repositories/sles15sp4"
-
         artifactory:
           base_url: "https://artifactory.example.com/artifactory"
           src_repo: "rpm-sles15sp3-prod"
           dst_repo: "rpm-sles15sp4-prod"
           dst_url: "https://artifactory.example.com/artifactory/rpm-sles15sp4-prod"
-
         nexus:
           base_url: "https://nexus.example.com/repository"
           src_repo: "sles15sp3-prod"
           dst_repo: "sles15sp4-prod"
           dst_url: "https://nexus.example.com/repository/sles15sp4-prod"
-
         pulp:
           base_url: "https://pulp.example.com"
           src_repo: "sles15sp3-prod"
           dst_repo: "sles15sp4-prod"
           dst_url: "https://pulp.example.com/pulp/content/sles15sp4-prod"
-
         airgap:
           src_mount: "/mnt/repos/sles/15sp3"
           dst_mount: "/mnt/repos/sles/15sp4"
           dst_url: "file:///mnt/repos/sles/15sp4"
           dst_repo_file: "/etc/zypp/repos.d/uip-sles15sp4.repo"
-
         native:
           migration_target: "SLES 15 SP4 x86_64"
 
@@ -776,7 +1041,6 @@ uip_repo_map:
           migration_target: "SLES 15 SP5 x86_64"
           target_urls:
             - "https://susemanager.example.com/pub/repositories/sles15sp5"
-
         uyuni:
           src_channel: "sles15-sp4-prod"
           dst_channel: "sles15-sp5-prod"
@@ -784,30 +1048,26 @@ uip_repo_map:
           migration_target: "SLES 15 SP5 x86_64"
           target_urls:
             - "https://uyuni.example.com/pub/repositories/sles15sp5"
-
         artifactory:
           base_url: "https://artifactory.example.com/artifactory"
           src_repo: "rpm-sles15sp4-prod"
           dst_repo: "rpm-sles15sp5-prod"
           dst_url: "https://artifactory.example.com/artifactory/rpm-sles15sp5-prod"
-
         nexus:
           base_url: "https://nexus.example.com/repository"
           src_repo: "sles15sp4-prod"
           dst_repo: "sles15sp5-prod"
           dst_url: "https://nexus.example.com/repository/sles15sp5-prod"
-
         pulp:
           base_url: "https://pulp.example.com"
           src_repo: "sles15sp4-prod"
           dst_repo: "sles15sp5-prod"
           dst_url: "https://pulp.example.com/pulp/content/sles15sp5-prod"
-
         airgap:
           src_mount: "/mnt/repos/sles/15sp4"
           dst_mount: "/mnt/repos/sles/15sp5"
           dst_url: "file:///mnt/repos/sles/15sp5"
           dst_repo_file: "/etc/zypp/repos.d/uip-sles15sp5.repo"
-
         native:
           migration_target: "SLES 15 SP5 x86_64"
+
