@@ -1070,4 +1070,3 @@ uip_repo_map:
           dst_repo_file: "/etc/zypp/repos.d/uip-sles15sp5.repo"
         native:
           migration_target: "SLES 15 SP5 x86_64"
-
