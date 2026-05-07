@@ -359,3 +359,13 @@ Project Initiator — IRIVEN Group
 
 © IRIVEN Group — All Rights Reserved
 
+
+
+## Collection dependency note
+
+`redhat.satellite` is intentionally not listed in the public `requirements.yml`
+because it may not resolve from public Ansible Galaxy in GitHub Actions.
+
+The framework keeps `theforeman.foreman` for Galaxy-compatible Foreman/Satellite
+automation primitives. In Red Hat AAP / Automation Hub environments, certified
+Red Hat collections should be pinned in the enterprise execution environment.

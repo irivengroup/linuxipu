@@ -7,5 +7,4 @@ collections:
   - name: amazon.aws
   - name: azure.azcollection
   - name: google.cloud
-  - name: redhat.satellite
   - name: theforeman.foreman
