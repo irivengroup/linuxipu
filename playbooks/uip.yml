@@ -37,11 +37,6 @@
         - uip_precheck
         - uip_preupgrade
 
-    - role: uip-update
-      tags:
-        - uip_update
-        - uip_preupgrade
-
     - role: uip-remediate
       tags:
         - uip_remediate

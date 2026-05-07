@@ -29,3 +29,13 @@
     - uip_precheck
     - uip_precheck_suse
     - uip_preupgrade
+
+- name: Run baseline update after successful prechecks
+  ansible.builtin.include_role:
+    name: uip-update
+  when:
+    - uip_update_before_upgrade | bool
+  tags:
+    - uip_precheck
+    - uip_update
+    - uip_preupgrade

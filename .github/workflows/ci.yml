@@ -18,6 +18,37 @@ permissions:
   contents: read
 
 jobs:
+  package:
+    name: Package artifact
+    runs-on: ubuntu-latest
+    needs:
+      - syntax
+      - structure
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build archive
+        run: |
+          set -euo pipefail
+          tar \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='.cache' \
+            --exclude='.venv' \
+            --exclude='*.tar.gz' \
+            --exclude='*.zip' \
+            -czf "${RUNNER_TEMP}/linux-uip.tar.gz" .
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-uip
+          path: >-
+            ${{ runner.temp }}/linux-uip.tar.gz
+          if-no-files-found: error
+
   lint:
     name: Lint Ansible and YAML
     runs-on: ubuntu-latest
@@ -125,34 +156,3 @@ jobs:
           test -f roles/uip-common/vars/main.yml
           grep -q "^uip_paths:" roles/uip-common/vars/main.yml
           grep -q "^uip_repo_map:" roles/uip-common/vars/main.yml
-
-  package:
-    name: Package artifact
-    runs-on: ubuntu-latest
-    needs:
-      - syntax
-      - structure
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Build archive
-        run: |
-          set -euo pipefail
-          tar \
-            --exclude='.git' \
-            --exclude='.github' \
-            --exclude='.cache' \
-            --exclude='.venv' \
-            --exclude='*.tar.gz' \
-            --exclude='*.zip' \
-            -czf "${RUNNER_TEMP}/linux-uip.tar.gz" .
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: linux-uip
-          path: >-
-            ${{ runner.temp }}/linux-uip.tar.gz
-          if-no-files-found: error
