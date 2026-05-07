@@ -128,7 +128,20 @@ jobs:
       - name: Validate mandatory roles
         run: |
           set -euo pipefail
-          for role in             uip-common             uip-lock             uip-discovery             uip-repos             uip-snapshot             uip-precheck             uip-update             uip-remediate             uip-upgrade             uip-reboot             uip-postcheck             uip-report             uip-rollback
+          for role in \
+            uip-common \
+            uip-lock \
+            uip-discovery \
+            uip-repos \
+            uip-snapshot \
+            uip-precheck \
+            uip-update \
+            uip-remediate \
+            uip-upgrade \
+            uip-reboot \
+            uip-postcheck \
+            uip-report \
+            uip-rollback
           do
             test -d "roles/${role}" || {
               echo "Missing role: ${role}"
