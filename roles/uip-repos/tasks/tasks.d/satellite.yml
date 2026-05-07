@@ -1,0 +1,16 @@
+---
+- name: Enable target RHSM repositories
+  community.general.rhsm_repository:
+    name: "{{ item }}"
+    state: enabled
+  loop: "{{ uip_repo_def.repos_enable | default([]) }}"
+  tags:
+    - uip_repos_satellite
+
+- name: Disable source RHSM repositories
+  community.general.rhsm_repository:
+    name: "{{ item }}"
+    state: disabled
+  loop: "{{ uip_repo_def.repos_disable | default([]) }}"
+  tags:
+    - uip_repos_satellite

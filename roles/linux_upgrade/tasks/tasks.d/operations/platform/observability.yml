@@ -1,7 +1,0 @@
-- name: Write lifecycle event
-  lineinfile:
-    path: "{{ linux_upgrade_events_log_file }}"
-    create: true
-    mode: "0640"
-    line: "{{ {'timestamp': ansible_date_time.iso8601, 'host': inventory_hostname, 'phase': linux_upgrade_event_phase, 'correlation_id': linux_upgrade_correlation_id, 'action': linux_upgrade_action | default('execute')} | to_json }}"
-  when: linux_upgrade_observability_enabled | bool

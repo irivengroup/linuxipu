@@ -1,0 +1,10 @@
+---
+- name: Discover RPM packages
+  ansible.builtin.command: rpm -qa
+  register: uip_pkg_list
+  changed_when: false
+- name: Discover enabled YUM/DNF repositories
+  ansible.builtin.command: "{{ 'dnf' if uip_pkg_mgr == 'dnf' else 'yum' }} repolist all"
+  register: uip_repo_list
+  changed_when: false
+  failed_when: false

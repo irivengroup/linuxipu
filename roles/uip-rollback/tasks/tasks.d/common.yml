@@ -1,0 +1,23 @@
+---
+- name: Update UIP state to rollback_required
+  ansible.builtin.copy:
+    dest: "{{ uip_state_file }}"
+    owner: root
+    group: root
+    mode: "0640"
+    content: |
+      host: "{{ inventory_hostname }}"
+      os: "{{ uip_os }}"
+      src_ver: "{{ uip_src_ver }}"
+      dst_ver: "{{ uip_dst_ver }}"
+      path: "{{ uip_path_key }}"
+      repo_mgr: "{{ uip_repo_mgr }}"
+      state: "rollback_required"
+      updated_at: "{{ ansible_date_time.iso8601 }}"
+
+- name: Rollback integration point
+  ansible.builtin.debug:
+    msg: "Trigger provider rollback here for snapshot type {{ uip_snap_type }} and snapshot {{ uip_snap_name }}"
+- name: Preserve lock for forensic analysis
+  ansible.builtin.debug:
+    msg: "{{ uip_lock_file }} is intentionally preserved during rollback."

@@ -1,0 +1,41 @@
+---
+- name: Configure RPM target repository
+  ansible.builtin.copy:
+    dest: "/etc/yum.repos.d/uip-{{ uip_dst_name }}.repo"
+    mode: "0644"
+    content: |
+      [uip-{{ uip_dst_name }}]
+      name=UIP {{ uip_dst_name }}
+      baseurl={{ uip_repo_def.dst_url | default(uip_repo_def.base_url ~ '/' ~ uip_repo_def.dst_repo) }}
+      enabled=1
+      gpgcheck={{ 1 if uip_repo_gpg else 0 }}
+      gpgkey={{ uip_repo_def.gpg_key | default('') }}
+  when: uip_pkg_mgr in ['yum', 'dnf']
+  tags:
+    - uip_repos
+
+- name: Configure APT target repository
+  ansible.builtin.copy:
+    dest: "/etc/apt/sources.list.d/uip-{{ uip_dst_name }}.list"
+    mode: "0644"
+    content: |
+      deb {{ uip_repo_def.dst_url | default(uip_repo_def.base_url ~ '/' ~ uip_repo_def.dst_repo) }} {{ uip_repo_def.dst_suite }} {{ uip_repo_def.components | default(['main']) | join(' ') }}
+  when: uip_pkg_mgr == "apt"
+  tags:
+    - uip_repos
+
+- name: Configure Zypper target repository
+  ansible.builtin.copy:
+    dest: "/etc/zypp/repos.d/uip-{{ uip_dst_name }}.repo"
+    mode: "0644"
+    content: |
+      [uip-{{ uip_dst_name }}]
+      name=UIP {{ uip_dst_name }}
+      enabled=1
+      autorefresh=1
+      baseurl={{ uip_repo_def.dst_url | default(uip_repo_def.base_url ~ '/' ~ uip_repo_def.dst_repo) }}
+      type=rpm-md
+      gpgcheck={{ 1 if uip_repo_gpg else 0 }}
+  when: uip_pkg_mgr == "zypper"
+  tags:
+    - uip_repos

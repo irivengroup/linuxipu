@@ -1,0 +1,73 @@
+---
+- name: Collect repository files after configuration
+  ansible.builtin.find:
+    paths:
+      - /etc/yum.repos.d
+      - /etc/apt
+      - /etc/zypp/repos.d
+    patterns:
+      - "*.repo"
+      - "*.list"
+      - "*.sources"
+    recurse: true
+    file_type: file
+  register: uip_target_repo_files
+  failed_when: false
+  tags:
+    - uip_repos_enforce_target
+
+- name: Read repository files after configuration
+  ansible.builtin.slurp:
+    src: "{{ item.path }}"
+  loop: "{{ uip_target_repo_files.files | default([]) }}"
+  register: uip_target_repo_raw
+  failed_when: false
+  tags:
+    - uip_repos_enforce_target
+
+- name: Build target repository corpus
+  ansible.builtin.set_fact:
+    uip_target_repo_text: >-
+      {{
+        (uip_target_repo_raw.results | default([]))
+        | selectattr('content', 'defined')
+        | map(attribute='content')
+        | map('b64decode')
+        | join('\n')
+      }}
+  tags:
+    - uip_repos_enforce_target
+
+- name: Set expected target repository URL list
+  ansible.builtin.set_fact:
+    uip_target_urls: >-
+      {{
+        uip_repo_def.target_urls
+        if uip_repo_def.target_urls is defined
+        else [uip_repo_def.dst_url]
+        if uip_repo_def.dst_url is defined
+        else [uip_repo_def.base_url ~ '/' ~ uip_repo_def.dst_repo]
+        if uip_repo_def.base_url is defined and uip_repo_def.dst_repo is defined
+        else []
+      }}
+  tags:
+    - uip_repos_enforce_target
+
+- name: Assert repositories point to target OS URLs
+  ansible.builtin.assert:
+    that:
+      - uip_target_urls | length > 0
+      - item in uip_target_repo_text
+    fail_msg: "Target repository URL {{ item }} not found in configured repositories."
+  loop: "{{ uip_target_urls }}"
+  when: uip_repo_mgr not in ['native'] or uip_pkg_mgr == 'apt'
+  tags:
+    - uip_repos_enforce_target
+
+- name: Save target repository URL report
+  ansible.builtin.copy:
+    dest: "{{ uip_report_dir }}/repo-target-urls.yml"
+    mode: "0640"
+    content: "{{ uip_target_urls | to_nice_yaml }}"
+  tags:
+    - uip_repos_enforce_target

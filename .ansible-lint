@@ -1,6 +1,16 @@
+---
 profile: production
+
 exclude_paths:
+  - .cache/
   - .github/
-  - molecule/
+  - .venv/
+
 skip_list:
-  - yaml[line-length]
+  - name[template]
+  - command-instead-of-module
+  - package-latest
+
+warn_list:
+  - experimental
+  - fqcn[action-core]

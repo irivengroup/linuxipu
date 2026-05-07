@@ -1,0 +1,23 @@
+---
+- name: Capture package inventory command
+  ansible.builtin.command: >-
+    {{
+      'rpm -qa' if uip_pkg_mgr in ['yum', 'dnf', 'zypper']
+      else 'dpkg-query -W'
+    }}
+  register: uip_pkg_inv
+  changed_when: false
+  failed_when: false
+  tags:
+    - uip_discovery
+    - uip_discovery_pkg
+
+- name: Save package inventory
+    - uip_preupgrade
+  ansible.builtin.copy:
+    dest: "{{ uip_report_dir }}/packages-before.txt"
+    content: "{{ uip_pkg_inv.stdout }}"
+    mode: "0640"
+  tags:
+    - uip_discovery
+    - uip_discovery_pkg

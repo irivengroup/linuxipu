@@ -1,0 +1,5 @@
+---
+- name: Fix interrupted dpkg configuration
+  ansible.builtin.command: dpkg --configure -a
+  changed_when: false
+  failed_when: false

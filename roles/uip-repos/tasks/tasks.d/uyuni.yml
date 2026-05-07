@@ -1,0 +1,6 @@
+---
+- name: Refresh Uyuni-managed repositories
+  ansible.builtin.command: zypper --non-interactive refresh
+  changed_when: false
+  tags:
+    - uip_repos_uyuni

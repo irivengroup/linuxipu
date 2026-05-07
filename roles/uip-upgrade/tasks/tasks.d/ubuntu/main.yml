@@ -1,0 +1,9 @@
+---
+- name: Run Ubuntu do-release-upgrade
+  ansible.builtin.command: do-release-upgrade -f DistUpgradeViewNonInteractive
+  environment:
+    DEBIAN_FRONTEND: noninteractive
+  register: uip_upgrade_out
+  async: 7200
+  poll: 30
+  when: uip_mode == 'enforce'

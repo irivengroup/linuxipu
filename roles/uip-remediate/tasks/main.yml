@@ -1,0 +1,7 @@
+---
+- name: Remediation placeholder
+  ansible.builtin.debug:
+    msg: "Run idempotent remediation for {{ uip_path_key }}"
+  tags:
+    - uip_remediate
+    - uip_preupgrade

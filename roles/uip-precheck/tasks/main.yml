@@ -1,0 +1,24 @@
+---
+- ansible.builtin.import_tasks: tasks.d/common.yml
+  tags:
+    - uip_precheck
+    - uip_precheck_sys
+
+- ansible.builtin.import_tasks: tasks.d/rhel.yml
+    - uip_preupgrade
+  when: uip_os == "rhel"
+  tags:
+    - uip_precheck
+    - uip_precheck_rhel
+
+- ansible.builtin.import_tasks: tasks.d/debian.yml
+  when: uip_os in ["debian", "ubuntu"]
+  tags:
+    - uip_precheck
+    - uip_precheck_apt
+
+- ansible.builtin.import_tasks: tasks.d/suse.yml
+  when: uip_os == "sles"
+  tags:
+    - uip_precheck
+    - uip_precheck_suse

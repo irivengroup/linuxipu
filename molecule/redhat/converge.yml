@@ -1,1 +1,0 @@
-- name: Converge\n  hosts: all\n  become: true\n  roles:\n    - role: linux_upgrade\n

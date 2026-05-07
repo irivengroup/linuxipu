@@ -1,1 +1,0 @@
-v43 adds compatibility matrix, remediation engine, assessment reports, app/middleware hooks, strict cluster checks, deep network checks, deeper disk mapping, encryption/signing, CMDB/ITSM URI integrations, archive/purge, deep boot validation, deep storage checks, wave state, docs and Molecule scenarios.

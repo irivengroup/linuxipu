@@ -1,0 +1,24 @@
+---
+build:
+  environment:
+    python: "3.11"
+  dependencies:
+    before:
+      - pip install --upgrade pip
+      - pip install ansible-core ansible-lint yamllint
+      - if [ -f requirements.yml ]; then ansible-galaxy collection install -r requirements.yml; fi
+  tests:
+    override:
+      - yamllint .
+      - ansible-lint playbooks/*.yml roles
+      - ansible-playbook --syntax-check playbooks/uip.yml
+      - ansible-playbook --syntax-check playbooks/uip-rollback.yml
+
+checks:
+  python: true
+
+filter:
+  excluded_paths:
+    - ".github/*"
+    - ".git/*"
+    - ".venv/*"

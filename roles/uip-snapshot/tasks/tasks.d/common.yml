@@ -1,0 +1,25 @@
+---
+- name: Update UIP state to snapshot_started
+  ansible.builtin.copy:
+    dest: "{{ uip_state_file }}"
+    owner: root
+    group: root
+    mode: "0640"
+    content: |
+      host: "{{ inventory_hostname }}"
+      os: "{{ uip_os }}"
+      src_ver: "{{ uip_src_ver }}"
+      dst_ver: "{{ uip_dst_ver }}"
+      path: "{{ uip_path_key }}"
+      repo_mgr: "{{ uip_repo_mgr }}"
+      state: "snapshot_started"
+      updated_at: "{{ ansible_date_time.iso8601 }}"
+
+- name: Skip snapshot when disabled
+  ansible.builtin.debug:
+    msg: "Snapshot disabled or external snapshot expected: {{ uip_snap_type }}"
+  when: not uip_snap_enabled | bool or uip_snap_type == 'none'
+- name: Mark snapshot integration point
+  ansible.builtin.debug:
+    msg: "Implement provider snapshot here: {{ uip_snap_type }} / {{ uip_snap_name }}"
+  when: uip_snap_enabled | bool and uip_snap_type != 'none'

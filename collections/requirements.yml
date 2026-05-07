@@ -1,8 +1,0 @@
-collections:
-  - name: ansible.posix
-  - name: community.general
-  - name: openstack.cloud
-  - name: vmware.vmware
-  - name: community.proxmox
-  - name: community.hashi_vault
-  - name: community.vmware

@@ -1,0 +1,9 @@
+---
+- name: Assert repository definition is loaded
+  ansible.builtin.assert:
+    that:
+      - uip_repo_def is mapping
+      - uip_repo_def | length > 0
+  tags:
+    - uip_repos
+    - uip_repos_common

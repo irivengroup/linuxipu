@@ -1,0 +1,6 @@
+---
+- name: Rollback placeholder
+  ansible.builtin.debug:
+    msg: "Rollback must restore snapshot/repo state for {{ uip_path_key }}"
+  tags:
+    - uip_rollback

@@ -1,0 +1,39 @@
+---
+- name: Debian | Ensure required packages are present
+  ansible.builtin.apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - gnupg
+      - debian-archive-keyring
+    state: present
+    update_cache: true
+  tags: [uip_precheck, uip_precheck_debian, uip_precheck_sys]
+
+- name: Debian | Check dpkg audit
+  ansible.builtin.command: dpkg --audit
+  register: uip_dpkg_audit
+  changed_when: false
+  failed_when: uip_pre_block_if_broken_pkgs | bool and (uip_dpkg_audit.stdout | trim | length > 0)
+  tags: [uip_precheck, uip_precheck_debian, uip_precheck_sys]
+
+- name: Debian | Check held packages
+  ansible.builtin.command: apt-mark showhold
+  register: uip_apt_holds
+  changed_when: false
+  failed_when: uip_pre_block_if_held_pkgs | bool and (uip_apt_holds.stdout | trim | length > 0)
+  tags: [uip_precheck, uip_precheck_debian, uip_precheck_sys]
+
+- name: Debian | Simulate minimal upgrade
+  ansible.builtin.command: apt-get -s upgrade
+  register: uip_apt_upgrade_sim
+  changed_when: false
+  failed_when: uip_apt_upgrade_sim.rc != 0
+  tags: [uip_precheck, uip_precheck_debian, uip_precheck_sys]
+
+- name: Debian | Simulate dist-upgrade
+  ansible.builtin.command: apt-get -s dist-upgrade
+  register: uip_precheck_out
+  changed_when: false
+  failed_when: uip_precheck_out.rc != 0
+  tags: [uip_precheck, uip_precheck_debian]

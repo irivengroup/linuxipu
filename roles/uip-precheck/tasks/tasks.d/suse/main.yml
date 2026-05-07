@@ -1,0 +1,35 @@
+---
+- name: SUSE | Check products
+  ansible.builtin.command: zypper products
+  register: uip_suse_products
+  changed_when: false
+  failed_when: uip_suse_products.rc != 0
+  tags: [uip_precheck, uip_precheck_suse, uip_precheck_sys]
+
+- name: SUSE | Refresh repositories
+  ansible.builtin.command: zypper --non-interactive refresh
+  register: uip_suse_refresh
+  changed_when: false
+  failed_when: uip_suse_refresh.rc != 0
+  tags: [uip_precheck, uip_precheck_suse, uip_precheck_sys]
+
+- name: SUSE | Verify repositories
+  ansible.builtin.command: zypper lr -u
+  register: uip_suse_repos
+  changed_when: false
+  failed_when: uip_suse_repos.rc != 0
+  tags: [uip_precheck, uip_precheck_suse, uip_precheck_sys]
+
+- name: SUSE | Check RPM database
+  ansible.builtin.command: rpm --verifydb
+  register: uip_suse_rpmdb
+  changed_when: false
+  failed_when: uip_suse_rpmdb.rc != 0
+  tags: [uip_precheck, uip_precheck_suse, uip_precheck_sys]
+
+- name: SUSE | Simulate migration
+  ansible.builtin.command: zypper --non-interactive migration --dry-run
+  register: uip_precheck_out
+  changed_when: false
+  failed_when: false
+  tags: [uip_precheck, uip_precheck_suse]

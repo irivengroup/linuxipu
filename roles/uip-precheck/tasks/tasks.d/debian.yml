@@ -1,0 +1,24 @@
+---
+- name: Check dpkg audit
+  ansible.builtin.command: dpkg --audit
+  register: uip_dpkg_audit
+  changed_when: false
+  failed_when: uip_dpkg_audit.stdout | length > 0
+  tags:
+    - uip_precheck_apt
+
+- name: Check held packages
+  ansible.builtin.command: apt-mark showhold
+  register: uip_apt_hold
+  changed_when: false
+  failed_when: false
+  tags:
+    - uip_precheck_apt
+
+- name: Run APT/vendor precheck
+  ansible.builtin.command: "{{ uip_pre_tool }}"
+  register: uip_vendor_precheck
+  changed_when: false
+  failed_when: false
+  tags:
+    - uip_precheck_apt

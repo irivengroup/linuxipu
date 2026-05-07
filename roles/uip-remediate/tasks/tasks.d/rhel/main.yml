@@ -1,0 +1,6 @@
+---
+- name: Answer common Leapp confirmations when answerfile exists
+  ansible.builtin.command: leapp answer --section remove_pam_pkcs11_module_check.confirm=True
+  changed_when: false
+  failed_when: false
+  when: uip_upg_tool == 'leapp'

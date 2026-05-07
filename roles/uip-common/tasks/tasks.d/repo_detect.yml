@@ -1,0 +1,160 @@
+---
+- name: Collect repository files
+  ansible.builtin.find:
+    paths:
+      - /etc/yum.repos.d
+      - /etc/apt
+      - /etc/zypp/repos.d
+    patterns:
+      - "*.repo"
+      - "*.list"
+      - "*.sources"
+      - "*.conf"
+    recurse: true
+    file_type: file
+  register: uip_repo_files
+  failed_when: false
+  tags:
+    - uip_repo_detect
+
+- name: Read repository files
+  ansible.builtin.slurp:
+    src: "{{ item.path }}"
+  loop: "{{ uip_repo_files.files | default([]) }}"
+  register: uip_repo_file_raw
+  failed_when: false
+  tags:
+    - uip_repo_detect
+
+- name: Build repository text corpus
+  ansible.builtin.set_fact:
+    uip_repo_text: >-
+      {{
+        (uip_repo_file_raw.results | default([]))
+        | selectattr('content', 'defined')
+        | map(attribute='content')
+        | map('b64decode')
+        | join('\n')
+        | lower
+      }}
+  tags:
+    - uip_repo_detect
+
+- name: Check Satellite files
+  ansible.builtin.stat:
+    path: "{{ item }}"
+  loop: "{{ uip_repo_detect_rules.satellite.files }}"
+  register: uip_detect_sat_files
+  failed_when: false
+  tags:
+    - uip_repo_detect
+
+- name: Check Landscape files
+  ansible.builtin.stat:
+    path: "{{ item }}"
+  loop: "{{ uip_repo_detect_rules.landscape.files }}"
+  register: uip_detect_landscape_files
+  failed_when: false
+  tags:
+    - uip_repo_detect
+
+- name: Check SUSE Manager files
+  ansible.builtin.stat:
+    path: "{{ item }}"
+  loop: "{{ uip_repo_detect_rules.suse_mgr.files }}"
+  register: uip_detect_suse_mgr_files
+  failed_when: false
+  tags:
+    - uip_repo_detect
+
+- name: Auto-detect Satellite
+  ansible.builtin.set_fact:
+    uip_repo_mgr: "satellite"
+  when:
+    - uip_os == "rhel"
+    - >
+      (uip_detect_sat_files.results | selectattr('stat.exists') | list | length > 0)
+      or
+      (uip_repo_text is search('satellite|katello|capsule'))
+  tags:
+    - uip_repo_detect
+
+- name: Auto-detect Landscape
+  ansible.builtin.set_fact:
+    uip_repo_mgr: "landscape"
+  when:
+    - uip_repo_mgr == "auto"
+    - uip_os == "ubuntu"
+    - >
+      (uip_detect_landscape_files.results | selectattr('stat.exists') | list | length > 0)
+      or
+      (uip_repo_text is search('landscape'))
+  tags:
+    - uip_repo_detect
+
+- name: Auto-detect SUSE Manager
+  ansible.builtin.set_fact:
+    uip_repo_mgr: "suse_mgr"
+  when:
+    - uip_repo_mgr == "auto"
+    - uip_os == "sles"
+    - >
+      (uip_detect_suse_mgr_files.results | selectattr('stat.exists') | list | length > 0)
+      or
+      (uip_repo_text is search('susemanager|suse-manager'))
+  tags:
+    - uip_repo_detect
+
+- name: Auto-detect Uyuni
+  ansible.builtin.set_fact:
+    uip_repo_mgr: "uyuni"
+  when:
+    - uip_repo_mgr == "auto"
+    - uip_os == "sles"
+    - uip_repo_text is search('uyuni')
+  tags:
+    - uip_repo_detect
+
+- name: Auto-detect Artifactory
+  ansible.builtin.set_fact:
+    uip_repo_mgr: "artifactory"
+  when:
+    - uip_repo_mgr == "auto"
+    - uip_repo_text is search('artifactory|jfrog')
+  tags:
+    - uip_repo_detect
+
+- name: Auto-detect Nexus
+  ansible.builtin.set_fact:
+    uip_repo_mgr: "nexus"
+  when:
+    - uip_repo_mgr == "auto"
+    - uip_repo_text is search('nexus|sonatype')
+  tags:
+    - uip_repo_detect
+
+- name: Auto-detect Pulp
+  ansible.builtin.set_fact:
+    uip_repo_mgr: "pulp"
+  when:
+    - uip_repo_mgr == "auto"
+    - uip_repo_text is search('pulp')
+  tags:
+    - uip_repo_detect
+
+- name: Auto-detect airgap repositories
+  ansible.builtin.set_fact:
+    uip_repo_mgr: "airgap"
+  when:
+    - uip_repo_mgr == "auto"
+    - uip_repo_text is search('file:/|file://|/mnt/repos|/media/repos')
+  tags:
+    - uip_repo_detect
+
+- name: Save detected repo manager
+  ansible.builtin.copy:
+    dest: "{{ uip_report_dir }}/repo-manager-detected.txt"
+    mode: "0640"
+    content: "{{ uip_repo_mgr }}"
+  tags:
+    - uip_repo_detect

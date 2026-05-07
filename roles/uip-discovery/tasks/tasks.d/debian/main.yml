@@ -1,0 +1,9 @@
+---
+- name: Discover DEB packages
+  ansible.builtin.command: dpkg-query -W
+  register: uip_pkg_list
+  changed_when: false
+- name: Discover APT sources
+  ansible.builtin.shell: "grep -Rhs '^deb ' /etc/apt/sources.list /etc/apt/sources.list.d/*.list || true"
+  register: uip_repo_list
+  changed_when: false

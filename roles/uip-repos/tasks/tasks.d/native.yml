@@ -1,0 +1,18 @@
+---
+- name: Configure native APT target repository
+  ansible.builtin.copy:
+    dest: "/etc/apt/sources.list.d/uip-{{ uip_dst_name }}.list"
+    mode: "0644"
+    content: |
+      deb {{ uip_repo_def.dst_url }} {{ uip_repo_def.dst_suite }} {{ uip_repo_def.components | join(' ') }}
+      deb {{ uip_repo_def.dst_url }} {{ uip_repo_def.dst_suite }}-updates {{ uip_repo_def.components | join(' ') }}
+  when: uip_pkg_mgr == "apt"
+  tags:
+    - uip_repos_native
+
+- name: Native repository manager selected for RPM/SUSE
+  ansible.builtin.debug:
+    msg: "Using native managed repositories for {{ uip_path_key }}"
+  when: uip_pkg_mgr in ['yum', 'dnf', 'zypper']
+  tags:
+    - uip_repos_native

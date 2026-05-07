@@ -1,0 +1,10 @@
+---
+- name: Discover installed packages
+  ansible.builtin.command: rpm -qa
+  register: uip_pkg_list
+  changed_when: false
+- name: Discover zypper repositories
+  ansible.builtin.command: zypper lr -u
+  register: uip_repo_list
+  changed_when: false
+  failed_when: false

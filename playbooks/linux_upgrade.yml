@@ -1,7 +1,0 @@
-- name: Linux major upgrade orchestration
-  hosts: linux_upgrade_targets
-  serial: "{{ (linux_upgrade_rolling_canary_batch_size if (linux_upgrade_rolling_enabled | default(false) | bool and linux_upgrade_rolling_canary_enabled | default(true) | bool) else (linux_upgrade_rolling_serial if (linux_upgrade_rolling_enabled | default(false) | bool) else '100%')) }}"
-  gather_facts: true
-  become: true
-  roles:
-    - role: linux_upgrade

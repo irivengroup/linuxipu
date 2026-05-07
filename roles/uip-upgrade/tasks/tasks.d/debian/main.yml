@@ -1,0 +1,21 @@
+---
+- name: Upgrade Debian base packages before release switch
+  ansible.builtin.apt:
+    upgrade: full
+    update_cache: true
+  environment:
+    DEBIAN_FRONTEND: noninteractive
+  when: uip_mode == 'enforce'
+- name: Switch Debian codename
+  ansible.builtin.replace:
+    path: /etc/apt/sources.list
+    regexp: "{{ uip_src_name }}"
+    replace: "{{ uip_dst_name }}"
+  when: uip_mode == 'enforce'
+- name: Run Debian dist-upgrade
+  ansible.builtin.apt:
+    upgrade: dist
+    update_cache: true
+  environment:
+    DEBIAN_FRONTEND: noninteractive
+  when: uip_mode == 'enforce'

@@ -1,6 +1,0 @@
-- name: Assert canary host first when enabled
-  assert:
-    that:
-      - (not linux_upgrade_cluster_canary_enabled | bool) or (inventory_hostname == linux_upgrade_cluster_canary_host) or (linux_upgrade_wave_enabled | bool)
-    fail_msg: "Canary mode enabled and current host is not the canary host."
-  when: linux_upgrade_cluster_orchestration_enabled | bool

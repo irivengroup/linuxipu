@@ -1,0 +1,17 @@
+---
+- name: Generate YAML report
+  ansible.builtin.copy:
+    dest: "{{ uip_report_dir }}/uip-report.yml"
+    mode: "0640"
+    content: |
+      host: "{{ inventory_hostname }}"
+      os: "{{ uip_os | default('unknown') }}"
+      src_ver: "{{ uip_src_ver | default('unknown') }}"
+      dst_ver: "{{ uip_dst_ver | default('unknown') }}"
+      path: "{{ uip_path_key | default('unknown') }}"
+      repo_mgr: "{{ uip_repo_mgr | default('unknown') }}"
+      mode: "{{ uip_mode }}"
+      generated_at: "{{ ansible_date_time.iso8601 }}"
+  tags:
+    - uip_report
+    - uip_postupgrade

@@ -1,0 +1,33 @@
+---
+- name: Ensure report directory exists
+  ansible.builtin.file:
+    path: "{{ uip_report_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0750"
+- name: Build report object
+  ansible.builtin.set_fact:
+    uip_report:
+      host: "{{ inventory_hostname }}"
+      os: "{{ uip_os | default('unknown') }}"
+      src_ver: "{{ uip_src_ver | default('unknown') }}"
+      dst_ver: "{{ uip_dst_ver | default('unknown') }}"
+      path: "{{ uip_path_key | default('unknown') }}"
+      repo_mgr: "{{ uip_repo_mgr | default('unknown') }}"
+      mode: "{{ uip_mode }}"
+      timestamp: "{{ ansible_date_time.iso8601 }}"
+- name: Write YAML report
+  ansible.builtin.copy:
+    dest: "{{ uip_report_yml }}"
+    owner: root
+    group: root
+    mode: "0640"
+    content: "{{ uip_report | to_nice_yaml }}"
+- name: Write JSON report
+  ansible.builtin.copy:
+    dest: "{{ uip_report_json }}"
+    owner: root
+    group: root
+    mode: "0640"
+    content: "{{ uip_report | to_nice_json }}"

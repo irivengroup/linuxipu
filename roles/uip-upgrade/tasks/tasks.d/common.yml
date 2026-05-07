@@ -1,0 +1,25 @@
+---
+- name: Update UIP state to upgrade_started
+  ansible.builtin.copy:
+    dest: "{{ uip_state_file }}"
+    owner: root
+    group: root
+    mode: "0640"
+    content: |
+      host: "{{ inventory_hostname }}"
+      os: "{{ uip_os }}"
+      src_ver: "{{ uip_src_ver }}"
+      dst_ver: "{{ uip_dst_ver }}"
+      path: "{{ uip_path_key }}"
+      repo_mgr: "{{ uip_repo_mgr }}"
+      state: "upgrade_started"
+      updated_at: "{{ ansible_date_time.iso8601 }}"
+
+- name: Assert active lock before upgrade
+  ansible.builtin.stat:
+    path: "{{ uip_lock_file }}"
+  register: uip_upgrade_lock
+- name: Fail when lock is missing
+  ansible.builtin.fail:
+    msg: "Missing {{ uip_lock_file }}. Upgrade cannot continue."
+  when: not uip_upgrade_lock.stat.exists

@@ -1,6 +1,0 @@
-- name: Archive state directory
-  archive:
-    path: "{{ linux_upgrade_state_dir }}"
-    dest: "{{ linux_upgrade_artifacts_archive_dir }}/{{ linux_upgrade_artifacts_archive_name }}"
-    format: gz
-  when: linux_upgrade_artifacts_archive_enabled | bool

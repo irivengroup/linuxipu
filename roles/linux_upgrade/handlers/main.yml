@@ -1,9 +1,0 @@
-- name: restart NetworkManager
-  service:
-    name: NetworkManager
-    state: restarted
-
-- name: update grub debian
-  command: update-grub
-  changed_when: true
-  when: ansible_os_family == 'Debian'

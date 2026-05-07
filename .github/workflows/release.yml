@@ -1,0 +1,33 @@
+---
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Create GitHub release archive
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build release archives
+        run: |
+          set -euo pipefail
+          zip -r linux-uip.zip .             -x ".git/*"             -x ".github/*"
+          tar             --exclude='.git'             --exclude='.github'             -czf linux-uip.tar.gz .
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            linux-uip.zip
+            linux-uip.tar.gz

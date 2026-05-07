@@ -1,1 +1,0 @@
-# Runbook\n\nAssessment, pré-upgrade, exécution, post-checks et rollback.

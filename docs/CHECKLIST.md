@@ -1,1 +1,0 @@
-# Checklist\n\nChange ticket, compatibilité, rollback, réseau, FS, cluster.

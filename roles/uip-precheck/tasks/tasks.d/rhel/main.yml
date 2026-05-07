@@ -1,0 +1,61 @@
+---
+- name: RHEL | Assert subscription-manager is available
+  ansible.builtin.command: subscription-manager status
+  register: uip_rhsm_status
+  changed_when: false
+  failed_when: false
+  tags: [uip_precheck, uip_precheck_rhel, uip_precheck_sys]
+
+- name: RHEL | Assert RHSM status is acceptable for native or Satellite repos
+  ansible.builtin.assert:
+    that:
+      - uip_repo_mgr not in ['native', 'satellite'] or uip_rhsm_status.rc in [0, 1]
+    fail_msg: "RHEL subscription-manager status failed. Check registration/Satellite attachment."
+  tags: [uip_precheck, uip_precheck_rhel, uip_precheck_sys]
+
+- name: RHEL | Check enabled repositories
+  ansible.builtin.command: "{{ 'dnf' if uip_pkg_mgr == 'dnf' else 'yum' }} repolist enabled"
+  register: uip_rhel_repolist
+  changed_when: false
+  failed_when: uip_rhel_repolist.rc != 0
+  tags: [uip_precheck, uip_precheck_rhel, uip_precheck_sys]
+
+- name: RHEL | Check rpm database
+  ansible.builtin.command: rpm --verifydb
+  register: uip_rpmdb_check
+  changed_when: false
+  failed_when: uip_rpmdb_check.rc != 0
+  tags: [uip_precheck, uip_precheck_rhel, uip_precheck_sys]
+
+- name: RHEL | Check excluded packages
+  ansible.builtin.shell: |
+    set -o pipefail
+    grep -Rhs '^exclude=' /etc/yum.conf /etc/dnf/dnf.conf /etc/yum.repos.d/*.repo 2>/dev/null || true
+  args:
+    executable: /bin/bash
+  register: uip_rhel_excludes
+  changed_when: false
+  failed_when: uip_pre_block_if_excluded_pkgs | bool and (uip_rhel_excludes.stdout | trim | length > 0)
+  tags: [uip_precheck, uip_precheck_rhel, uip_precheck_sys]
+
+- name: RHEL | Install Leapp for RHEL 7+ or preupgrade tools for RHEL 6
+  ansible.builtin.package:
+    name: "{{ 'leapp-upgrade' if uip_src_ver | int >= 7 else 'preupgrade-assistant' }}"
+    state: present
+  failed_when: false
+  tags: [uip_precheck, uip_precheck_rhel]
+
+- name: RHEL | Run ecosystem precheck tool
+  ansible.builtin.command: "{{ uip_pre_tool }}"
+  register: uip_precheck_out
+  changed_when: false
+  failed_when: false
+  tags: [uip_precheck, uip_precheck_rhel]
+
+- name: RHEL | Block on known inhibitors
+  ansible.builtin.assert:
+    that:
+      - "'inhibitor' not in (uip_precheck_out.stdout | lower)"
+    fail_msg: "RHEL upgrade inhibitors detected. Review precheck output/report."
+  when: uip_precheck_out.stdout is defined
+  tags: [uip_precheck, uip_precheck_rhel]

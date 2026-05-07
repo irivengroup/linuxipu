@@ -1,0 +1,52 @@
+---
+- name: Refresh facts after upgrade
+  ansible.builtin.setup:
+  tags:
+    - uip_postcheck
+
+- name: Assert target version reached
+    - uip_postupgrade
+  ansible.builtin.assert:
+    that:
+      - ansible_distribution_version is search(uip_dst_ver | string) or ansible_distribution_major_version | string == uip_dst_ver | string
+    fail_msg: "Target version {{ uip_dst_ver }} not detected after upgrade."
+  tags:
+    - uip_postcheck
+
+- name: Re-enforce target repositories after upgrade
+  ansible.builtin.include_role:
+    name: uip-repos
+  vars:
+    uip_repo_enforce_target: true
+  tags:
+    - uip_postcheck
+    - uip_repos_enforce_target
+
+- name: Run health commands
+  ansible.builtin.shell: "{{ item }}"
+  loop: "{{ uip_health_cmds }}"
+  register: uip_health
+  changed_when: false
+  failed_when: false
+  tags:
+    - uip_postcheck
+
+- name: Write done marker
+  ansible.builtin.copy:
+    dest: "{{ uip_done_file }}"
+    mode: "0640"
+    content: |
+      host: "{{ inventory_hostname }}"
+      path: "{{ uip_path_key }}"
+      state: "completed"
+      repo_mgr: "{{ uip_repo_mgr }}"
+      completed_at: "{{ ansible_date_time.iso8601 }}"
+  tags:
+    - uip_postcheck
+
+- name: Remove active lock after successful postcheck
+  ansible.builtin.file:
+    path: "{{ uip_lock_file }}"
+    state: absent
+  tags:
+    - uip_postcheck

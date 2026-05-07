@@ -1,0 +1,10 @@
+---
+- name: Discover DEB packages
+  ansible.builtin.command: dpkg-query -W
+  register: uip_pkg_list
+  changed_when: false
+- name: Discover held packages
+  ansible.builtin.command: apt-mark showhold
+  register: uip_apt_holds
+  changed_when: false
+  failed_when: false

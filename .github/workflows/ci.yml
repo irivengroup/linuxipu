@@ -1,11 +1,150 @@
-name: ci
+---
+name: CI
+
 on:
   push:
+    branches:
+      - main
+      - master
+      - develop
   pull_request:
+    branches:
+      - main
+      - master
+      - develop
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
 jobs:
-  lint-and-structure:
+  lint:
+    name: Lint Ansible and YAML
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - name: Basic tree check
-        run: test -f roles/linux_upgrade/tasks/main.yml
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install lint dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ansible-core ansible-lint yamllint
+
+      - name: Install Ansible collections
+        run: |
+          if [ -f requirements.yml ]; then
+            ansible-galaxy collection install -r requirements.yml
+          fi
+
+      - name: Run yamllint
+        run: yamllint .
+
+      - name: Run ansible-lint
+        run: ansible-lint playbooks/*.yml roles
+
+  syntax:
+    name: Ansible syntax check
+    runs-on: ubuntu-latest
+    needs:
+      - lint
+
+    strategy:
+      fail-fast: false
+      matrix:
+        playbook:
+          - playbooks/uip.yml
+          - playbooks/uip-rollback.yml
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Ansible
+        run: |
+          python -m pip install --upgrade pip
+          pip install ansible-core
+
+      - name: Install Ansible collections
+        run: |
+          if [ -f requirements.yml ]; then
+            ansible-galaxy collection install -r requirements.yml
+          fi
+
+      - name: Syntax check
+        run: ansible-playbook --syntax-check "${{ matrix.playbook }}"
+
+  structure:
+    name: Framework structure checks
+    runs-on: ubuntu-latest
+    needs:
+      - lint
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate mandatory roles
+        run: |
+          set -euo pipefail
+          for role in             uip-common             uip-lock             uip-discovery             uip-repos             uip-snapshot             uip-precheck             uip-update             uip-remediate             uip-upgrade             uip-reboot             uip-postcheck             uip-report             uip-rollback
+          do
+            test -d "roles/${role}" || {
+              echo "Missing role: ${role}"
+              exit 1
+            }
+          done
+
+      - name: Validate transverse tags
+        run: |
+          set -euo pipefail
+          grep -R "uip_preupgrade" playbooks roles
+          grep -R "uip_postupgrade" playbooks roles
+
+      - name: Validate no group_vars directory
+        run: |
+          set -euo pipefail
+          if [ -d group_vars ]; then
+            echo "group_vars is forbidden. Use roles/uip-common instead."
+            exit 1
+          fi
+
+      - name: Validate mappings are centralized
+        run: |
+          set -euo pipefail
+          test -f roles/uip-common/vars/main.yml
+          grep -q "^uip_paths:" roles/uip-common/vars/main.yml
+          grep -q "^uip_repo_map:" roles/uip-common/vars/main.yml
+
+  package:
+    name: Package artifact
+    runs-on: ubuntu-latest
+    needs:
+      - syntax
+      - structure
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build archive
+        run: |
+          set -euo pipefail
+          tar             --exclude='.git'             --exclude='.github'             -czf linux-uip.tar.gz .
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-uip
+          path: linux-uip.tar.gz
+          if-no-files-found: error

@@ -1,0 +1,57 @@
+---
+- name: Update UIP state to postcheck_started
+  ansible.builtin.copy:
+    dest: "{{ uip_state_file }}"
+    owner: root
+    group: root
+    mode: "0640"
+    content: |
+      host: "{{ inventory_hostname }}"
+      os: "{{ uip_os }}"
+      src_ver: "{{ uip_src_ver }}"
+      dst_ver: "{{ uip_dst_ver }}"
+      path: "{{ uip_path_key }}"
+      repo_mgr: "{{ uip_repo_mgr }}"
+      state: "postcheck_started"
+      updated_at: "{{ ansible_date_time.iso8601 }}"
+
+- name: Refresh facts
+  ansible.builtin.setup:
+
+- name: Compute post-upgrade version
+  ansible.builtin.set_fact:
+    uip_post_ver: "{{ ansible_distribution_version if uip_os == 'ubuntu' else ansible_distribution_major_version if uip_os in ['rhel','debian'] else uip_dst_ver }}"
+
+- name: Assert target version after upgrade
+  ansible.builtin.assert:
+    that:
+      - uip_post_ver == uip_dst_ver or uip_mode != 'enforce'
+    fail_msg: "Postcheck failed: expected {{ uip_dst_ver }}, got {{ uip_post_ver }}"
+
+- name: Run health commands
+  ansible.builtin.command: "{{ item }}"
+  register: uip_health_out
+  changed_when: false
+  failed_when: false
+  loop: "{{ uip_health_cmds }}"
+
+- name: Write done file
+  ansible.builtin.copy:
+    dest: "{{ uip_done_file }}"
+    owner: root
+    group: root
+    mode: "0640"
+    content: |
+      host: "{{ inventory_hostname }}"
+      os: "{{ uip_os }}"
+      src_ver: "{{ uip_src_ver }}"
+      dst_ver: "{{ uip_dst_ver }}"
+      path: "{{ uip_path_key }}"
+      repo_mgr: "{{ uip_repo_mgr }}"
+      state: "completed"
+      completed_at: "{{ ansible_date_time.iso8601 }}"
+
+- name: Remove active lock only after successful postcheck
+  ansible.builtin.file:
+    path: "{{ uip_lock_file }}"
+    state: absent

@@ -1,0 +1,58 @@
+---
+- name: Assert update-before-upgrade is enabled
+  ansible.builtin.assert:
+    that:
+      - uip_update_before_upgrade | bool
+    fail_msg: "uip_update_before_upgrade is disabled; baseline update is mandatory before upgrade."
+  tags:
+    - uip_update
+    - uip_preupgrade
+
+- name: Run RHEL baseline update
+  ansible.builtin.import_tasks: tasks.d/rhel.yml
+  when: uip_os == "rhel"
+  tags:
+    - uip_update
+    - uip_update_rhel
+    - uip_preupgrade
+
+- name: Run Debian or Ubuntu baseline update
+  ansible.builtin.import_tasks: tasks.d/apt.yml
+  when: uip_os in ["ubuntu", "debian"]
+  tags:
+    - uip_update
+    - uip_update_apt
+    - uip_preupgrade
+
+- name: Run SUSE baseline update
+  ansible.builtin.import_tasks: tasks.d/suse.yml
+  when: uip_os == "sles"
+  tags:
+    - uip_update
+    - uip_update_suse
+    - uip_preupgrade
+
+- name: Reboot after baseline update when required
+  ansible.builtin.include_role:
+    name: uip-reboot
+  vars:
+    uip_reboot_reason: "baseline_update"
+    uip_reboot_current_step: "uip-update"
+    uip_reboot_next_step: "uip-remediate"
+  when:
+    - uip_update_reboot_required | default(false) | bool
+    - uip_allow_reboot | bool
+  tags:
+    - uip_update
+    - uip_update_reboot
+    - uip_preupgrade
+
+- name: Refresh facts after baseline update reboot
+  ansible.builtin.setup:
+  when:
+    - uip_update_reboot_required | default(false) | bool
+    - uip_allow_reboot | bool
+  tags:
+    - uip_update
+    - uip_update_reboot
+    - uip_preupgrade
