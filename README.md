@@ -358,34 +358,3 @@ Project Initiator — IRIVEN Group
 ## Copyright
 
 © IRIVEN Group — All Rights Reserved
-
-
-
-
-
-## Satellite Autonomy
-
-Linux UIP does not require the `redhat.satellite` collection.
-
-Satellite support is implemented client-side with native Ansible modules and
-standard Red Hat commands:
-
-```bash
-subscription-manager identity
-subscription-manager status
-subscription-manager repos --disable=<repo>
-subscription-manager repos --enable=<repo>
-yum makecache
-dnf makecache
-```
-
-This keeps the framework compatible with:
-
-- public GitHub Actions runners
-- disconnected environments
-- custom execution environments
-- AAP environments without certified Satellite collections
-
-Satellite Content Views and Lifecycle Environments must already be published and
-promoted by the enterprise repository governance process. UIP consumes these
-approved repositories and enforces the target OS repository state on the host.

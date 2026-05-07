@@ -5,6 +5,7 @@
   register: uip_airgap
   tags:
     - uip_repos_airgap
+    - uip_preupgrade
 
 - name: Fail if airgap target repository is missing
   ansible.builtin.fail:
@@ -12,6 +13,7 @@
   when: not uip_airgap.stat.exists
   tags:
     - uip_repos_airgap
+    - uip_preupgrade
 
 - name: Configure airgap RPM target repository
   ansible.builtin.copy:
@@ -26,13 +28,18 @@
   when: uip_pkg_mgr in ['yum', 'dnf', 'zypper']
   tags:
     - uip_repos_airgap
+    - uip_preupgrade
 
 - name: Configure airgap APT target repository
   ansible.builtin.copy:
     dest: "{{ uip_repo_def.dst_list_file }}"
     mode: "0644"
     content: |
-      deb [trusted={{ 'no' if uip_repo_gpg else 'yes' }}] {{ uip_repo_def.dst_url }} {{ uip_repo_def.dst_suite }} {{ uip_repo_def.components | default(['main']) | join(' ') }}
+      deb [trusted={{ uip_apt_trusted }}] {{ uip_repo_def.dst_url }} {{ uip_repo_def.dst_suite }} {{ uip_repo_components }}
+  vars:
+    uip_apt_trusted: "{{ 'no' if uip_repo_gpg else 'yes' }}"
+    uip_repo_components: "{{ uip_repo_def.components | default(['main']) | join(' ') }}"
   when: uip_pkg_mgr == "apt"
   tags:
     - uip_repos_airgap
+    - uip_preupgrade
