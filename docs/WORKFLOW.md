@@ -1,14 +1,12 @@
 # UIP Workflow
 
-`uip-update` is not called directly from the main playbook.
-
 Execution flow:
 
 ```text
 uip-common
 uip-lock
 uip-discovery
-uip-repos
+  -> uip-repos
 uip-snapshot
 uip-precheck
   -> uip-update
@@ -19,4 +17,5 @@ uip-postcheck
 uip-report
 ```
 
-`uip-precheck` invokes `uip-update` only after ecosystem prechecks have completed.
+`uip-repos` is called by `uip-discovery`.
+`uip-update` is called by `uip-precheck`.

@@ -22,11 +22,6 @@
         - uip_discovery
         - uip_preupgrade
 
-    - role: uip-repos
-      tags:
-        - uip_repos
-        - uip_preupgrade
-
     - role: uip-snapshot
       tags:
         - uip_snapshot

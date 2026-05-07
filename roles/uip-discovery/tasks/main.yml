@@ -21,3 +21,11 @@
   tags:
     - uip_discovery
     - uip_discovery_pkg
+
+- name: Run repository manager handling after discovery
+  ansible.builtin.include_role:
+    name: uip-repos
+  tags:
+    - uip_discovery
+    - uip_repos
+    - uip_preupgrade
