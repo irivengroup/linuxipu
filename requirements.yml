@@ -3,8 +3,6 @@ collections:
   - name: ansible.posix
   - name: community.general
   - name: community.crypto
-  - name: openstack.cloud
-  - name: vmware.vmware  
   - name: community.vmware
   - name: amazon.aws
   - name: azure.azcollection

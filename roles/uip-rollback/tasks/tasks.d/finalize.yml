@@ -1,0 +1,29 @@
+---
+- name: Optionally clear UIP active lock after rollback
+  ansible.builtin.file:
+    path: "{{ uip_lock_file }}"
+    state: absent
+  when:
+    - uip_rollback_clear_lock | bool
+  tags:
+    - uip_rollback
+    - uip_rollback_finalize
+
+- name: Persist rollback completion report
+  ansible.builtin.copy:
+    dest: "{{ uip_rollback_report_file }}"
+    owner: root
+    group: root
+    mode: "0640"
+    content: |
+      host: "{{ inventory_hostname }}"
+      os: "{{ uip_os | default('unknown') }}"
+      src_ver: "{{ uip_src_ver | default('unknown') }}"
+      dst_ver: "{{ uip_dst_ver | default('unknown') }}"
+      path: "{{ uip_path_key | default('unknown') }}"
+      state: "rollback_completed"
+      lock_cleared: "{{ uip_rollback_clear_lock }}"
+      completed_at: "{{ ansible_date_time.iso8601 }}"
+  tags:
+    - uip_rollback
+    - uip_rollback_finalize

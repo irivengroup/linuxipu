@@ -1,4 +1,12 @@
 ---
+- name: Detect UEFI boot mode
+  ansible.builtin.stat:
+    path: /sys/firmware/efi
+  register: uip_efi_mode
+  tags:
+    - uip_precheck
+    - uip_precheck_sys
+    - uip_preupgrade
 - name: Define critical filesystem requirements
   ansible.builtin.set_fact:
     uip_pre_fs_req:
@@ -65,4 +73,33 @@
   tags:
     - uip_precheck
     - uip_precheck_fs
+    - uip_preupgrade
+
+- name: Append /boot/efi critical filesystem report when system is UEFI
+  ansible.builtin.set_fact:
+    uip_fs_report: "{{ uip_fs_report + [uip_boot_efi_item] }}"
+  vars:
+    uip_boot_efi_mount: >-
+      {{
+        (
+          ansible_mounts
+          | selectattr('mount', 'equalto', '/boot/efi')
+          | list
+          | first
+        ) | default({})
+      }}
+    uip_boot_efi_free_mb: "{{ (uip_boot_efi_mount.size_available | default(0) | int) // 1024 // 1024 }}"
+    uip_boot_efi_item:
+      name: "boot_efi"
+      path: "/boot/efi"
+      free_mb: "{{ uip_boot_efi_free_mb | int }}"
+      status: "{{ 'ok' if (uip_boot_efi_free_mb | int) >= (uip_pre_min_boot_efi_mb | int) else 'ko' }}"
+      min_required_mb: "{{ uip_pre_min_boot_efi_mb | int }}"
+      mount: "{{ uip_boot_efi_mount.mount | default('/boot/efi') }}"
+      fstype: "{{ uip_boot_efi_mount.fstype | default('unknown') }}"
+  when:
+    - uip_efi_mode.stat.exists
+  tags:
+    - uip_precheck
+    - uip_precheck_sys
     - uip_preupgrade

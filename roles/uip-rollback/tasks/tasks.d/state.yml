@@ -1,0 +1,67 @@
+---
+- name: Check UIP state file before rollback
+  ansible.builtin.stat:
+    path: "{{ uip_state_file }}"
+  register: uip_rollback_state_stat
+  tags:
+    - uip_rollback
+    - uip_rollback_state
+
+- name: Assert UIP state file exists when required
+  ansible.builtin.assert:
+    that:
+      - not (uip_rollback_require_state | bool) or uip_rollback_state_stat.stat.exists
+    fail_msg: >-
+      Rollback requires {{ uip_state_file }}, but the file is missing.
+      Disable uip_rollback_require_state only with operator approval.
+  tags:
+    - uip_rollback
+    - uip_rollback_state
+
+- name: Read UIP state file
+  ansible.builtin.slurp:
+    src: "{{ uip_state_file }}"
+  register: uip_rollback_state_raw
+  when: uip_rollback_state_stat.stat.exists
+  tags:
+    - uip_rollback
+    - uip_rollback_state
+
+- name: Decode UIP state file
+  ansible.builtin.set_fact:
+    uip_rollback_state: "{{ uip_rollback_state_raw.content | b64decode | from_yaml }}"
+  when: uip_rollback_state_stat.stat.exists
+  tags:
+    - uip_rollback
+    - uip_rollback_state
+
+- name: Validate rollback path consistency
+  ansible.builtin.assert:
+    that:
+      - uip_rollback_state is not defined
+        or uip_rollback_state.path is not defined
+        or uip_rollback_state.path == uip_path_key
+    fail_msg: >-
+      Rollback path mismatch. State file path={{ uip_rollback_state.path | default('unknown') }},
+      requested path={{ uip_path_key }}.
+  tags:
+    - uip_rollback
+    - uip_rollback_state
+
+- name: Persist rollback start state
+  ansible.builtin.copy:
+    dest: "{{ uip_rollback_report_file }}"
+    owner: root
+    group: root
+    mode: "0640"
+    content: |
+      host: "{{ inventory_hostname }}"
+      os: "{{ uip_os | default('unknown') }}"
+      src_ver: "{{ uip_src_ver | default('unknown') }}"
+      dst_ver: "{{ uip_dst_ver | default('unknown') }}"
+      path: "{{ uip_path_key | default('unknown') }}"
+      state: "rollback_started"
+      started_at: "{{ ansible_date_time.iso8601 }}"
+  tags:
+    - uip_rollback
+    - uip_rollback_state

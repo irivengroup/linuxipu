@@ -1,0 +1,31 @@
+---
+- name: Check original fstab backup for rollback
+  ansible.builtin.stat:
+    path: "{{ uip_remediate_fstab_backup }}"
+  register: uip_rollback_fstab_backup
+  tags:
+    - uip_rollback
+    - uip_rollback_fstab
+
+- name: Restore original fstab during rollback
+  ansible.builtin.copy:
+    src: "{{ uip_remediate_fstab_backup }}"
+    dest: /etc/fstab
+    owner: root
+    group: root
+    mode: "0644"
+    remote_src: true
+  when: uip_rollback_fstab_backup.stat.exists
+  tags:
+    - uip_rollback
+    - uip_rollback_fstab
+
+- name: Validate restored fstab during rollback
+  ansible.builtin.command: findmnt --verify --tab-file /etc/fstab
+  register: uip_rollback_fstab_verify
+  changed_when: false
+  failed_when: uip_rollback_fstab_verify.rc != 0
+  when: uip_rollback_fstab_backup.stat.exists
+  tags:
+    - uip_rollback
+    - uip_rollback_fstab
