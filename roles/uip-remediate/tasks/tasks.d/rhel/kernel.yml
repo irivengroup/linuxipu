@@ -1,0 +1,44 @@
+---
+- name: Detect running kernel on RHEL
+  ansible.builtin.command: uname -r
+  register: uip_running_kernel
+  changed_when: false
+  tags:
+    - uip_remediate
+    - uip_remediate_rhel
+    - uip_remediate_kernel
+    - uip_preupgrade
+
+- name: Ensure yum-utils for legacy RHEL kernel cleanup
+  ansible.builtin.package:
+    name: yum-utils
+    state: present
+  when: uip_src_ver | string == "6"
+  tags:
+    - uip_remediate
+    - uip_remediate_rhel
+    - uip_remediate_kernel
+    - uip_preupgrade
+
+- name: Clean old kernels on RHEL
+  ansible.builtin.command: "package-cleanup --oldkernels --count={{ uip_remediate_kernel_keep }} -y"
+  register: uip_kernel_cleanup_rhel
+  changed_when: "'No old kernels to remove' not in (uip_kernel_cleanup_rhel.stdout | default(''))"
+  failed_when: false
+  when: uip_remediate_boot_cleanup | bool
+  tags:
+    - uip_remediate
+    - uip_remediate_rhel
+    - uip_remediate_kernel
+    - uip_preupgrade
+
+- name: Remove obsolete weak modules on RHEL
+  ansible.builtin.command: weak-modules --remove-kernel "{{ uip_running_kernel.stdout }}"
+  register: uip_weak_modules
+  changed_when: false
+  failed_when: false
+  tags:
+    - uip_remediate
+    - uip_remediate_rhel
+    - uip_remediate_kernel
+    - uip_preupgrade

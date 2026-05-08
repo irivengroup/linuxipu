@@ -1,0 +1,23 @@
+---
+- name: Detect SUSE GRUB command
+  ansible.builtin.command: command -v grub2-mkconfig
+  register: uip_suse_grub2_cmd
+  changed_when: false
+  failed_when: false
+  tags:
+    - uip_remediate
+    - uip_remediate_suse
+    - uip_remediate_grub
+    - uip_preupgrade
+
+- name: Reconfigure SUSE GRUB2
+  ansible.builtin.command: "{{ uip_suse_grub2_cmd.stdout }} -o /boot/grub2/grub.cfg"
+  register: uip_suse_grub_reconfigure
+  changed_when: true
+  failed_when: uip_suse_grub_reconfigure.rc != 0
+  when: uip_suse_grub2_cmd.rc == 0
+  tags:
+    - uip_remediate
+    - uip_remediate_suse
+    - uip_remediate_grub
+    - uip_preupgrade

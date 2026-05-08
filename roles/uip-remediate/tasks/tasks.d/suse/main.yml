@@ -3,3 +3,34 @@
   ansible.builtin.command: zypper --non-interactive refresh
   changed_when: false
   failed_when: false
+  tags:
+    - uip_remediate
+    - uip_remediate_suse
+    - uip_remediate_Refresh_repo
+    - uip_preupgrade
+
+- name: Include SUSE kernel remediation tasks
+  ansible.builtin.import_tasks: kernel.yml
+  tags:
+    - uip_remediate
+    - uip_remediate_suse
+    - uip_remediate_kernel
+    - uip_preupgrade
+
+- name: Include SUSE GRUB remediation tasks
+  ansible.builtin.import_tasks: grub.yml
+  when: uip_remediate_grub_reconfigure | bool
+  tags:
+    - uip_remediate
+    - uip_remediate_suse
+    - uip_remediate_grub
+    - uip_preupgrade
+
+- name: Include SUSE inhibitor remediation tasks
+  ansible.builtin.import_tasks: inhibitors.yml
+  when: uip_remediate_fix_inhibitors | bool
+  tags:
+    - uip_remediate
+    - uip_remediate_suse
+    - uip_remediate_inhibitors
+    - uip_preupgrade

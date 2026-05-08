@@ -1,0 +1,12 @@
+---
+- name: List orphaned SUSE packages
+  ansible.builtin.command: zypper --non-interactive packages --orphaned
+  register: uip_suse_orphans
+  changed_when: false
+  failed_when: false
+  when: uip_remediate_boot_cleanup | bool
+  tags:
+    - uip_remediate
+    - uip_remediate_suse
+    - uip_remediate_kernel
+    - uip_preupgrade

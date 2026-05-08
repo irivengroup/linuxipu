@@ -1,0 +1,32 @@
+---
+- name: Install RHEL 6 to 7 legacy upgrade tooling
+  ansible.builtin.package:
+    name:
+      - preupgrade-assistant
+      - redhat-upgrade-tool
+    state: present
+  when:
+    - uip_src_ver | string == "6"
+    - uip_dst_ver | string == "7"
+  tags:
+    - uip_remediate
+    - uip_remediate_rhel
+    - uip_remediate_inhibitors
+    - uip_preupgrade
+
+- name: Fix common RHEL Leapp inhibitors
+  ansible.builtin.copy:
+    dest: /etc/leapp/answers/answerfile
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      [remove_pam_pkcs11_module_check]
+      confirm = True
+  when:
+    - uip_src_ver | string in ["7", "8", "9"]
+  tags:
+    - uip_remediate
+    - uip_remediate_rhel
+    - uip_remediate_inhibitors
+    - uip_preupgrade

@@ -1,0 +1,22 @@
+---
+- name: Clear interrupted Debian dpkg state
+  ansible.builtin.command: dpkg --configure -a
+  register: uip_dpkg_configure
+  changed_when: false
+  failed_when: false
+  tags:
+    - uip_remediate
+    - uip_remediate_debian
+    - uip_remediate_inhibitors
+    - uip_preupgrade
+
+- name: Repair Debian package dependencies
+  ansible.builtin.command: apt-get -f install -y
+  register: uip_apt_fix_install
+  changed_when: false
+  failed_when: false
+  tags:
+    - uip_remediate
+    - uip_remediate_debian
+    - uip_remediate_inhibitors
+    - uip_preupgrade

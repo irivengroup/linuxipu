@@ -1,0 +1,23 @@
+---
+- name: Detect Ubuntu GRUB command
+  ansible.builtin.command: command -v update-grub
+  register: uip_update_grub_cmd
+  changed_when: false
+  failed_when: false
+  tags:
+    - uip_remediate
+    - uip_remediate_ubuntu
+    - uip_remediate_grub
+    - uip_preupgrade
+
+- name: Reconfigure Ubuntu GRUB
+  ansible.builtin.command: update-grub
+  register: uip_ubuntu_update_grub
+  changed_when: true
+  failed_when: uip_ubuntu_update_grub.rc != 0
+  when: uip_update_grub_cmd.rc == 0
+  tags:
+    - uip_remediate
+    - uip_remediate_ubuntu
+    - uip_remediate_grub
+    - uip_preupgrade

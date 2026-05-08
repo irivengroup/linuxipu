@@ -19,24 +19,34 @@
     - uip_remediate_fs
     - uip_preupgrade
 
-- name: Include kernel cleanup tasks
-  ansible.builtin.import_tasks: tasks.d/kernel.yml
+- name: Include RHEL remediation tasks
+  ansible.builtin.import_tasks: tasks.d/rhel/main.yml
+  when: uip_os == "rhel"
   tags:
     - uip_remediate
-    - uip_remediate_kernel
+    - uip_remediate_rhel
     - uip_preupgrade
 
-- name: Include GRUB remediation tasks
-  ansible.builtin.import_tasks: tasks.d/grub.yml
+- name: Include Debian remediation tasks
+  ansible.builtin.import_tasks: tasks.d/debian/main.yml
+  when: uip_os == "debian"
   tags:
     - uip_remediate
-    - uip_remediate_grub
+    - uip_remediate_debian
     - uip_preupgrade
 
-- name: Include inhibitor remediation tasks
-  ansible.builtin.import_tasks: tasks.d/inhibitors.yml
-  when: uip_remediate_fix_inhibitors | bool
+- name: Include Ubuntu remediation tasks
+  ansible.builtin.import_tasks: tasks.d/ubuntu/main.yml
+  when: uip_os == "ubuntu"
   tags:
     - uip_remediate
-    - uip_remediate_inhibitors
+    - uip_remediate_ubuntu
+    - uip_preupgrade
+
+- name: Include SUSE remediation tasks
+  ansible.builtin.import_tasks: tasks.d/suse/main.yml
+  when: uip_os == "sles"
+  tags:
+    - uip_remediate
+    - uip_remediate_suse
     - uip_preupgrade

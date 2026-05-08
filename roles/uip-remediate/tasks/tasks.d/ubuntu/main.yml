@@ -6,7 +6,7 @@
   failed_when: false
   tags:
     - uip_remediate
-    - uip_remediate_debian
+    - uip_remediate_ubuntu
     - uip_remediate_dpkg
     - uip_preupgrade
 
@@ -19,7 +19,7 @@
     DEBIAN_FRONTEND: noninteractive
   tags:
     - uip_remediate
-    - uip_remediate_debian
+    - uip_remediate_ubuntu
     - uip_remediate_dpkg
     - uip_preupgrade
 
@@ -28,18 +28,7 @@
     update_cache: true
   tags:
     - uip_remediate
-    - uip_remediate_debian
-    - uip_remediate_dpkg
-    - uip_preupgrade
-
-- name: Verify package consistency before major upgrade
-  ansible.builtin.command: apt-get check
-  register: uip_apt_check
-  changed_when: false
-  failed_when: false
-  tags:
-    - uip_remediate
-    - uip_remediate_debian
+    - uip_remediate_ubuntu
     - uip_remediate_dpkg
     - uip_preupgrade
 
@@ -50,52 +39,45 @@
   failed_when: false
   tags:
     - uip_remediate
-    - uip_remediate_debian
+    - uip_remediate_ubuntu
     - uip_remediate_dpkg
     - uip_preupgrade
 
-- name: Fail if package issues still exist
+- name: Fail if dpkg issues still exist
   ansible.builtin.fail:
     msg: |
-      Remaining Debian package issues detected
-
-      apt-get check:
-      {{ uip_apt_check.stdout }}
-
-      dpkg audit:
+      Remaining dpkg issues detected:
       {{ uip_dpkg_audit.stdout }}
   when:
-    - uip_apt_check.rc != 0
-      or
-      (uip_dpkg_audit.stdout | length > 0)
+    - uip_dpkg_audit.stdout | length > 0
   tags:
     - uip_remediate
-    - uip_remediate_debian
+    - uip_remediate_ubuntu
     - uip_remediate_dpkg
     - uip_preupgrade
     
-- name: Include DEBIAN kernel remediation tasks
+- name: Include UBUNTU kernel remediation tasks
   ansible.builtin.import_tasks: kernel.yml
   tags:
     - uip_remediate
-    - uip_remediate_debian
+    - uip_remediate_ubuntu
     - uip_remediate_kernel
     - uip_preupgrade
 
-- name: Include DEBIAN GRUB remediation tasks
+- name: Include UBUNTU GRUB remediation tasks
   ansible.builtin.import_tasks: grub.yml
   when: uip_remediate_grub_reconfigure | bool
   tags:
     - uip_remediate
-    - uip_remediate_debian
+    - uip_remediate_ubuntu
     - uip_remediate_grub
     - uip_preupgrade
 
-- name: Include DEBIAN inhibitor remediation tasks
+- name: Include UBUNTU inhibitor remediation tasks
   ansible.builtin.import_tasks: inhibitors.yml
   when: uip_remediate_fix_inhibitors | bool
   tags:
     - uip_remediate
-    - uip_remediate_debian
+    - uip_remediate_ubuntu
     - uip_remediate_inhibitors
     - uip_preupgrade

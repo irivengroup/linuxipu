@@ -4,3 +4,34 @@
   changed_when: false
   failed_when: false
   when: uip_upg_tool == 'leapp'
+  tags:
+    - uip_remediate
+    - uip_remediate_rhel
+    - uip_remediate_answerfile
+    - uip_preupgrade
+
+- name: Include RHEL kernel remediation tasks
+  ansible.builtin.import_tasks: kernel.yml
+  tags:
+    - uip_remediate
+    - uip_remediate_rhel
+    - uip_remediate_kernel
+    - uip_preupgrade
+
+- name: Include RHEL GRUB remediation tasks
+  ansible.builtin.import_tasks: grub.yml
+  when: uip_remediate_grub_reconfigure | bool
+  tags:
+    - uip_remediate
+    - uip_remediate_rhel
+    - uip_remediate_grub
+    - uip_preupgrade
+
+- name: Include RHEL inhibitor remediation tasks
+  ansible.builtin.import_tasks: inhibitors.yml
+  when: uip_remediate_fix_inhibitors | bool
+  tags:
+    - uip_remediate
+    - uip_remediate_rhel
+    - uip_remediate_inhibitors
+    - uip_preupgrade

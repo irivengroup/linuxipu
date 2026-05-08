@@ -1,0 +1,61 @@
+---
+- name: Detect RHEL firmware boot mode
+  ansible.builtin.set_fact:
+    uip_boot_mode: "{{ 'uefi' if ansible_facts.efi is defined and ansible_facts.efi | length > 0 else 'bios' }}"
+  tags:
+    - uip_remediate
+    - uip_remediate_rhel
+    - uip_remediate_grub
+    - uip_preupgrade
+
+- name: Detect RHEL GRUB2 command
+  ansible.builtin.command: command -v grub2-mkconfig
+  register: uip_grub2_cmd
+  changed_when: false
+  failed_when: false
+  tags:
+    - uip_remediate
+    - uip_remediate_rhel
+    - uip_remediate_grub
+    - uip_preupgrade
+
+- name: Set RHEL GRUB output path
+  ansible.builtin.set_fact:
+    uip_grub_cfg_path: "{{ '/boot/efi/EFI/redhat/grub.cfg' if uip_boot_mode == 'uefi' else '/boot/grub2/grub.cfg' }}"
+  tags:
+    - uip_remediate
+    - uip_remediate_rhel
+    - uip_remediate_grub
+    - uip_preupgrade
+
+- name: Reconfigure RHEL GRUB2 configuration
+  ansible.builtin.command: "{{ uip_grub2_cmd.stdout }} -o {{ uip_grub_cfg_path }}"
+  register: uip_grub_reconfigure
+  changed_when: true
+  failed_when: uip_grub_reconfigure.rc != 0
+  when: uip_grub2_cmd.rc == 0
+  tags:
+    - uip_remediate
+    - uip_remediate_rhel
+    - uip_remediate_grub
+    - uip_preupgrade
+
+- name: Install RHEL GRUB on BIOS systems
+  ansible.builtin.command: >-
+    grub2-install {{
+      ansible_mounts
+      | selectattr('mount', 'equalto', '/')
+      | map(attribute='device')
+      | first
+    }}
+  register: uip_grub_install
+  changed_when: true
+  failed_when: false
+  when:
+    - uip_boot_mode == "bios"
+    - uip_grub2_cmd.rc == 0
+  tags:
+    - uip_remediate
+    - uip_remediate_rhel
+    - uip_remediate_grub
+    - uip_preupgrade
