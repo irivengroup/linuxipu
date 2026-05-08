@@ -62,7 +62,6 @@
     - uip_discovery
     - uip_preupgrade
 
-
 - name: Restart previously stopped agents after upgrade
   ansible.builtin.service:
     name: "{{ item }}"
@@ -157,4 +156,3 @@
   tags:
     - uip_postcheck
     - uip_postupgrade
-

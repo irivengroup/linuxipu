@@ -32,7 +32,6 @@
     - uip_remediate_agents
     - uip_preupgrade
 
-
 - name: Include bootloader backup tasks
   ansible.builtin.import_tasks: tasks.d/bootloader_backup.yml
   when: uip_bootloader_backup_enabled | bool
@@ -78,4 +77,3 @@
   tags:
     - uip_remediate
     - uip_preupgrade
-
