@@ -73,7 +73,7 @@
     - uip_remediate_debian
     - uip_remediate_dpkg
     - uip_preupgrade
-    
+
 - name: Include DEBIAN kernel remediation tasks
   ansible.builtin.import_tasks: kernel.yml
   tags:

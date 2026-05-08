@@ -55,7 +55,7 @@
     - uip_remediate_ubuntu
     - uip_remediate_dpkg
     - uip_preupgrade
-    
+
 - name: Include UBUNTU kernel remediation tasks
   ansible.builtin.import_tasks: kernel.yml
   tags:
