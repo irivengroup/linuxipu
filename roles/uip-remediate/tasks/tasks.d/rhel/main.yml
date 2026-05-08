@@ -3,7 +3,10 @@
   ansible.builtin.command: leapp answer --section remove_pam_pkcs11_module_check.confirm=True
   changed_when: false
   failed_when: false
-  when: uip_upg_tool == 'leapp'
+  when:
+    - uip_os == "rhel"
+    - uip_src_ver | string in ["7", "8", "9"]
+    - uip_upg_tool == 'leapp'
   tags:
     - uip_remediate
     - uip_remediate_rhel
