@@ -2,56 +2,49 @@
 - name: Assert rollback is enabled
   ansible.builtin.assert:
     that:
-      - uip_rollback_enabled | bool
-    fail_msg: "Rollback is disabled. Set uip_rollback_enabled=true after operator approval."
+    - uip_rollback_enabled | bool
+    fail_msg: Rollback is disabled. Set uip_rollback_enabled=true after operator approval.
   tags:
-    - uip_rollback
-
+  - uip_rollback
 - name: Ensure rollback report directory exists
   ansible.builtin.file:
-    path: "{{ uip_report_dir }}"
+    path: '{{ uip_report_dir }}'
     state: directory
     owner: root
     group: root
-    mode: "0750"
+    mode: '0750'
   tags:
-    - uip_rollback
-
+  - uip_rollback
 - name: Include rollback state validation
   ansible.builtin.import_tasks: tasks.d/state.yml
   tags:
-    - uip_rollback
-    - uip_rollback_state
-
+  - uip_rollback
+  - uip_rollback_state
 - name: Include rollback fstab restoration
   ansible.builtin.import_tasks: tasks.d/fstab.yml
   when: uip_rollback_restore_fstab | bool
   tags:
-    - uip_rollback
-    - uip_rollback_fstab
-
+  - uip_rollback
+  - uip_rollback_fstab
 - name: Include rollback repository restoration
   ansible.builtin.import_tasks: tasks.d/repos.yml
   when: uip_rollback_restore_repos | bool
   tags:
-    - uip_rollback
-    - uip_rollback_repos
-
+  - uip_rollback
+  - uip_rollback_repos
 - name: Include rollback agent restoration
   ansible.builtin.import_tasks: tasks.d/agents.yml
   when: uip_rollback_restart_agents | bool
   tags:
-    - uip_rollback
-    - uip_rollback_agents
-
+  - uip_rollback
+  - uip_rollback_agents
 - name: Include rollback hook execution
   ansible.builtin.import_tasks: tasks.d/hooks.yml
   tags:
-    - uip_rollback
-    - uip_rollback_hooks
-
+  - uip_rollback
+  - uip_rollback_hooks
 - name: Include rollback finalization
   ansible.builtin.import_tasks: tasks.d/finalize.yml
   tags:
-    - uip_rollback
-    - uip_rollback_finalize
+  - uip_rollback
+  - uip_rollback_finalize

@@ -5,57 +5,71 @@
   changed_when: false
   failed_when: false
   tags:
-    - uip_precheck
-    - uip_precheck_boot
-    - uip_preupgrade
-
+  - uip_precheck
+  - uip_precheck_boot
+  - uip_preupgrade
 - name: Check free space for var lib leapp parent
   ansible.builtin.command: df -Pm /var/lib
   register: uip_var_lib_df
   changed_when: false
   failed_when: false
   tags:
-    - uip_precheck
-    - uip_precheck_boot
-    - uip_preupgrade
-
+  - uip_precheck
+  - uip_precheck_boot
+  - uip_preupgrade
 - name: Capture block LVM and multipath inventory
-  ansible.builtin.shell: |
-    set -o pipefail
+  ansible.builtin.shell: 'set -o pipefail
+
     echo "### lsblk"
+
     lsblk -fp || true
+
     echo "### pvs"
+
     pvs || true
+
     echo "### vgs"
+
     vgs || true
+
     echo "### lvs"
+
     lvs || true
+
     echo "### multipath"
+
     multipath -ll || true
+
+    '
   args:
     executable: /bin/bash
   register: uip_storage_inventory
   changed_when: false
   failed_when: false
   tags:
-    - uip_precheck
-    - uip_precheck_boot
-    - uip_preupgrade
-
+  - uip_precheck
+  - uip_precheck_boot
+  - uip_preupgrade
 - name: Persist boot and storage precheck report
   ansible.builtin.copy:
-    dest: "{{ uip_report_dir }}/precheck-boot-storage.yml"
+    dest: '{{ uip_report_dir }}/precheck-boot-storage.yml'
     owner: root
     group: root
-    mode: "0640"
-    content: |
-      boot_inode_df: |
-      {{ uip_boot_inode_df.stdout | default('') | indent(2, true) }}
+    mode: '0640'
+    content: 'boot_inode_df: |
+
+      {{ uip_boot_inode_df.stdout | default('''') | indent(2, true) }}
+
       var_lib_df: |
-      {{ uip_var_lib_df.stdout | default('') | indent(2, true) }}
+
+      {{ uip_var_lib_df.stdout | default('''') | indent(2, true) }}
+
       storage_inventory: |
-      {{ uip_storage_inventory.stdout | default('') | indent(2, true) }}
+
+      {{ uip_storage_inventory.stdout | default('''') | indent(2, true) }}
+
+      '
   tags:
-    - uip_precheck
-    - uip_precheck_boot
-    - uip_preupgrade
+  - uip_precheck
+  - uip_precheck_boot
+  - uip_preupgrade

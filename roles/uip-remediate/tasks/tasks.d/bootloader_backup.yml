@@ -1,65 +1,54 @@
 ---
 - name: Ensure bootloader backup directory exists
   ansible.builtin.file:
-    path: "{{ uip_bootloader_backup_dir }}"
+    path: '{{ uip_bootloader_backup_dir }}'
     state: directory
     owner: root
     group: root
-    mode: "0750"
+    mode: '0750'
   tags:
-    - uip_remediate
-    - uip_remediate_bootloader
-    - uip_preupgrade
-
+  - uip_remediate
+  - uip_remediate_bootloader
+  - uip_preupgrade
 - name: Detect firmware mode for bootloader backup
   ansible.builtin.stat:
     path: /sys/firmware/efi
   register: uip_bootloader_efi_stat
   tags:
-    - uip_remediate
-    - uip_remediate_bootloader
-    - uip_preupgrade
-
+  - uip_remediate
+  - uip_remediate_bootloader
+  - uip_preupgrade
 - name: Set bootloader backup facts
   ansible.builtin.set_fact:
-    uip_boot_mode: "{{ 'uefi' if uip_bootloader_efi_stat.stat.exists else 'bios' }}"
-    uip_bootloader_backup_ts_dir: "{{ uip_bootloader_backup_dir }}/{{ ansible_date_time.iso8601_basic_short }}"
+    uip_boot_mode: '{{ ''uefi'' if uip_bootloader_efi_stat.stat.exists else ''bios'' }}'
+    uip_bootloader_backup_ts_dir: '{{ uip_bootloader_backup_dir }}/{{ ansible_date_time.iso8601_basic_short }}'
   tags:
-    - uip_remediate
-    - uip_remediate_bootloader
-    - uip_preupgrade
-
+  - uip_remediate
+  - uip_remediate_bootloader
+  - uip_preupgrade
 - name: Create timestamped bootloader backup directory
   ansible.builtin.file:
-    path: "{{ uip_bootloader_backup_ts_dir }}"
+    path: '{{ uip_bootloader_backup_ts_dir }}'
     state: directory
     owner: root
     group: root
-    mode: "0750"
+    mode: '0750'
   tags:
-    - uip_remediate
-    - uip_remediate_bootloader
-    - uip_preupgrade
-
+  - uip_remediate
+  - uip_remediate_bootloader
+  - uip_preupgrade
 - name: Backup GRUB and bootloader configuration files
-  ansible.builtin.shell: |
-    set -o pipefail
-    for item in /etc/default/grub /boot/grub /boot/grub2 /boot/loader /boot/efi/EFI
-    do
-      if [ -e "$item" ]; then
-        cp -a "$item" "{{ uip_bootloader_backup_ts_dir }}/"
-      fi
-    done
+  ansible.builtin.shell: "set -o pipefail\nfor item in /etc/default/grub /boot/grub /boot/grub2 /boot/loader /boot/efi/EFI\n\
+    do\n  if [ -e \"$item\" ]; then\n    cp -a \"$item\" \"{{ uip_bootloader_backup_ts_dir }}/\"\n  fi\ndone\n"
   args:
     executable: /bin/bash
   register: uip_bootloader_backup_copy
   changed_when: true
   failed_when: false
   tags:
-    - uip_remediate
-    - uip_remediate_bootloader
-    - uip_preupgrade
-
+  - uip_remediate
+  - uip_remediate_bootloader
+  - uip_preupgrade
 - name: Capture UEFI NVRAM entries when applicable
   ansible.builtin.command: efibootmgr -v
   register: uip_efibootmgr_before
@@ -67,68 +56,82 @@
   failed_when: false
   when: uip_boot_mode == "uefi"
   tags:
-    - uip_remediate
-    - uip_remediate_bootloader
-    - uip_preupgrade
-
+  - uip_remediate
+  - uip_remediate_bootloader
+  - uip_preupgrade
 - name: Capture default kernel with grubby when available
   ansible.builtin.command: grubby --default-kernel
   register: uip_grubby_default_before
   changed_when: false
   failed_when: false
   tags:
-    - uip_remediate
-    - uip_remediate_bootloader
-    - uip_preupgrade
-
+  - uip_remediate
+  - uip_remediate_bootloader
+  - uip_preupgrade
 - name: Capture grubby kernel inventory when available
   ansible.builtin.command: grubby --info=ALL
   register: uip_grubby_info_before
   changed_when: false
   failed_when: false
   tags:
-    - uip_remediate
-    - uip_remediate_bootloader
-    - uip_preupgrade
-
+  - uip_remediate
+  - uip_remediate_bootloader
+  - uip_preupgrade
 - name: Capture boot device inventory
-  ansible.builtin.shell: |
-    set -o pipefail
+  ansible.builtin.shell: 'set -o pipefail
+
     echo "### findmnt /"
+
     findmnt -n -o SOURCE,TARGET,FSTYPE,OPTIONS --target / || true
+
     echo "### lsblk"
+
     lsblk -fp || true
+
     echo "### bootctl"
+
     bootctl status || true
+
+    '
   args:
     executable: /bin/bash
   register: uip_bootloader_device_inventory
   changed_when: false
   failed_when: false
   tags:
-    - uip_remediate
-    - uip_remediate_bootloader
-    - uip_preupgrade
-
+  - uip_remediate
+  - uip_remediate_bootloader
+  - uip_preupgrade
 - name: Persist bootloader backup report
   ansible.builtin.copy:
-    dest: "{{ uip_report_dir }}/bootloader-backup.yml"
+    dest: '{{ uip_report_dir }}/bootloader-backup.yml'
     owner: root
     group: root
-    mode: "0640"
-    content: |
-      backup_dir: "{{ uip_bootloader_backup_ts_dir }}"
+    mode: '0640'
+    content: 'backup_dir: "{{ uip_bootloader_backup_ts_dir }}"
+
       boot_mode: "{{ uip_boot_mode }}"
+
       copy_rc: "{{ uip_bootloader_backup_copy.rc | default(0) }}"
+
       efibootmgr_before: |
-      {{ uip_efibootmgr_before.stdout | default('') | indent(2, true) }}
+
+      {{ uip_efibootmgr_before.stdout | default('''') | indent(2, true) }}
+
       grubby_default_before: |
-      {{ uip_grubby_default_before.stdout | default('') | indent(2, true) }}
+
+      {{ uip_grubby_default_before.stdout | default('''') | indent(2, true) }}
+
       grubby_info_before: |
-      {{ uip_grubby_info_before.stdout | default('') | indent(2, true) }}
+
+      {{ uip_grubby_info_before.stdout | default('''') | indent(2, true) }}
+
       boot_device_inventory: |
-      {{ uip_bootloader_device_inventory.stdout | default('') | indent(2, true) }}
+
+      {{ uip_bootloader_device_inventory.stdout | default('''') | indent(2, true) }}
+
+      '
   tags:
-    - uip_remediate
-    - uip_remediate_bootloader
-    - uip_preupgrade
+  - uip_remediate
+  - uip_remediate_bootloader
+  - uip_preupgrade

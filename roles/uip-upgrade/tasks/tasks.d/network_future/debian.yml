@@ -2,24 +2,25 @@
 - name: Prepare Debian ifupdown interface aliases for predicted names
   ansible.builtin.blockinfile:
     path: /etc/network/interfaces
-    marker: "# {mark} UIP predicted interface {{ item.predicted }}"
-    block: |
-      allow-hotplug {{ item.predicted }}
-      iface {{ item.predicted }} inet manual
-  loop: "{{ uip_network_future_ifaces | default([]) }}"
-  when:
-    - uip_network_future_apply | bool
-    - item.rename | bool
-    - uip_network_future_manager in ["networking", "unknown"]
-  tags:
-    - uip_upgrade
-    - uip_postupgrade
+    marker: '# {mark} UIP predicted interface {{ item.predicted }}'
+    block: 'allow-hotplug {{ item.predicted }}
 
+      iface {{ item.predicted }} inet manual
+
+      '
+  loop: '{{ uip_network_future_ifaces | default([]) }}'
+  when:
+  - uip_network_future_apply | bool
+  - item.rename | bool
+  - uip_network_future_manager in ["networking", "unknown"]
+  tags:
+  - uip_upgrade
+  - uip_postupgrade
 - name: Validate Debian interfaces syntax without applying
   ansible.builtin.command: ifquery --list
   register: uip_network_debian_ifquery
   changed_when: false
   failed_when: false
   tags:
-    - uip_upgrade
-    - uip_postupgrade
+  - uip_upgrade
+  - uip_postupgrade

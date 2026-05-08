@@ -1,49 +1,45 @@
 ---
 - name: Check stopped agent report
   ansible.builtin.stat:
-    path: "{{ uip_report_dir }}/remediate-stopped-agents.yml"
+    path: '{{ uip_report_dir }}/remediate-stopped-agents.yml'
   register: uip_rollback_agents_stat
   tags:
-    - uip_rollback
-    - uip_rollback_agents
-
+  - uip_rollback
+  - uip_rollback_agents
 - name: Read stopped agent report
   ansible.builtin.slurp:
-    src: "{{ uip_report_dir }}/remediate-stopped-agents.yml"
+    src: '{{ uip_report_dir }}/remediate-stopped-agents.yml'
   register: uip_rollback_agents_raw
   when: uip_rollback_agents_stat.stat.exists
   tags:
-    - uip_rollback
-    - uip_rollback_agents
-
+  - uip_rollback
+  - uip_rollback_agents
 - name: Decode stopped agent report
   ansible.builtin.set_fact:
-    uip_rollback_agents_report: "{{ uip_rollback_agents_raw.content | b64decode | from_yaml }}"
+    uip_rollback_agents_report: '{{ uip_rollback_agents_raw.content | b64decode | from_yaml }}'
   when: uip_rollback_agents_stat.stat.exists
   tags:
-    - uip_rollback
-    - uip_rollback_agents
-
+  - uip_rollback
+  - uip_rollback_agents
 - name: Restart agents stopped by UIP
   ansible.builtin.service:
-    name: "{{ item }}"
+    name: '{{ item }}'
     state: started
-  loop: "{{ uip_rollback_agents_report.stopped_agents | default([]) }}"
+  loop: '{{ uip_rollback_agents_report.stopped_agents | default([]) }}'
   failed_when: false
   when:
-    - uip_rollback_agents_report is defined
+  - uip_rollback_agents_report is defined
   tags:
-    - uip_rollback
-    - uip_rollback_agents
-
+  - uip_rollback
+  - uip_rollback_agents
 - name: Restart patch automation stopped by UIP
   ansible.builtin.service:
-    name: "{{ item }}"
+    name: '{{ item }}'
     state: started
-  loop: "{{ uip_rollback_agents_report.stopped_patch_automation | default([]) }}"
+  loop: '{{ uip_rollback_agents_report.stopped_patch_automation | default([]) }}'
   failed_when: false
   when:
-    - uip_rollback_agents_report is defined
+  - uip_rollback_agents_report is defined
   tags:
-    - uip_rollback
-    - uip_rollback_agents
+  - uip_rollback
+  - uip_rollback_agents

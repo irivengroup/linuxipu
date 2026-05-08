@@ -2,34 +2,34 @@
 - name: Refresh facts after upgrade
   ansible.builtin.setup: null
   tags:
-    - uip_postcheck
-    - uip_postupgrade
+  - uip_postcheck
+  - uip_postupgrade
 - name: Set expected post-upgrade version for Ubuntu
   ansible.builtin.set_fact:
     uip_expected_ver: '{{ ansible_distribution_version }}'
   when: uip_os == "ubuntu"
   tags:
-    - uip_postcheck
-    - uip_postupgrade
+  - uip_postcheck
+  - uip_postupgrade
 - name: Set expected post-upgrade version for RHEL or Debian
   ansible.builtin.set_fact:
     uip_expected_ver: '{{ ansible_distribution_major_version }}'
   when: uip_os in ["rhel", "debian"]
   tags:
-    - uip_postcheck
-    - uip_postupgrade
+  - uip_postcheck
+  - uip_postupgrade
 - name: Set expected post-upgrade version for other ecosystems
   ansible.builtin.set_fact:
     uip_expected_ver: '{{ uip_dst_ver }}'
   when: uip_os not in ["ubuntu", "rhel", "debian"]
   tags:
-    - uip_postcheck
-    - uip_postupgrade
+  - uip_postcheck
+  - uip_postupgrade
 - name: Assert target version reached
   ansible.builtin.assert:
     that:
-      - uip_expected_ver | string == uip_dst_ver | string
+    - uip_expected_ver | string == uip_dst_ver | string
     fail_msg: Target version {{ uip_dst_ver }} not detected after upgrade.
   tags:
-    - uip_postcheck
-    - uip_postupgrade
+  - uip_postcheck
+  - uip_postupgrade

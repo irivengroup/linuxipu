@@ -10,12 +10,18 @@
       '
   when: uip_pkg_mgr == "apt"
   tags:
-    - uip_repos_native
-    - uip_preupgrade
+  - uip_repos_native
+  - uip_preupgrade
+  - uip_discovery
+  - uip_postcheck
+  - uip_postupgrade
 - name: Native repository manager selected for RPM/SUSE
   ansible.builtin.debug:
     msg: Using native managed repositories for {{ uip_path_key }}
   when: uip_pkg_mgr in ['yum', 'dnf', 'zypper']
   tags:
-    - uip_repos_native
-    - uip_preupgrade
+  - uip_repos_native
+  - uip_preupgrade
+  - uip_discovery
+  - uip_postcheck
+  - uip_postupgrade

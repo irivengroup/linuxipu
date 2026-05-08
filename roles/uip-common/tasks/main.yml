@@ -7,56 +7,56 @@
     group: root
     mode: '0750'
   loop:
-    - '{{ uip_lock_dir }}'
-    - '{{ uip_log_dir }}'
-    - '{{ uip_report_dir }}'
+  - '{{ uip_lock_dir }}'
+  - '{{ uip_log_dir }}'
+  - '{{ uip_report_dir }}'
   tags:
-    - always
-    - uip_common
-    - uip_preupgrade
+  - always
+  - uip_common
+  - uip_preupgrade
 - name: Normalize distribution name - uip_preupgrade
   ansible.builtin.set_fact:
     uip_os: "{{\n  'rhel' if ansible_distribution in ['RedHat', 'CentOS', 'Rocky', 'AlmaLinux']\n  else 'ubuntu' if ansible_distribution\
       \ == 'Ubuntu'\n  else 'debian' if ansible_distribution == 'Debian'\n  else 'sles' if ansible_distribution in ['SLES',\
       \ 'SLES_SAP', 'openSUSE Leap']\n  else 'unsupported'\n}}"
   tags:
-    - always
-    - uip_common
-    - uip_preupgrade
+  - always
+  - uip_common
+  - uip_preupgrade
 - name: Set normalized source version
   ansible.builtin.set_fact:
     uip_src_ver: "{{\n  ansible_distribution_version\n  if uip_os in ['ubuntu']\n  else ansible_distribution_major_version\n\
       \  if uip_os in ['rhel', 'debian']\n  else ansible_distribution_version | lower | regex_replace(' ', '-')\n}}"
   tags:
-    - always
-    - uip_common
-    - uip_preupgrade
+  - always
+  - uip_common
+  - uip_preupgrade
 - name: Assert target version is provided
   ansible.builtin.assert:
     that:
-      - uip_dst_ver is defined
-      - uip_dst_ver | string | length > 0
+    - uip_dst_ver is defined
+    - uip_dst_ver | string | length > 0
     fail_msg: uip_dst_ver is mandatory.
   tags:
-    - always
-    - uip_common
-    - uip_preupgrade
+  - always
+  - uip_common
+  - uip_preupgrade
 - name: Load supported upgrade path
   ansible.builtin.set_fact:
     uip_path_def: '{{ uip_paths[uip_os][uip_src_ver][uip_dst_ver] | default({}) }}'
   tags:
-    - always
-    - uip_common
-    - uip_preupgrade
+  - always
+  - uip_common
+  - uip_preupgrade
 - name: Assert supported N to N+1 path
   ansible.builtin.assert:
     that:
-      - uip_path_def | length > 0
+    - uip_path_def | length > 0
     fail_msg: Unsupported path {{ uip_os }} {{ uip_src_ver }} -> {{ uip_dst_ver }}. Only mapped N to N+1 paths are allowed.
   tags:
-    - always
-    - uip_common
-    - uip_preupgrade
+  - always
+  - uip_common
+  - uip_preupgrade
 - name: Set normalized upgrade facts
   ansible.builtin.set_fact:
     uip_path_key: '{{ uip_path_def.key }}'
@@ -66,42 +66,42 @@
     uip_src_name: '{{ uip_path_def.src_name }}'
     uip_dst_name: '{{ uip_path_def.dst_name }}'
   tags:
-    - always
-    - uip_common
-    - uip_preupgrade
+  - always
+  - uip_common
+  - uip_preupgrade
 - name: Include repo manager auto-detection
   ansible.builtin.import_tasks: tasks.d/repo_detect.yml
   when:
-    - uip_repo_detect | bool
-    - uip_repo_mgr == "auto"
+  - uip_repo_detect | bool
+  - uip_repo_mgr == "auto"
   tags:
-    - always
-    - uip_common
-    - uip_repo_detect
-    - uip_preupgrade
+  - always
+  - uip_common
+  - uip_repo_detect
+  - uip_preupgrade
 - name: Fallback repo manager to native
   ansible.builtin.set_fact:
     uip_repo_mgr: native
   when:
-    - uip_repo_mgr == "auto"
+  - uip_repo_mgr == "auto"
   tags:
-    - always
-    - uip_common
-    - uip_repo_detect
-    - uip_preupgrade
+  - always
+  - uip_common
+  - uip_repo_detect
+  - uip_preupgrade
 - name: Load repository mapping
   ansible.builtin.set_fact:
     uip_repo_def: '{{ uip_repo_map[uip_os][uip_src_ver][uip_dst_ver][uip_repo_mgr] | default({}) }}'
   tags:
-    - always
-    - uip_common
-    - uip_preupgrade
+  - always
+  - uip_common
+  - uip_preupgrade
 - name: Assert repository mapping exists
   ansible.builtin.assert:
     that:
-      - uip_repo_def | length > 0
+    - uip_repo_def | length > 0
     fail_msg: No repo mapping for {{ uip_os }} {{ uip_src_ver }} -> {{ uip_dst_ver }} using {{ uip_repo_mgr }}.
   tags:
-    - always
-    - uip_common
-    - uip_preupgrade
+  - always
+  - uip_common
+  - uip_preupgrade

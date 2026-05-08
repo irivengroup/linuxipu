@@ -5,4 +5,7 @@
   failed_when: false
   when: uip_repo_mgr in ["satellite", "native"]
   tags:
-    - uip_preupgrade
+  - uip_preupgrade
+  - uip_discovery
+  - uip_postcheck
+  - uip_postupgrade

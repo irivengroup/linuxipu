@@ -2,54 +2,87 @@
 - name: Include common repository checks
   ansible.builtin.import_tasks: tasks.d/common.yml
   tags:
-    - uip_preupgrade
+  - uip_preupgrade
+  - uip_discovery
+  - uip_postcheck
+  - uip_postupgrade
 - name: Include Satellite repository handling
   ansible.builtin.import_tasks: tasks.d/satellite.yml
   when: uip_repo_mgr == "satellite"
   tags:
-    - uip_preupgrade
+  - uip_preupgrade
+  - uip_discovery
+  - uip_postcheck
+  - uip_postupgrade
 - name: Include Artifactory repository handling
   ansible.builtin.import_tasks: tasks.d/artifactory.yml
   when: uip_repo_mgr == "artifactory"
   tags:
-    - uip_preupgrade
+  - uip_preupgrade
+  - uip_discovery
+  - uip_postcheck
+  - uip_postupgrade
 - name: Include Nexus repository handling
   ansible.builtin.import_tasks: tasks.d/nexus.yml
   when: uip_repo_mgr == "nexus"
   tags:
-    - uip_preupgrade
+  - uip_preupgrade
+  - uip_discovery
+  - uip_postcheck
+  - uip_postupgrade
 - name: Include Pulp repository handling
   ansible.builtin.import_tasks: tasks.d/pulp.yml
   when: uip_repo_mgr == "pulp"
   tags:
-    - uip_preupgrade
+  - uip_preupgrade
+  - uip_discovery
+  - uip_postcheck
+  - uip_postupgrade
 - name: Include Landscape repository handling
   ansible.builtin.import_tasks: tasks.d/landscape.yml
   when: uip_repo_mgr == "landscape"
   tags:
-    - uip_preupgrade
+  - uip_preupgrade
+  - uip_discovery
+  - uip_postcheck
+  - uip_postupgrade
 - name: Include SUSE Manager repository handling
   ansible.builtin.import_tasks: tasks.d/suse_mgr.yml
   when: uip_repo_mgr == "suse_mgr"
   tags:
-    - uip_preupgrade
+  - uip_preupgrade
+  - uip_discovery
+  - uip_postcheck
+  - uip_postupgrade
 - name: Include Uyuni repository handling
   ansible.builtin.import_tasks: tasks.d/uyuni.yml
   when: uip_repo_mgr == "uyuni"
   tags:
-    - uip_preupgrade
+  - uip_preupgrade
+  - uip_discovery
+  - uip_postcheck
+  - uip_postupgrade
 - name: Include air-gapped repository handling
   ansible.builtin.import_tasks: tasks.d/airgap.yml
   when: uip_repo_mgr == "airgap"
   tags:
-    - uip_preupgrade
+  - uip_preupgrade
+  - uip_discovery
+  - uip_postcheck
+  - uip_postupgrade
 - name: Include native repository handling
   ansible.builtin.import_tasks: tasks.d/native.yml
   when: uip_repo_mgr == "native"
   tags:
-    - uip_preupgrade
+  - uip_preupgrade
+  - uip_discovery
+  - uip_postcheck
+  - uip_postupgrade
 - name: Include target repository enforcement
   ansible.builtin.import_tasks: tasks.d/enforce_target.yml
   when: uip_repo_enforce_target | bool
   tags:
-    - uip_preupgrade
+  - uip_preupgrade
+  - uip_discovery
+  - uip_postcheck
+  - uip_postupgrade

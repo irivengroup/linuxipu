@@ -3,8 +3,11 @@
   ansible.builtin.set_fact:
     uip_repo_target_url: "{{\n  uip_repo_def.dst_url\n  | default(uip_repo_def.base_url ~ '/' ~ uip_repo_def.dst_repo)\n}}"
   tags:
-    - uip_preupgrade
-    - uip_repos_nexus
+  - uip_preupgrade
+  - uip_repos_nexus
+  - uip_discovery
+  - uip_postcheck
+  - uip_postupgrade
 - name: Configure RPM target repository
   ansible.builtin.copy:
     dest: /etc/yum.repos.d/uip-{{ uip_dst_name }}.repo
@@ -24,8 +27,11 @@
       '
   when: uip_pkg_mgr in ['yum', 'dnf']
   tags:
-    - uip_preupgrade
-    - uip_repos_nexus
+  - uip_preupgrade
+  - uip_repos_nexus
+  - uip_discovery
+  - uip_postcheck
+  - uip_postupgrade
 - name: Configure APT target repository
   ansible.builtin.copy:
     dest: /etc/apt/sources.list.d/uip-{{ uip_dst_name }}.list
@@ -37,8 +43,11 @@
     uip_repo_components: '{{ uip_repo_def.components | default([''main'']) | join('' '') }}'
   when: uip_pkg_mgr == "apt"
   tags:
-    - uip_preupgrade
-    - uip_repos_nexus
+  - uip_preupgrade
+  - uip_repos_nexus
+  - uip_discovery
+  - uip_postcheck
+  - uip_postupgrade
 - name: Configure Zypper target repository
   ansible.builtin.copy:
     dest: /etc/zypp/repos.d/uip-{{ uip_dst_name }}.repo
@@ -60,5 +69,8 @@
       '
   when: uip_pkg_mgr == "zypper"
   tags:
-    - uip_preupgrade
-    - uip_repos_nexus
+  - uip_preupgrade
+  - uip_repos_nexus
+  - uip_discovery
+  - uip_postcheck
+  - uip_postupgrade

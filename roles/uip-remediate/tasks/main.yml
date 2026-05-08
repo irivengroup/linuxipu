@@ -2,67 +2,58 @@
 - name: Include common remediation tasks
   ansible.builtin.import_tasks: tasks.d/common.yml
   tags:
-    - uip_remediate
-    - uip_preupgrade
-
+  - uip_remediate
+  - uip_preupgrade
 - name: Include fstab remediation tasks
   ansible.builtin.import_tasks: tasks.d/fstab.yml
   tags:
-    - uip_remediate
-    - uip_remediate_fstab
-    - uip_preupgrade
-
+  - uip_remediate
+  - uip_remediate_fstab
+  - uip_preupgrade
 - name: Include filesystem remediation tasks
   ansible.builtin.import_tasks: tasks.d/filesystems.yml
   tags:
-    - uip_remediate
-    - uip_remediate_fs
-    - uip_preupgrade
-
+  - uip_remediate
+  - uip_remediate_fs
+  - uip_preupgrade
 - name: Include disruptive agent remediation tasks
   ansible.builtin.import_tasks: tasks.d/agents.yml
   tags:
-    - uip_remediate
-    - uip_remediate_agents
-    - uip_preupgrade
-
-
+  - uip_remediate
+  - uip_remediate_agents
+  - uip_preupgrade
 - name: Include bootloader backup tasks
   ansible.builtin.import_tasks: tasks.d/bootloader_backup.yml
   when: uip_bootloader_backup_enabled | bool
   tags:
-    - uip_remediate
-    - uip_remediate_bootloader
-    - uip_preupgrade
-
+  - uip_remediate
+  - uip_remediate_bootloader
+  - uip_preupgrade
 - name: Include RHEL remediation tasks
   ansible.builtin.import_tasks: tasks.d/rhel/main.yml
   when: uip_os == "rhel"
   tags:
-    - uip_remediate
-    - uip_remediate_rhel
-    - uip_preupgrade
-
+  - uip_remediate
+  - uip_remediate_rhel
+  - uip_preupgrade
 - name: Include Debian remediation tasks
   ansible.builtin.import_tasks: tasks.d/debian/main.yml
   when: uip_os == "debian"
   tags:
-    - uip_remediate
-    - uip_remediate_debian
-    - uip_preupgrade
-
+  - uip_remediate
+  - uip_remediate_debian
+  - uip_preupgrade
 - name: Include Ubuntu remediation tasks
   ansible.builtin.import_tasks: tasks.d/ubuntu/main.yml
   when: uip_os == "ubuntu"
   tags:
-    - uip_remediate
-    - uip_remediate_ubuntu
-    - uip_preupgrade
-
+  - uip_remediate
+  - uip_remediate_ubuntu
+  - uip_preupgrade
 - name: Include SUSE remediation tasks
   ansible.builtin.import_tasks: tasks.d/suse/main.yml
   when: uip_os == "sles"
   tags:
-    - uip_remediate
-    - uip_remediate_suse
-    - uip_preupgrade
+  - uip_remediate
+  - uip_remediate_suse
+  - uip_preupgrade

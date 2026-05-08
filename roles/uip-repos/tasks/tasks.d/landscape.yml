@@ -5,8 +5,11 @@
     regexp: ^Prompt=
     line: Prompt=lts
   tags:
-    - uip_repos_landscape
-    - uip_preupgrade
+  - uip_repos_landscape
+  - uip_preupgrade
+  - uip_discovery
+  - uip_postcheck
+  - uip_postupgrade
 - name: Configure Landscape target APT source
   ansible.builtin.copy:
     dest: /etc/apt/sources.list.d/uip-{{ uip_dst_name }}.list
@@ -20,5 +23,8 @@
       '
   when: uip_repo_def.target_urls is defined
   tags:
-    - uip_repos_landscape
-    - uip_preupgrade
+  - uip_repos_landscape
+  - uip_preupgrade
+  - uip_discovery
+  - uip_postcheck
+  - uip_postupgrade

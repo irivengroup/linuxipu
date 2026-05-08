@@ -2,34 +2,31 @@
 - name: Include SUSE kernel remediation tasks
   ansible.builtin.import_tasks: kernel.yml
   tags:
-    - uip_remediate
-    - uip_remediate_suse
-    - uip_remediate_kernel
-    - uip_preupgrade
-
+  - uip_remediate
+  - uip_remediate_suse
+  - uip_remediate_kernel
+  - uip_preupgrade
 - name: Include SUSE bootability verification tasks
   ansible.builtin.import_tasks: bootability.yml
   when: uip_bootloader_bootability_checks | bool
   tags:
-    - uip_remediate
-    - uip_remediate_suse
-    - uip_remediate_bootloader
-    - uip_preupgrade
-
+  - uip_remediate
+  - uip_remediate_suse
+  - uip_remediate_bootloader
+  - uip_preupgrade
 - name: Include SUSE GRUB remediation tasks
   ansible.builtin.import_tasks: grub.yml
   when: uip_remediate_grub_reconfigure | bool
   tags:
-    - uip_remediate
-    - uip_remediate_suse
-    - uip_remediate_grub
-    - uip_preupgrade
-
+  - uip_remediate
+  - uip_remediate_suse
+  - uip_remediate_grub
+  - uip_preupgrade
 - name: Include SUSE inhibitor remediation tasks
   ansible.builtin.import_tasks: inhibitors.yml
   when: uip_remediate_fix_inhibitors | bool
   tags:
-    - uip_remediate
-    - uip_remediate_suse
-    - uip_remediate_inhibitors
-    - uip_preupgrade
+  - uip_remediate
+  - uip_remediate_suse
+  - uip_remediate_inhibitors
+  - uip_preupgrade

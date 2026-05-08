@@ -1,56 +1,52 @@
 ---
 - name: Check original fstab backup
   ansible.builtin.stat:
-    path: "{{ uip_remediate_fstab_backup }}"
+    path: '{{ uip_remediate_fstab_backup }}'
   register: uip_fstab_backup_stat
   tags:
-    - uip_remediate
-    - uip_remediate_fstab
-    - uip_preupgrade
-
+  - uip_remediate
+  - uip_remediate_fstab
+  - uip_preupgrade
 - name: Backup original fstab once
   ansible.builtin.copy:
     src: /etc/fstab
-    dest: "{{ uip_remediate_fstab_backup }}"
+    dest: '{{ uip_remediate_fstab_backup }}'
     owner: root
     group: root
-    mode: "0644"
+    mode: '0644'
     remote_src: true
     force: false
   when: not uip_fstab_backup_stat.stat.exists
   tags:
-    - uip_remediate
-    - uip_remediate_fstab
-    - uip_preupgrade
-
+  - uip_remediate
+  - uip_remediate_fstab
+  - uip_preupgrade
 - name: Comment active network mounts in fstab
   ansible.builtin.replace:
     path: /etc/fstab
-    regexp: '^(?!\s*#)(\S+\s+\S+\s+(?:nfs|nfs4|cifs|smbfs)\s+.*)$'
-    replace: "{{ uip_remediate_fstab_network_prefix }}\\1"
+    regexp: ^(?!\s*#)(\S+\s+\S+\s+(?:nfs|nfs4|cifs|smbfs)\s+.*)$
+    replace: '{{ uip_remediate_fstab_network_prefix }}\1'
     backup: true
   when: uip_remediate_comment_network_mounts | bool
   tags:
-    - uip_remediate
-    - uip_remediate_fstab
-    - uip_preupgrade
-
+  - uip_remediate
+  - uip_remediate_fstab
+  - uip_preupgrade
 - name: Collect filesystem UUIDs
   ansible.builtin.command: blkid -o export
   register: uip_blkid_export
   changed_when: false
   failed_when: false
   tags:
-    - uip_remediate
-    - uip_remediate_fstab
-    - uip_preupgrade
-
+  - uip_remediate
+  - uip_remediate_fstab
+  - uip_preupgrade
 - name: Validate fstab syntax after network mount changes
   ansible.builtin.command: findmnt --verify --tab-file /etc/fstab
   register: uip_fstab_verify
   changed_when: false
   failed_when: uip_fstab_verify.rc != 0
   tags:
-    - uip_remediate
-    - uip_remediate_fstab
-    - uip_preupgrade
+  - uip_remediate
+  - uip_remediate_fstab
+  - uip_preupgrade

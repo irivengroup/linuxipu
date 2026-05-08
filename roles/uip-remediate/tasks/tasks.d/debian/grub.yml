@@ -5,11 +5,10 @@
   changed_when: false
   failed_when: false
   tags:
-    - uip_remediate
-    - uip_remediate_debian
-    - uip_remediate_grub
-    - uip_preupgrade
-
+  - uip_remediate
+  - uip_remediate_debian
+  - uip_remediate_grub
+  - uip_preupgrade
 - name: Reconfigure Debian GRUB
   ansible.builtin.command: update-grub
   register: uip_debian_update_grub
@@ -17,35 +16,32 @@
   failed_when: uip_debian_update_grub.rc != 0
   when: uip_update_grub_cmd.rc == 0
   tags:
-    - uip_remediate
-    - uip_remediate_debian
-    - uip_remediate_grub
-    - uip_preupgrade
-
+  - uip_remediate
+  - uip_remediate_debian
+  - uip_remediate_grub
+  - uip_preupgrade
 - name: Validate generated Debian GRUB configuration exists
   ansible.builtin.stat:
     path: /boot/grub/grub.cfg
   register: uip_debian_grub_cfg_stat
   when: uip_bootloader_validate_config | bool
   tags:
-    - uip_remediate
-    - uip_remediate_debian
-    - uip_remediate_grub
-    - uip_preupgrade
-
+  - uip_remediate
+  - uip_remediate_debian
+  - uip_remediate_grub
+  - uip_preupgrade
 - name: Assert generated Debian GRUB configuration is usable
   ansible.builtin.assert:
     that:
-      - uip_debian_grub_cfg_stat.stat.exists
-      - uip_debian_grub_cfg_stat.stat.size | int > 0
-    fail_msg: "Debian GRUB configuration /boot/grub/grub.cfg is missing or empty after regeneration."
+    - uip_debian_grub_cfg_stat.stat.exists
+    - uip_debian_grub_cfg_stat.stat.size | int > 0
+    fail_msg: Debian GRUB configuration /boot/grub/grub.cfg is missing or empty after regeneration.
   when: uip_bootloader_validate_config | bool
   tags:
-    - uip_remediate
-    - uip_remediate_debian
-    - uip_remediate_grub
-    - uip_preupgrade
-
+  - uip_remediate
+  - uip_remediate_debian
+  - uip_remediate_grub
+  - uip_preupgrade
 - name: Validate Debian GRUB has at least one kernel menu entry
   ansible.builtin.command: grep -E 'menuentry|linux ' /boot/grub/grub.cfg
   register: uip_debian_grub_menu_check
@@ -53,7 +49,7 @@
   failed_when: uip_debian_grub_menu_check.rc != 0
   when: uip_bootloader_validate_config | bool
   tags:
-    - uip_remediate
-    - uip_remediate_debian
-    - uip_remediate_grub
-    - uip_preupgrade
+  - uip_remediate
+  - uip_remediate_debian
+  - uip_remediate_grub
+  - uip_preupgrade

@@ -4,15 +4,21 @@
     path: '{{ uip_repo_def.dst_mount }}'
   register: uip_airgap
   tags:
-    - uip_repos_airgap
-    - uip_preupgrade
+  - uip_repos_airgap
+  - uip_preupgrade
+  - uip_discovery
+  - uip_postcheck
+  - uip_postupgrade
 - name: Fail if airgap target repository is missing
   ansible.builtin.fail:
     msg: Airgap target repo {{ uip_repo_def.dst_mount }} is missing.
   when: not uip_airgap.stat.exists
   tags:
-    - uip_repos_airgap
-    - uip_preupgrade
+  - uip_repos_airgap
+  - uip_preupgrade
+  - uip_discovery
+  - uip_postcheck
+  - uip_postupgrade
 - name: Configure airgap RPM target repository
   ansible.builtin.copy:
     dest: '{{ uip_repo_def.dst_repo_file }}'
@@ -30,8 +36,11 @@
       '
   when: uip_pkg_mgr in ['yum', 'dnf', 'zypper']
   tags:
-    - uip_repos_airgap
-    - uip_preupgrade
+  - uip_repos_airgap
+  - uip_preupgrade
+  - uip_discovery
+  - uip_postcheck
+  - uip_postupgrade
 - name: Configure airgap APT target repository
   ansible.builtin.copy:
     dest: '{{ uip_repo_def.dst_list_file }}'
@@ -45,5 +54,8 @@
     uip_repo_components: '{{ uip_repo_def.components | default([''main'']) | join('' '') }}'
   when: uip_pkg_mgr == "apt"
   tags:
-    - uip_repos_airgap
-    - uip_preupgrade
+  - uip_repos_airgap
+  - uip_preupgrade
+  - uip_discovery
+  - uip_postcheck
+  - uip_postupgrade

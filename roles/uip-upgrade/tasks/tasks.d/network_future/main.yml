@@ -2,39 +2,34 @@
 - name: Include future network discovery tasks
   ansible.builtin.import_tasks: common.yml
   tags:
-    - uip_upgrade
-    - uip_postupgrade
-
+  - uip_upgrade
+  - uip_postupgrade
 - name: Include RHEL future network preparation
   ansible.builtin.import_tasks: rhel.yml
   when: uip_os == "rhel"
   tags:
-    - uip_upgrade
-    - uip_postupgrade
-
+  - uip_upgrade
+  - uip_postupgrade
 - name: Include Debian future network preparation
   ansible.builtin.import_tasks: debian.yml
   when: uip_os == "debian"
   tags:
-    - uip_upgrade
-    - uip_postupgrade
-
+  - uip_upgrade
+  - uip_postupgrade
 - name: Include Ubuntu future network preparation
   ansible.builtin.import_tasks: ubuntu.yml
   when: uip_os == "ubuntu"
   tags:
-    - uip_upgrade
-    - uip_postupgrade
-
+  - uip_upgrade
+  - uip_postupgrade
 - name: Include SUSE future network preparation
   ansible.builtin.import_tasks: suse.yml
   when: uip_os == "sles"
   tags:
-    - uip_upgrade
-    - uip_postupgrade
-
+  - uip_upgrade
+  - uip_postupgrade
 - name: Include future network risk gate
   ansible.builtin.import_tasks: validate.yml
   tags:
-    - uip_upgrade
-    - uip_postupgrade
+  - uip_upgrade
+  - uip_postupgrade

@@ -1,37 +1,28 @@
 ---
 - name: Build unresolved network future risks
   ansible.builtin.set_fact:
-    uip_network_future_risks: >-
-      {{
-        uip_network_future_ifaces
-        | default([])
-        | selectattr('rename', 'equalto', true)
-        | list
-      }}
+    uip_network_future_risks: "{{\n  uip_network_future_ifaces\n  | default([])\n  | selectattr('rename', 'equalto', true)\n\
+      \  | list\n}}"
   tags:
-    - uip_upgrade
-    - uip_postupgrade
-
+  - uip_upgrade
+  - uip_postupgrade
 - name: Fail when future network rename risk remains unmanaged
   ansible.builtin.fail:
-    msg: >-
-      Future network interface rename risk detected before reboot.
-      Review {{ uip_network_future_report }} and generated network configuration:
-      {{ uip_network_future_risks | to_nice_yaml }}
+    msg: 'Future network interface rename risk detected before reboot. Review {{ uip_network_future_report }} and generated
+      network configuration: {{ uip_network_future_risks | to_nice_yaml }}'
   when:
-    - uip_network_future_fail_on_high_risk | bool
-    - uip_network_future_risks | length > 0
-    - not (uip_network_future_apply | bool)
+  - uip_network_future_fail_on_high_risk | bool
+  - uip_network_future_risks | length > 0
+  - not (uip_network_future_apply | bool)
   tags:
-    - uip_upgrade
-    - uip_postupgrade
-
+  - uip_upgrade
+  - uip_postupgrade
 - name: Display future network state summary
   ansible.builtin.debug:
     msg:
-      - "Future network manager: {{ uip_network_future_manager }}"
-      - "Future interface predictions: {{ uip_network_future_ifaces | default([]) }}"
-      - "Report: {{ uip_network_future_report }}"
+    - 'Future network manager: {{ uip_network_future_manager }}'
+    - 'Future interface predictions: {{ uip_network_future_ifaces | default([]) }}'
+    - 'Report: {{ uip_network_future_report }}'
   tags:
-    - uip_upgrade
-    - uip_postupgrade
+  - uip_upgrade
+  - uip_postupgrade

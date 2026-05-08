@@ -2,27 +2,34 @@
 - name: Announce remediation scope
   ansible.builtin.debug:
     msg:
-      - "Run idempotent remediation for {{ uip_path_key }}."
-      - "Repository manager is {{ uip_repo_mgr }}."
+    - Run idempotent remediation for {{ uip_path_key }}.
+    - Repository manager is {{ uip_repo_mgr }}.
   tags:
-    - uip_remediate
-    - uip_preupgrade
-
+  - uip_remediate
+  - uip_preupgrade
 - name: Mark remediation as started
   ansible.builtin.copy:
-    dest: "{{ uip_state_file }}"
+    dest: '{{ uip_state_file }}'
     owner: root
     group: root
-    mode: "0640"
-    content: |
-      host: "{{ inventory_hostname }}"
+    mode: '0640'
+    content: 'host: "{{ inventory_hostname }}"
+
       os: "{{ uip_os }}"
+
       src_ver: "{{ uip_src_ver }}"
+
       dst_ver: "{{ uip_dst_ver }}"
+
       path: "{{ uip_path_key }}"
+
       repo_mgr: "{{ uip_repo_mgr }}"
+
       state: "remediate_started"
+
       updated_at: "{{ ansible_date_time.iso8601 }}"
+
+      '
   tags:
-    - uip_remediate
-    - uip_preupgrade
+  - uip_remediate
+  - uip_preupgrade

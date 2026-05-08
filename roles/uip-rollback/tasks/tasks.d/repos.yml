@@ -1,55 +1,47 @@
 ---
 - name: Restore RHEL source repositories when using subscription-manager
-  ansible.builtin.command: "subscription-manager repos --enable={{ item }}"
-  loop: "{{ uip_repo_def.repos_disable | default([]) }}"
+  ansible.builtin.command: subscription-manager repos --enable={{ item }}
+  loop: '{{ uip_repo_def.repos_disable | default([]) }}'
   register: uip_rollback_rhel_repos
-  changed_when: "'enabled' in (uip_rollback_rhel_repos.stdout | default(''))"
+  changed_when: '''enabled'' in (uip_rollback_rhel_repos.stdout | default(''''))'
   failed_when: false
   when:
-    - uip_os == "rhel"
-    - uip_repo_mgr == "satellite"
+  - uip_os == "rhel"
+  - uip_repo_mgr == "satellite"
   tags:
-    - uip_rollback
-    - uip_rollback_repos
-
+  - uip_rollback
+  - uip_rollback_repos
 - name: Disable RHEL target repositories during rollback
-  ansible.builtin.command: "subscription-manager repos --disable={{ item }}"
-  loop: "{{ uip_repo_def.repos_enable | default([]) }}"
+  ansible.builtin.command: subscription-manager repos --disable={{ item }}
+  loop: '{{ uip_repo_def.repos_enable | default([]) }}'
   register: uip_rollback_rhel_disable_repos
-  changed_when: "'disabled' in (uip_rollback_rhel_disable_repos.stdout | default(''))"
+  changed_when: '''disabled'' in (uip_rollback_rhel_disable_repos.stdout | default(''''))'
   failed_when: false
   when:
-    - uip_os == "rhel"
-    - uip_repo_mgr == "satellite"
+  - uip_os == "rhel"
+  - uip_repo_mgr == "satellite"
   tags:
-    - uip_rollback
-    - uip_rollback_repos
-
+  - uip_rollback
+  - uip_rollback_repos
 - name: Restore APT source lists from backup when present
-  ansible.builtin.shell: |
-    set -o pipefail
-    for backup in /etc/apt/sources.list*.uipbak /etc/apt/sources.list.d/*.uipbak; do
-      if [ -f "$backup" ]; then
-        target="${backup%.uipbak}"
-        cp -a "$backup" "$target"
-      fi
-    done
+  ansible.builtin.shell: "set -o pipefail\nfor backup in /etc/apt/sources.list*.uipbak /etc/apt/sources.list.d/*.uipbak; do\n\
+    \  if [ -f \"$backup\" ]; then\n    target=\"${backup%.uipbak}\"\n    cp -a \"$backup\" \"$target\"\n  fi\ndone\n"
   args:
     executable: /bin/bash
   register: uip_rollback_apt_sources
   changed_when: false
   failed_when: false
   when:
-    - uip_os in ["ubuntu", "debian"]
+  - uip_os in ["ubuntu", "debian"]
   tags:
-    - uip_rollback
-    - uip_rollback_repos
-
+  - uip_rollback
+  - uip_rollback_repos
 - name: Refresh package metadata after rollback repo restoration
-  ansible.builtin.command: "{{ 'apt-get update' if uip_os in ['ubuntu', 'debian'] else 'yum makecache' if uip_pkg_mgr == 'yum' else 'dnf makecache' if uip_pkg_mgr == 'dnf' else 'zypper --non-interactive refresh' }}"
+  ansible.builtin.command: '{{ ''apt-get update'' if uip_os in [''ubuntu'', ''debian''] else ''yum makecache'' if uip_pkg_mgr
+    == ''yum'' else ''dnf makecache'' if uip_pkg_mgr == ''dnf'' else ''zypper --non-interactive refresh'' }}'
   register: uip_rollback_repo_refresh
   changed_when: false
   failed_when: false
   tags:
-    - uip_rollback
-    - uip_rollback_repos
+  - uip_rollback
+  - uip_rollback_repos

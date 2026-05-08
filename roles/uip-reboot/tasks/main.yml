@@ -1,217 +1,271 @@
 ---
 - name: Ensure reboot state directory exists
   ansible.builtin.file:
-    path: "{{ uip_state_dir }}"
+    path: '{{ uip_state_dir }}'
     state: directory
     owner: root
     group: root
-    mode: "0750"
+    mode: '0750'
   tags:
-    - uip_preupgrade
-    - uip_postupgrade
-
+  - uip_preupgrade
+  - uip_postupgrade
+  - uip_upgrade
 - name: Check existing reboot guard
   ansible.builtin.stat:
-    path: "{{ uip_reboot_guard_file }}"
+    path: '{{ uip_reboot_guard_file }}'
   register: uip_reboot_guard_stat
   tags:
-    - uip_preupgrade
-    - uip_postupgrade
-
+  - uip_preupgrade
+  - uip_postupgrade
+  - uip_upgrade
 - name: Read existing reboot guard
   ansible.builtin.slurp:
-    src: "{{ uip_reboot_guard_file }}"
+    src: '{{ uip_reboot_guard_file }}'
   register: uip_reboot_guard_raw
   when: uip_reboot_guard_stat.stat.exists
   tags:
-    - uip_preupgrade
-    - uip_postupgrade
-
+  - uip_preupgrade
+  - uip_postupgrade
+  - uip_upgrade
 - name: Decode existing reboot guard
   ansible.builtin.set_fact:
-    uip_reboot_guard: "{{ uip_reboot_guard_raw.content | b64decode | from_yaml }}"
+    uip_reboot_guard: '{{ uip_reboot_guard_raw.content | b64decode | from_yaml }}'
   when: uip_reboot_guard_stat.stat.exists
   tags:
-    - uip_preupgrade
-    - uip_postupgrade
-
+  - uip_preupgrade
+  - uip_postupgrade
+  - uip_upgrade
 - name: Initialize reboot guard when absent
   ansible.builtin.set_fact:
     uip_reboot_guard:
       attempts: 0
-      reason: "{{ uip_reboot_reason | default('unspecified') }}"
-      current_step: "{{ uip_reboot_current_step | default('unknown') }}"
-      next_step: "{{ uip_reboot_next_step | default('unknown') }}"
+      reason: '{{ uip_reboot_reason | default(''unspecified'') }}'
+      current_step: '{{ uip_reboot_current_step | default(''unknown'') }}'
+      next_step: '{{ uip_reboot_next_step | default(''unknown'') }}'
   when: not uip_reboot_guard_stat.stat.exists
   tags:
-    - uip_preupgrade
-    - uip_postupgrade
-
+  - uip_preupgrade
+  - uip_postupgrade
+  - uip_upgrade
 - name: Assert reboot attempt limit is not exceeded
   ansible.builtin.assert:
     that:
-      - (uip_reboot_guard.attempts | int) < (uip_reboot_max_attempts | int)
-    fail_msg: >-
-      Reboot guard blocked execution. Maximum reboot attempts exceeded for
-      reason={{ uip_reboot_guard.reason | default(uip_reboot_reason | default('unknown')) }},
-      current_step={{ uip_reboot_guard.current_step | default(uip_reboot_current_step | default('unknown')) }},
-      next_step={{ uip_reboot_guard.next_step | default(uip_reboot_next_step | default('unknown')) }}.
+    - (uip_reboot_guard.attempts | int) < (uip_reboot_max_attempts | int)
+    fail_msg: Reboot guard blocked execution. Maximum reboot attempts exceeded for reason={{ uip_reboot_guard.reason | default(uip_reboot_reason
+      | default('unknown')) }}, current_step={{ uip_reboot_guard.current_step | default(uip_reboot_current_step | default('unknown'))
+      }}, next_step={{ uip_reboot_guard.next_step | default(uip_reboot_next_step | default('unknown')) }}.
   tags:
-    - uip_preupgrade
-    - uip_postupgrade
-
+  - uip_preupgrade
+  - uip_postupgrade
+  - uip_upgrade
 - name: Increment reboot attempt counter
   ansible.builtin.set_fact:
-    uip_reboot_attempt: "{{ (uip_reboot_guard.attempts | int) + 1 }}"
+    uip_reboot_attempt: '{{ (uip_reboot_guard.attempts | int) + 1 }}'
   tags:
-    - uip_preupgrade
-    - uip_postupgrade
-
+  - uip_preupgrade
+  - uip_postupgrade
+  - uip_upgrade
 - name: Persist reboot guard before reboot
   ansible.builtin.copy:
-    dest: "{{ uip_reboot_guard_file }}"
+    dest: '{{ uip_reboot_guard_file }}'
     owner: root
     group: root
-    mode: "0640"
-    content: |
-      host: "{{ inventory_hostname }}"
-      attempts: {{ uip_reboot_attempt }}
-      reason: "{{ uip_reboot_reason | default('unspecified') }}"
-      current_step: "{{ uip_reboot_current_step | default('unknown') }}"
-      next_step: "{{ uip_reboot_next_step | default('unknown') }}"
-      state: "reboot_guard_active"
-      started_at: "{{ ansible_date_time.iso8601 }}"
-  tags:
-    - uip_preupgrade
-    - uip_postupgrade
+    mode: '0640'
+    content: 'host: "{{ inventory_hostname }}"
 
+      attempts: {{ uip_reboot_attempt }}
+
+      reason: "{{ uip_reboot_reason | default(''unspecified'') }}"
+
+      current_step: "{{ uip_reboot_current_step | default(''unknown'') }}"
+
+      next_step: "{{ uip_reboot_next_step | default(''unknown'') }}"
+
+      state: "reboot_guard_active"
+
+      started_at: "{{ ansible_date_time.iso8601 }}"
+
+      '
+  tags:
+  - uip_preupgrade
+  - uip_postupgrade
+  - uip_upgrade
 - name: Persist global state before reboot
   ansible.builtin.copy:
-    dest: "{{ uip_state_file }}"
+    dest: '{{ uip_state_file }}'
     owner: root
     group: root
-    mode: "0640"
-    content: |
-      host: "{{ inventory_hostname }}"
-      os: "{{ uip_os }}"
-      src_ver: "{{ uip_src_ver }}"
-      dst_ver: "{{ uip_dst_ver }}"
-      path: "{{ uip_path_key }}"
-      repo_mgr: "{{ uip_repo_mgr }}"
-      state: "reboot_started"
-      reboot_reason: "{{ uip_reboot_reason | default('unspecified') }}"
-      current_step: "{{ uip_reboot_current_step | default('unknown') }}"
-      next_step: "{{ uip_reboot_next_step | default('unknown') }}"
-      reboot_attempt: "{{ uip_reboot_attempt }}"
-      updated_at: "{{ ansible_date_time.iso8601 }}"
-  tags:
-    - uip_preupgrade
-    - uip_postupgrade
+    mode: '0640'
+    content: 'host: "{{ inventory_hostname }}"
 
+      os: "{{ uip_os }}"
+
+      src_ver: "{{ uip_src_ver }}"
+
+      dst_ver: "{{ uip_dst_ver }}"
+
+      path: "{{ uip_path_key }}"
+
+      repo_mgr: "{{ uip_repo_mgr }}"
+
+      state: "reboot_started"
+
+      reboot_reason: "{{ uip_reboot_reason | default(''unspecified'') }}"
+
+      current_step: "{{ uip_reboot_current_step | default(''unknown'') }}"
+
+      next_step: "{{ uip_reboot_next_step | default(''unknown'') }}"
+
+      reboot_attempt: "{{ uip_reboot_attempt }}"
+
+      updated_at: "{{ ansible_date_time.iso8601 }}"
+
+      '
+  tags:
+  - uip_preupgrade
+  - uip_postupgrade
+  - uip_upgrade
 - name: Persist reboot state before reboot
   ansible.builtin.copy:
-    dest: "{{ uip_reboot_state_file }}"
+    dest: '{{ uip_reboot_state_file }}'
     owner: root
     group: root
-    mode: "0640"
-    content: |
-      host: "{{ inventory_hostname }}"
-      state: "reboot_started"
-      reason: "{{ uip_reboot_reason | default('unspecified') }}"
-      current_step: "{{ uip_reboot_current_step | default('unknown') }}"
-      next_step: "{{ uip_reboot_next_step | default('unknown') }}"
-      attempt: "{{ uip_reboot_attempt }}"
-      timeout: "{{ uip_reboot_timeout }}"
-      updated_at: "{{ ansible_date_time.iso8601 }}"
-  tags:
-    - uip_preupgrade
-    - uip_postupgrade
+    mode: '0640'
+    content: 'host: "{{ inventory_hostname }}"
 
+      state: "reboot_started"
+
+      reason: "{{ uip_reboot_reason | default(''unspecified'') }}"
+
+      current_step: "{{ uip_reboot_current_step | default(''unknown'') }}"
+
+      next_step: "{{ uip_reboot_next_step | default(''unknown'') }}"
+
+      attempt: "{{ uip_reboot_attempt }}"
+
+      timeout: "{{ uip_reboot_timeout }}"
+
+      updated_at: "{{ ansible_date_time.iso8601 }}"
+
+      '
+  tags:
+  - uip_preupgrade
+  - uip_postupgrade
+  - uip_upgrade
 - name: Reboot managed host
   ansible.builtin.reboot:
-    msg: "UIP reboot: {{ uip_reboot_reason | default('unspecified') }}"
-    reboot_timeout: "{{ uip_reboot_timeout | int }}"
-    connect_timeout: "{{ uip_reboot_connect_timeout | int }}"
-    post_reboot_delay: "{{ uip_reboot_post_delay | int }}"
+    msg: 'UIP reboot: {{ uip_reboot_reason | default(''unspecified'') }}'
+    reboot_timeout: '{{ uip_reboot_timeout | int }}'
+    connect_timeout: '{{ uip_reboot_connect_timeout | int }}'
+    post_reboot_delay: '{{ uip_reboot_post_delay | int }}'
     test_command: whoami
   register: uip_reboot_result
   tags:
-    - uip_preupgrade
-    - uip_postupgrade
-
+  - uip_preupgrade
+  - uip_postupgrade
+  - uip_upgrade
 - name: Refresh facts after reboot
-  ansible.builtin.setup:
+  ansible.builtin.setup: null
   tags:
-    - uip_preupgrade
-    - uip_postupgrade
-
+  - uip_preupgrade
+  - uip_postupgrade
+  - uip_upgrade
 - name: Persist reboot completion state
   ansible.builtin.copy:
-    dest: "{{ uip_reboot_state_file }}"
+    dest: '{{ uip_reboot_state_file }}'
     owner: root
     group: root
-    mode: "0640"
-    content: |
-      host: "{{ inventory_hostname }}"
-      state: "reboot_completed"
-      reason: "{{ uip_reboot_reason | default('unspecified') }}"
-      current_step: "{{ uip_reboot_current_step | default('unknown') }}"
-      next_step: "{{ uip_reboot_next_step | default('unknown') }}"
-      attempt: "{{ uip_reboot_attempt }}"
-      elapsed: "{{ uip_reboot_result.elapsed | default('unknown') }}"
-      rebooted: "{{ uip_reboot_result.rebooted | default(false) }}"
-      completed_at: "{{ ansible_date_time.iso8601 }}"
-  tags:
-    - uip_preupgrade
-    - uip_postupgrade
+    mode: '0640'
+    content: 'host: "{{ inventory_hostname }}"
 
+      state: "reboot_completed"
+
+      reason: "{{ uip_reboot_reason | default(''unspecified'') }}"
+
+      current_step: "{{ uip_reboot_current_step | default(''unknown'') }}"
+
+      next_step: "{{ uip_reboot_next_step | default(''unknown'') }}"
+
+      attempt: "{{ uip_reboot_attempt }}"
+
+      elapsed: "{{ uip_reboot_result.elapsed | default(''unknown'') }}"
+
+      rebooted: "{{ uip_reboot_result.rebooted | default(false) }}"
+
+      completed_at: "{{ ansible_date_time.iso8601 }}"
+
+      '
+  tags:
+  - uip_preupgrade
+  - uip_postupgrade
+  - uip_upgrade
 - name: Persist global state after reboot
   ansible.builtin.copy:
-    dest: "{{ uip_state_file }}"
+    dest: '{{ uip_state_file }}'
     owner: root
     group: root
-    mode: "0640"
-    content: |
-      host: "{{ inventory_hostname }}"
-      os: "{{ uip_os }}"
-      src_ver: "{{ uip_src_ver }}"
-      dst_ver: "{{ uip_dst_ver }}"
-      path: "{{ uip_path_key }}"
-      repo_mgr: "{{ uip_repo_mgr }}"
-      state: "reboot_completed"
-      reboot_reason: "{{ uip_reboot_reason | default('unspecified') }}"
-      completed_step: "{{ uip_reboot_current_step | default('unknown') }}"
-      next_step: "{{ uip_reboot_next_step | default('unknown') }}"
-      reboot_attempt: "{{ uip_reboot_attempt }}"
-      updated_at: "{{ ansible_date_time.iso8601 }}"
-  tags:
-    - uip_preupgrade
-    - uip_postupgrade
+    mode: '0640'
+    content: 'host: "{{ inventory_hostname }}"
 
+      os: "{{ uip_os }}"
+
+      src_ver: "{{ uip_src_ver }}"
+
+      dst_ver: "{{ uip_dst_ver }}"
+
+      path: "{{ uip_path_key }}"
+
+      repo_mgr: "{{ uip_repo_mgr }}"
+
+      state: "reboot_completed"
+
+      reboot_reason: "{{ uip_reboot_reason | default(''unspecified'') }}"
+
+      completed_step: "{{ uip_reboot_current_step | default(''unknown'') }}"
+
+      next_step: "{{ uip_reboot_next_step | default(''unknown'') }}"
+
+      reboot_attempt: "{{ uip_reboot_attempt }}"
+
+      updated_at: "{{ ansible_date_time.iso8601 }}"
+
+      '
+  tags:
+  - uip_preupgrade
+  - uip_postupgrade
+  - uip_upgrade
 - name: Persist reboot report
   ansible.builtin.copy:
-    dest: "{{ uip_report_dir }}/reboot-{{ uip_reboot_reason | default('unspecified') }}.yml"
+    dest: '{{ uip_report_dir }}/reboot-{{ uip_reboot_reason | default(''unspecified'') }}.yml'
     owner: root
     group: root
-    mode: "0640"
-    content: |
-      reason: "{{ uip_reboot_reason | default('unspecified') }}"
-      current_step: "{{ uip_reboot_current_step | default('unknown') }}"
-      next_step: "{{ uip_reboot_next_step | default('unknown') }}"
-      attempt: "{{ uip_reboot_attempt }}"
-      elapsed: "{{ uip_reboot_result.elapsed | default('unknown') }}"
-      rebooted: "{{ uip_reboot_result.rebooted | default(false) }}"
-      completed_at: "{{ ansible_date_time.iso8601 }}"
-  tags:
-    - uip_preupgrade
-    - uip_postupgrade
+    mode: '0640'
+    content: 'reason: "{{ uip_reboot_reason | default(''unspecified'') }}"
 
+      current_step: "{{ uip_reboot_current_step | default(''unknown'') }}"
+
+      next_step: "{{ uip_reboot_next_step | default(''unknown'') }}"
+
+      attempt: "{{ uip_reboot_attempt }}"
+
+      elapsed: "{{ uip_reboot_result.elapsed | default(''unknown'') }}"
+
+      rebooted: "{{ uip_reboot_result.rebooted | default(false) }}"
+
+      completed_at: "{{ ansible_date_time.iso8601 }}"
+
+      '
+  tags:
+  - uip_preupgrade
+  - uip_postupgrade
+  - uip_upgrade
 - name: Clear reboot guard after successful reboot
   ansible.builtin.file:
-    path: "{{ uip_reboot_guard_file }}"
+    path: '{{ uip_reboot_guard_file }}'
     state: absent
   when:
-    - uip_reboot_result is defined
+  - uip_reboot_result is defined
   tags:
-    - uip_preupgrade
-    - uip_postupgrade
+  - uip_preupgrade
+  - uip_postupgrade
+  - uip_upgrade

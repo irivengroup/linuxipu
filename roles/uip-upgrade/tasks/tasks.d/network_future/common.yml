@@ -1,210 +1,157 @@
 ---
 - name: Ensure network backup directory exists
   ansible.builtin.file:
-    path: "{{ uip_network_backup_dir }}"
+    path: '{{ uip_network_backup_dir }}'
     state: directory
     owner: root
     group: root
-    mode: "0750"
+    mode: '0750'
   tags:
-    - uip_upgrade
-    - uip_postupgrade
-
+  - uip_upgrade
+  - uip_postupgrade
 - name: Gather current interface facts
   ansible.builtin.setup:
     gather_subset:
-      - network
+    - network
   tags:
-    - uip_upgrade
-    - uip_postupgrade
-
+  - uip_upgrade
+  - uip_postupgrade
 - name: Build physical interface list
   ansible.builtin.set_fact:
-    uip_network_current_ifaces: >-
-      {{
-        ansible_interfaces
-        | difference(['lo'])
-        | list
-      }}
+    uip_network_current_ifaces: "{{\n  ansible_interfaces\n  | difference(['lo'])\n  | list\n}}"
   tags:
-    - uip_upgrade
-    - uip_postupgrade
-
+  - uip_upgrade
+  - uip_postupgrade
 - name: Predict future interface names with udev net_id
-  ansible.builtin.shell: |
-    set -o pipefail
-    iface="{{ item }}"
-    sys="/sys/class/net/${iface}"
-    if [ ! -e "$sys" ]; then
-      exit 0
-    fi
-    echo "CURRENT=${iface}"
-    udevadm test-builtin net_id "$sys" 2>/dev/null \
-      | awk -F= '/ID_NET_NAME_/ {print $1"="$2}'
+  ansible.builtin.shell: "set -o pipefail\niface=\"{{ item }}\"\nsys=\"/sys/class/net/${iface}\"\nif [ ! -e \"$sys\" ]; then\n\
+    \  exit 0\nfi\necho \"CURRENT=${iface}\"\nudevadm test-builtin net_id \"$sys\" 2>/dev/null \\\n  | awk -F= '/ID_NET_NAME_/\
+    \ {print $1\"=\"$2}'\n"
   args:
     executable: /bin/bash
-  loop: "{{ uip_network_current_ifaces }}"
+  loop: '{{ uip_network_current_ifaces }}'
   register: uip_network_netid_raw
   changed_when: false
   failed_when: false
   tags:
-    - uip_upgrade
-    - uip_postupgrade
-
+  - uip_upgrade
+  - uip_postupgrade
 - name: Capture kernel command line naming overrides
   ansible.builtin.command: cat /proc/cmdline
   register: uip_network_cmdline
   changed_when: false
   failed_when: false
   tags:
-    - uip_upgrade
-    - uip_postupgrade
-
+  - uip_upgrade
+  - uip_postupgrade
 - name: Capture active routes
   ansible.builtin.command: ip route show
   register: uip_network_routes_v4
   changed_when: false
   failed_when: false
   tags:
-    - uip_upgrade
-    - uip_postupgrade
-
+  - uip_upgrade
+  - uip_postupgrade
 - name: Capture IPv6 routes
   ansible.builtin.command: ip -6 route show
   register: uip_network_routes_v6
   changed_when: false
   failed_when: false
   tags:
-    - uip_upgrade
-    - uip_postupgrade
-
+  - uip_upgrade
+  - uip_postupgrade
 - name: Capture current IP addressing
   ansible.builtin.command: ip -o addr show
   register: uip_network_ip_addr
   changed_when: false
   failed_when: false
   tags:
-    - uip_upgrade
-    - uip_postupgrade
-
+  - uip_upgrade
+  - uip_postupgrade
 - name: Detect enabled network services for next boot
-  ansible.builtin.shell: |
-    set -o pipefail
-    for svc in NetworkManager network systemd-networkd wicked networking; do
-      systemctl is-enabled "$svc" 2>/dev/null && echo "${svc}=enabled" || true
-    done
+  ansible.builtin.shell: "set -o pipefail\nfor svc in NetworkManager network systemd-networkd wicked networking; do\n  systemctl\
+    \ is-enabled \"$svc\" 2>/dev/null && echo \"${svc}=enabled\" || true\ndone\n"
   args:
     executable: /bin/bash
   register: uip_network_enabled_services
   changed_when: false
   failed_when: false
   tags:
-    - uip_upgrade
-    - uip_postupgrade
-
+  - uip_upgrade
+  - uip_postupgrade
 - name: Build future network manager prediction
   ansible.builtin.set_fact:
-    uip_network_future_manager: >-
-      {{
-        'NetworkManager'
-        if 'NetworkManager=enabled' in (uip_network_enabled_services.stdout | default(''))
-        else 'wicked'
-        if 'wicked=enabled' in (uip_network_enabled_services.stdout | default(''))
-        else 'systemd-networkd'
-        if 'systemd-networkd=enabled' in (uip_network_enabled_services.stdout | default(''))
-        else 'network'
-        if 'network=enabled' in (uip_network_enabled_services.stdout | default(''))
-        else 'networking'
-        if 'networking=enabled' in (uip_network_enabled_services.stdout | default(''))
-        else 'unknown'
-      }}
+    uip_network_future_manager: "{{\n  'NetworkManager'\n  if 'NetworkManager=enabled' in (uip_network_enabled_services.stdout\
+      \ | default(''))\n  else 'wicked'\n  if 'wicked=enabled' in (uip_network_enabled_services.stdout | default(''))\n  else\
+      \ 'systemd-networkd'\n  if 'systemd-networkd=enabled' in (uip_network_enabled_services.stdout | default(''))\n  else\
+      \ 'network'\n  if 'network=enabled' in (uip_network_enabled_services.stdout | default(''))\n  else 'networking'\n  if\
+      \ 'networking=enabled' in (uip_network_enabled_services.stdout | default(''))\n  else 'unknown'\n}}"
   tags:
-    - uip_upgrade
-    - uip_postupgrade
-
+  - uip_upgrade
+  - uip_postupgrade
 - name: Build future interface prediction list
   ansible.builtin.set_fact:
-    uip_network_future_ifaces: "{{ uip_network_future_ifaces | default([]) + [uip_network_future_item] }}"
+    uip_network_future_ifaces: '{{ uip_network_future_ifaces | default([]) + [uip_network_future_item] }}'
   vars:
-    uip_netid_text: "{{ item.stdout | default('') }}"
-    uip_current_name: "{{ (uip_netid_text.splitlines() | select('match', '^CURRENT=') | list | first | default('CURRENT=')) | regex_replace('^CURRENT=', '') }}"
-    uip_pred_name: >-
-      {{
-        uip_current_name
-        if 'net.ifnames=0' in (uip_network_cmdline.stdout | default(''))
-        else
-        (
-          uip_netid_text.splitlines()
-          | select('match', '^ID_NET_NAME_ONBOARD=')
-          | list
-          | first
-          | default(
-              uip_netid_text.splitlines()
-              | select('match', '^ID_NET_NAME_SLOT=')
-              | list
-              | first
-              | default(
-                  uip_netid_text.splitlines()
-                  | select('match', '^ID_NET_NAME_PATH=')
-                  | list
-                  | first
-                  | default('ID_NET_NAME=' ~ uip_current_name)
-              )
-          )
-        ) | regex_replace('^ID_NET_NAME_[A-Z]+=','')
-      }}
+    uip_netid_text: '{{ item.stdout | default('''') }}'
+    uip_current_name: '{{ (uip_netid_text.splitlines() | select(''match'', ''^CURRENT='') | list | first | default(''CURRENT=''))
+      | regex_replace(''^CURRENT='', '''') }}'
+    uip_pred_name: "{{\n  uip_current_name\n  if 'net.ifnames=0' in (uip_network_cmdline.stdout | default(''))\n  else\n \
+      \ (\n    uip_netid_text.splitlines()\n    | select('match', '^ID_NET_NAME_ONBOARD=')\n    | list\n    | first\n    |\
+      \ default(\n        uip_netid_text.splitlines()\n        | select('match', '^ID_NET_NAME_SLOT=')\n        | list\n \
+      \       | first\n        | default(\n            uip_netid_text.splitlines()\n            | select('match', '^ID_NET_NAME_PATH=')\n\
+      \            | list\n            | first\n            | default('ID_NET_NAME=' ~ uip_current_name)\n        )\n    )\n\
+      \  ) | regex_replace('^ID_NET_NAME_[A-Z]+=','')\n}}"
     uip_network_future_item:
-      current: "{{ uip_current_name }}"
-      predicted: "{{ uip_pred_name }}"
-      rename: "{{ uip_current_name != uip_pred_name }}"
-  loop: "{{ uip_network_netid_raw.results | default([]) }}"
+      current: '{{ uip_current_name }}'
+      predicted: '{{ uip_pred_name }}'
+      rename: '{{ uip_current_name != uip_pred_name }}'
+  loop: '{{ uip_network_netid_raw.results | default([]) }}'
   tags:
-    - uip_upgrade
-    - uip_postupgrade
-
+  - uip_upgrade
+  - uip_postupgrade
 - name: Backup current network configuration
-  ansible.builtin.shell: |
-    set -o pipefail
-    for item in \
-      /etc/sysconfig/network-scripts \
-      /etc/sysconfig/network \
-      /etc/NetworkManager/system-connections \
-      /etc/netplan \
-      /etc/network \
-      /etc/systemd/network
-    do
-      if [ -e "$item" ]; then
-        cp -a "$item" "{{ uip_network_backup_dir }}/"
-      fi
-    done
+  ansible.builtin.shell: "set -o pipefail\nfor item in \\\n  /etc/sysconfig/network-scripts \\\n  /etc/sysconfig/network \\\
+    \n  /etc/NetworkManager/system-connections \\\n  /etc/netplan \\\n  /etc/network \\\n  /etc/systemd/network\ndo\n  if\
+    \ [ -e \"$item\" ]; then\n    cp -a \"$item\" \"{{ uip_network_backup_dir }}/\"\n  fi\ndone\n"
   args:
     executable: /bin/bash
   register: uip_network_config_backup
   changed_when: true
   failed_when: false
   tags:
-    - uip_upgrade
-    - uip_postupgrade
-
+  - uip_upgrade
+  - uip_postupgrade
 - name: Persist future network state report
   ansible.builtin.copy:
-    dest: "{{ uip_network_future_report }}"
+    dest: '{{ uip_network_future_report }}'
     owner: root
     group: root
-    mode: "0640"
-    content: |
-      predicted_manager: "{{ uip_network_future_manager }}"
-      naming_overrides: "{{ uip_network_cmdline.stdout | default('') }}"
+    mode: '0640'
+    content: 'predicted_manager: "{{ uip_network_future_manager }}"
+
+      naming_overrides: "{{ uip_network_cmdline.stdout | default('''') }}"
+
       interfaces:
+
       {{ uip_network_future_ifaces | default([]) | to_nice_yaml(indent=2) | indent(2, true) }}
+
       ipv4_routes: |
-      {{ uip_network_routes_v4.stdout | default('') | indent(2, true) }}
+
+      {{ uip_network_routes_v4.stdout | default('''') | indent(2, true) }}
+
       ipv6_routes: |
-      {{ uip_network_routes_v6.stdout | default('') | indent(2, true) }}
+
+      {{ uip_network_routes_v6.stdout | default('''') | indent(2, true) }}
+
       addresses: |
-      {{ uip_network_ip_addr.stdout | default('') | indent(2, true) }}
+
+      {{ uip_network_ip_addr.stdout | default('''') | indent(2, true) }}
+
       enabled_services: |
-      {{ uip_network_enabled_services.stdout | default('') | indent(2, true) }}
+
+      {{ uip_network_enabled_services.stdout | default('''') | indent(2, true) }}
+
+      '
   tags:
-    - uip_upgrade
-    - uip_postupgrade
+  - uip_upgrade
+  - uip_postupgrade

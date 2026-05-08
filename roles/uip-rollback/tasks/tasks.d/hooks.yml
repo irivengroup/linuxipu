@@ -1,23 +1,22 @@
 ---
 - name: Run rollback operator hooks
-  ansible.builtin.command: "{{ item }}"
-  loop: "{{ uip_rollback_hooks }}"
+  ansible.builtin.command: '{{ item }}'
+  loop: '{{ uip_rollback_hooks }}'
   register: uip_rollback_hook_results
   changed_when: true
   failed_when: false
   when:
-    - uip_rollback_hooks | length > 0
+  - uip_rollback_hooks | length > 0
   tags:
-    - uip_rollback
-    - uip_rollback_hooks
-
+  - uip_rollback
+  - uip_rollback_hooks
 - name: Persist rollback hook results
   ansible.builtin.copy:
-    dest: "{{ uip_report_dir }}/rollback-hooks.yml"
+    dest: '{{ uip_report_dir }}/rollback-hooks.yml'
     owner: root
     group: root
-    mode: "0640"
-    content: "{{ uip_rollback_hook_results.results | default([]) | to_nice_yaml }}"
+    mode: '0640'
+    content: '{{ uip_rollback_hook_results.results | default([]) | to_nice_yaml }}'
   tags:
-    - uip_rollback
-    - uip_rollback_hooks
+  - uip_rollback
+  - uip_rollback_hooks

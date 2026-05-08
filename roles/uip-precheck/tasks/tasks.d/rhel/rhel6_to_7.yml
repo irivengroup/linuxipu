@@ -5,58 +5,60 @@
   changed_when: false
   failed_when: false
   tags:
-    - uip_precheck
-    - uip_precheck_rhel
-    - uip_preupgrade
-
+  - uip_precheck
+  - uip_precheck_rhel
+  - uip_preupgrade
 - name: Check redhat-upgrade-tool availability for RHEL 6 to 7
   ansible.builtin.command: command -v redhat-upgrade-tool
   register: uip_rhut_cmd
   changed_when: false
   failed_when: false
   tags:
-    - uip_precheck
-    - uip_precheck_rhel
-    - uip_preupgrade
-
+  - uip_precheck
+  - uip_precheck_rhel
+  - uip_preupgrade
 - name: Report RHEL 6 to 7 upgrade tooling status
   ansible.builtin.debug:
     msg:
-      - "preupg rc={{ uip_preupg_cmd.rc }}"
-      - "redhat-upgrade-tool rc={{ uip_rhut_cmd.rc }}"
-      - "RHEL 6 to 7 is supported by UIP as a legacy path."
+    - preupg rc={{ uip_preupg_cmd.rc }}
+    - redhat-upgrade-tool rc={{ uip_rhut_cmd.rc }}
+    - RHEL 6 to 7 is supported by UIP as a legacy path.
   tags:
-    - uip_precheck
-    - uip_precheck_rhel
-    - uip_preupgrade
-
+  - uip_precheck
+  - uip_precheck_rhel
+  - uip_preupgrade
 - name: Run RHEL 6 to 7 preupg when available
   ansible.builtin.command: preupg
   register: uip_preupg_run
   changed_when: true
   failed_when: false
   when:
-    - uip_preupg_cmd.rc == 0
-    - uip_mode == "enforce"
+  - uip_preupg_cmd.rc == 0
+  - uip_mode == "enforce"
   tags:
-    - uip_precheck
-    - uip_precheck_rhel
-    - uip_preupgrade
-
+  - uip_precheck
+  - uip_precheck_rhel
+  - uip_preupgrade
 - name: Save RHEL 6 to 7 preupg output
   ansible.builtin.copy:
-    dest: "{{ uip_report_dir }}/rhel6-to-7-preupg.txt"
+    dest: '{{ uip_report_dir }}/rhel6-to-7-preupg.txt'
     owner: root
     group: root
-    mode: "0640"
-    content: |
-      preupg_command_rc: {{ uip_preupg_cmd.rc }}
+    mode: '0640'
+    content: 'preupg_command_rc: {{ uip_preupg_cmd.rc }}
+
       redhat_upgrade_tool_rc: {{ uip_rhut_cmd.rc }}
+
       stdout:
-      {{ uip_preupg_run.stdout | default('') }}
+
+      {{ uip_preupg_run.stdout | default('''') }}
+
       stderr:
-      {{ uip_preupg_run.stderr | default('') }}
+
+      {{ uip_preupg_run.stderr | default('''') }}
+
+      '
   tags:
-    - uip_precheck
-    - uip_precheck_rhel
-    - uip_preupgrade
+  - uip_precheck
+  - uip_precheck_rhel
+  - uip_preupgrade

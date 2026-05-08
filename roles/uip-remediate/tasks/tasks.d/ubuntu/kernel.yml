@@ -5,7 +5,7 @@
     purge: true
   when: uip_remediate_boot_cleanup | bool
   tags:
-    - uip_remediate
-    - uip_remediate_ubuntu
-    - uip_remediate_kernel
-    - uip_preupgrade
+  - uip_remediate
+  - uip_remediate_ubuntu
+  - uip_remediate_kernel
+  - uip_preupgrade

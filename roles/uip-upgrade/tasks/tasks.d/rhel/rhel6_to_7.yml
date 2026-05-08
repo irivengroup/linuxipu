@@ -6,21 +6,24 @@
   failed_when: uip_rhel6_upgrade.rc != 0
   when: uip_mode == "enforce"
   tags:
-    - uip_upgrade
-    - uip_postupgrade
-
+  - uip_upgrade
+  - uip_postupgrade
 - name: Save RHEL 6 to 7 upgrade output
   ansible.builtin.copy:
-    dest: "{{ uip_report_dir }}/rhel6-to-7-upgrade.txt"
+    dest: '{{ uip_report_dir }}/rhel6-to-7-upgrade.txt'
     owner: root
     group: root
-    mode: "0640"
-    content: |
-      stdout:
-      {{ uip_rhel6_upgrade.stdout | default('') }}
+    mode: '0640'
+    content: 'stdout:
+
+      {{ uip_rhel6_upgrade.stdout | default('''') }}
+
       stderr:
-      {{ uip_rhel6_upgrade.stderr | default('') }}
+
+      {{ uip_rhel6_upgrade.stderr | default('''') }}
+
+      '
   when: uip_mode == "enforce"
   tags:
-    - uip_upgrade
-    - uip_postupgrade
+  - uip_upgrade
+  - uip_postupgrade

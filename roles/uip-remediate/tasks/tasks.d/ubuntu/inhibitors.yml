@@ -2,27 +2,25 @@
 - name: Ensure Ubuntu release upgrader allows LTS upgrades
   ansible.builtin.lineinfile:
     path: /etc/update-manager/release-upgrades
-    regexp: '^Prompt='
-    line: 'Prompt=lts'
+    regexp: ^Prompt=
+    line: Prompt=lts
     create: true
-    mode: "0644"
+    mode: '0644'
   tags:
-    - uip_remediate
-    - uip_remediate_ubuntu
-    - uip_remediate_inhibitors
-    - uip_preupgrade
-
+  - uip_remediate
+  - uip_remediate_ubuntu
+  - uip_remediate_inhibitors
+  - uip_preupgrade
 - name: Clear interrupted Ubuntu dpkg state
   ansible.builtin.command: dpkg --configure -a
   register: uip_dpkg_configure
   changed_when: false
   failed_when: false
   tags:
-    - uip_remediate
-    - uip_remediate_ubuntu
-    - uip_remediate_inhibitors
-    - uip_preupgrade
-
+  - uip_remediate
+  - uip_remediate_ubuntu
+  - uip_remediate_inhibitors
+  - uip_preupgrade
 - name: Rebuild Ubuntu initramfs
   ansible.builtin.command: update-initramfs -u -k all
   register: uip_ubuntu_initramfs
@@ -30,7 +28,7 @@
   failed_when: uip_ubuntu_initramfs.rc != 0
   when: uip_initramfs_rebuild | bool
   tags:
-    - uip_remediate
-    - uip_remediate_ubuntu
-    - uip_remediate_initramfs
-    - uip_preupgrade
+  - uip_remediate
+  - uip_remediate_ubuntu
+  - uip_remediate_initramfs
+  - uip_preupgrade

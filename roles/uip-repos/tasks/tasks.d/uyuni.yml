@@ -3,5 +3,8 @@
   ansible.builtin.command: zypper --non-interactive refresh
   changed_when: false
   tags:
-    - uip_repos_uyuni
-    - uip_preupgrade
+  - uip_repos_uyuni
+  - uip_preupgrade
+  - uip_discovery
+  - uip_postcheck
+  - uip_postupgrade

@@ -6,21 +6,24 @@
   failed_when: uip_leapp_upgrade.rc != 0
   when: uip_mode == "enforce"
   tags:
-    - uip_upgrade
-    - uip_postupgrade
-
+  - uip_upgrade
+  - uip_postupgrade
 - name: Save Leapp upgrade output
   ansible.builtin.copy:
-    dest: "{{ uip_report_dir }}/leapp-upgrade.txt"
+    dest: '{{ uip_report_dir }}/leapp-upgrade.txt'
     owner: root
     group: root
-    mode: "0640"
-    content: |
-      stdout:
-      {{ uip_leapp_upgrade.stdout | default('') }}
+    mode: '0640'
+    content: 'stdout:
+
+      {{ uip_leapp_upgrade.stdout | default('''') }}
+
       stderr:
-      {{ uip_leapp_upgrade.stderr | default('') }}
+
+      {{ uip_leapp_upgrade.stderr | default('''') }}
+
+      '
   when: uip_mode == "enforce"
   tags:
-    - uip_upgrade
-    - uip_postupgrade
+  - uip_upgrade
+  - uip_postupgrade

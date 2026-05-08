@@ -2,61 +2,57 @@
 - name: Include critical filesystem verification tasks
   ansible.builtin.import_tasks: fs.yml
   tags:
-    - uip_precheck
-    - uip_precheck_fs
-    - uip_preupgrade
+  - uip_precheck
+  - uip_precheck_fs
+  - uip_preupgrade
 - name: Check default route
   ansible.builtin.command: ip route show default
   register: uip_route
   changed_when: false
   failed_when: uip_route.rc != 0
   tags:
-    - uip_precheck_sys
-    - uip_precheck
-    - uip_preupgrade
+  - uip_precheck_sys
+  - uip_precheck
+  - uip_preupgrade
 - name: Check DNS resolution
   ansible.builtin.command: getent hosts example.com
   register: uip_dns
   changed_when: false
   failed_when: uip_dns.rc != 0
   tags:
-    - uip_precheck_sys
-    - uip_precheck
-    - uip_preupgrade
+  - uip_precheck_sys
+  - uip_precheck
+  - uip_preupgrade
 - name: Check failed systemd units
   ansible.builtin.command: systemctl --failed --no-legend
   register: uip_failed_units
   changed_when: false
   failed_when: false
   tags:
-    - uip_precheck_sys
-    - uip_precheck
-    - uip_preupgrade
-
+  - uip_precheck_sys
+  - uip_precheck
+  - uip_preupgrade
 - name: Include DNS and repository reachability checks
   ansible.builtin.import_tasks: network.yml
   tags:
-    - uip_precheck
-    - uip_precheck_network
-    - uip_preupgrade
-
+  - uip_precheck
+  - uip_precheck_network
+  - uip_preupgrade
 - name: Include boot and storage readiness checks
   ansible.builtin.import_tasks: boot.yml
   tags:
-    - uip_precheck
-    - uip_precheck_boot
-    - uip_preupgrade
-
+  - uip_precheck
+  - uip_precheck_boot
+  - uip_preupgrade
 - name: Include automation and agent checks
   ansible.builtin.import_tasks: agents.yml
   tags:
-    - uip_precheck
-    - uip_precheck_agents
-    - uip_preupgrade
-
+  - uip_precheck
+  - uip_precheck_agents
+  - uip_preupgrade
 - name: Include application hook precheck tasks
   ansible.builtin.import_tasks: app_hooks.yml
   tags:
-    - uip_precheck
-    - uip_precheck_app
-    - uip_preupgrade
+  - uip_precheck
+  - uip_precheck_app
+  - uip_preupgrade

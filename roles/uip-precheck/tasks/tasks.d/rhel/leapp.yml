@@ -5,36 +5,39 @@
   changed_when: false
   failed_when: false
   tags:
-    - uip_precheck
-    - uip_precheck_rhel
-    - uip_preupgrade
-
+  - uip_precheck
+  - uip_precheck_rhel
+  - uip_preupgrade
 - name: Run Leapp preupgrade when available
   ansible.builtin.command: leapp preupgrade
   register: uip_leapp_preupgrade
   changed_when: true
   failed_when: false
   when:
-    - uip_leapp_cmd.rc == 0
-    - uip_mode == "enforce"
+  - uip_leapp_cmd.rc == 0
+  - uip_mode == "enforce"
   tags:
-    - uip_precheck
-    - uip_precheck_rhel
-    - uip_preupgrade
-
+  - uip_precheck
+  - uip_precheck_rhel
+  - uip_preupgrade
 - name: Save Leapp preupgrade output
   ansible.builtin.copy:
-    dest: "{{ uip_report_dir }}/leapp-preupgrade.txt"
+    dest: '{{ uip_report_dir }}/leapp-preupgrade.txt'
     owner: root
     group: root
-    mode: "0640"
-    content: |
-      leapp_command_rc: {{ uip_leapp_cmd.rc }}
+    mode: '0640'
+    content: 'leapp_command_rc: {{ uip_leapp_cmd.rc }}
+
       stdout:
-      {{ uip_leapp_preupgrade.stdout | default('') }}
+
+      {{ uip_leapp_preupgrade.stdout | default('''') }}
+
       stderr:
-      {{ uip_leapp_preupgrade.stderr | default('') }}
+
+      {{ uip_leapp_preupgrade.stderr | default('''') }}
+
+      '
   tags:
-    - uip_precheck
-    - uip_precheck_rhel
-    - uip_preupgrade
+  - uip_precheck
+  - uip_precheck_rhel
+  - uip_preupgrade

@@ -2,30 +2,38 @@
 - name: Run lock validation before discovery
   ansible.builtin.include_role:
     name: uip-lock
+    apply:
+      tags:
+      - uip_discovery
+      - uip_preupgrade
   tags:
-    - uip_discovery
-    - uip_preupgrade
+  - uip_discovery
+  - uip_preupgrade
 - name: Capture package inventory command
   ansible.builtin.command: "{{\n  'rpm -qa' if uip_pkg_mgr in ['yum', 'dnf', 'zypper']\n  else 'dpkg-query -W'\n}}"
   register: uip_pkg_inv
   changed_when: false
   failed_when: false
   tags:
-    - uip_discovery
-    - uip_discovery_pkg
-    - uip_preupgrade
+  - uip_discovery
+  - uip_discovery_pkg
+  - uip_preupgrade
 - name: Save package inventory
   ansible.builtin.copy:
     dest: '{{ uip_report_dir }}/packages-before.txt'
     content: '{{ uip_pkg_inv.stdout }}'
     mode: '0640'
   tags:
-    - uip_discovery
-    - uip_discovery_pkg
-    - uip_preupgrade
+  - uip_discovery
+  - uip_discovery_pkg
+  - uip_preupgrade
 - name: Run repository manager handling after discovery
   ansible.builtin.include_role:
     name: uip-repos
+    apply:
+      tags:
+      - uip_discovery
+      - uip_preupgrade
   tags:
-    - uip_discovery
-    - uip_preupgrade
+  - uip_discovery
+  - uip_preupgrade

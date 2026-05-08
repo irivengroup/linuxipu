@@ -2,20 +2,19 @@
 - name: Include RHEL 6 to 7 bootability checks
   ansible.builtin.import_tasks: bootability_rhel6_to_7.yml
   when:
-    - uip_src_ver | string == "6"
-    - uip_dst_ver | string == "7"
+  - uip_src_ver | string == "6"
+  - uip_dst_ver | string == "7"
   tags:
-    - uip_remediate
-    - uip_remediate_rhel
-    - uip_remediate_bootloader
-    - uip_preupgrade
-
+  - uip_remediate
+  - uip_remediate_rhel
+  - uip_remediate_bootloader
+  - uip_preupgrade
 - name: Include RHEL Leapp bootability checks
   ansible.builtin.import_tasks: bootability_leapp.yml
   when:
-    - not (uip_src_ver | string == "6" and uip_dst_ver | string == "7")
+  - not (uip_src_ver | string == "6" and uip_dst_ver | string == "7")
   tags:
-    - uip_remediate
-    - uip_remediate_rhel
-    - uip_remediate_bootloader
-    - uip_preupgrade
+  - uip_remediate
+  - uip_remediate_rhel
+  - uip_remediate_bootloader
+  - uip_preupgrade

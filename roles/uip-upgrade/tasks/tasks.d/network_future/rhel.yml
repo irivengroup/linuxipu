@@ -1,40 +1,28 @@
 ---
 - name: Prepare RHEL ifcfg files for predicted interface names
-  ansible.builtin.shell: |
-    set -o pipefail
-    old="{{ item.current }}"
-    new="{{ item.predicted }}"
-    src="/etc/sysconfig/network-scripts/ifcfg-${old}"
-    dst="/etc/sysconfig/network-scripts/ifcfg-${new}"
-    if [ "$old" != "$new" ] && [ -f "$src" ] && [ ! -f "$dst" ]; then
-      cp -a "$src" "$dst"
-      sed -i "s/^DEVICE=.*/DEVICE=${new}/" "$dst"
-      if grep -q '^NAME=' "$dst"; then
-        sed -i "s/^NAME=.*/NAME=${new}/" "$dst"
-      else
-        echo "NAME=${new}" >> "$dst"
-      fi
-      echo "created ${dst}"
-    fi
+  ansible.builtin.shell: "set -o pipefail\nold=\"{{ item.current }}\"\nnew=\"{{ item.predicted }}\"\nsrc=\"/etc/sysconfig/network-scripts/ifcfg-${old}\"\
+    \ndst=\"/etc/sysconfig/network-scripts/ifcfg-${new}\"\nif [ \"$old\" != \"$new\" ] && [ -f \"$src\" ] && [ ! -f \"$dst\"\
+    \ ]; then\n  cp -a \"$src\" \"$dst\"\n  sed -i \"s/^DEVICE=.*/DEVICE=${new}/\" \"$dst\"\n  if grep -q '^NAME=' \"$dst\"\
+    ; then\n    sed -i \"s/^NAME=.*/NAME=${new}/\" \"$dst\"\n  else\n    echo \"NAME=${new}\" >> \"$dst\"\n  fi\n  echo \"\
+    created ${dst}\"\nfi\n"
   args:
     executable: /bin/bash
-  loop: "{{ uip_network_future_ifaces | default([]) }}"
+  loop: '{{ uip_network_future_ifaces | default([]) }}'
   register: uip_network_rhel_ifcfg_prepare
-  changed_when: "'created' in (uip_network_rhel_ifcfg_prepare.stdout | default(''))"
+  changed_when: '''created'' in (uip_network_rhel_ifcfg_prepare.stdout | default(''''))'
   failed_when: false
   when:
-    - uip_network_future_apply | bool
+  - uip_network_future_apply | bool
   tags:
-    - uip_upgrade
-    - uip_postupgrade
-
+  - uip_upgrade
+  - uip_postupgrade
 - name: Reload NetworkManager connections without disrupting current SSH
   ansible.builtin.command: nmcli connection reload
   register: uip_network_rhel_nm_reload
   changed_when: false
   failed_when: false
   when:
-    - uip_network_future_manager == "NetworkManager"
+  - uip_network_future_manager == "NetworkManager"
   tags:
-    - uip_upgrade
-    - uip_postupgrade
+  - uip_upgrade
+  - uip_postupgrade

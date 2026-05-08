@@ -1,304 +1,250 @@
 ---
 - name: Check critical filesystem report
   ansible.builtin.stat:
-    path: "{{ uip_report_dir }}/precheck-filesystems.yml"
+    path: '{{ uip_report_dir }}/precheck-filesystems.yml'
   register: uip_fs_report_stat
   tags:
-    - uip_remediate
-    - uip_remediate_fs
-    - uip_preupgrade
-
+  - uip_remediate
+  - uip_remediate_fs
+  - uip_preupgrade
 - name: Read critical filesystem report
   ansible.builtin.slurp:
-    src: "{{ uip_report_dir }}/precheck-filesystems.yml"
+    src: '{{ uip_report_dir }}/precheck-filesystems.yml'
   register: uip_fs_report_raw
   when: uip_fs_report_stat.stat.exists
   tags:
-    - uip_remediate
-    - uip_remediate_fs
-    - uip_preupgrade
-
+  - uip_remediate
+  - uip_remediate_fs
+  - uip_preupgrade
 - name: Decode critical filesystem report
   ansible.builtin.set_fact:
-    uip_pre_fs_report: "{{ uip_fs_report_raw.content | b64decode | from_yaml }}"
+    uip_pre_fs_report: '{{ uip_fs_report_raw.content | b64decode | from_yaml }}'
   when: uip_fs_report_stat.stat.exists
   tags:
-    - uip_remediate
-    - uip_remediate_fs
-    - uip_preupgrade
-
+  - uip_remediate
+  - uip_remediate_fs
+  - uip_preupgrade
 - name: Initialize filesystem remediation facts
   ansible.builtin.set_fact:
     uip_fs_candidates: []
     uip_fs_extend_results: []
     uip_fs_skipped_results: []
   tags:
-    - uip_remediate
-    - uip_remediate_fs
-    - uip_preupgrade
-
+  - uip_remediate
+  - uip_remediate_fs
+  - uip_preupgrade
 - name: Build remediation candidate list
   ansible.builtin.set_fact:
-    uip_fs_candidates: "{{ uip_fs_candidates + [uip_fs_candidate] }}"
+    uip_fs_candidates: '{{ uip_fs_candidates + [uip_fs_candidate] }}'
   vars:
-    uip_fs_needed_mb: "{{ (item.min_required_mb | int) - (item.free_mb | int) }}"
-    uip_fs_delta_mb: "{{ (uip_fs_needed_mb | int) + (uip_remediate_fs_size_threshold_mb | int) }}"
+    uip_fs_needed_mb: '{{ (item.min_required_mb | int) - (item.free_mb | int) }}'
+    uip_fs_delta_mb: '{{ (uip_fs_needed_mb | int) + (uip_remediate_fs_size_threshold_mb | int) }}'
     uip_fs_candidate:
-      name: "{{ item.name }}"
-      path: "{{ item.path }}"
-      current_status: "{{ item.status }}"
-      free_mb: "{{ item.free_mb | int }}"
-      min_required_mb: "{{ item.min_required_mb | int }}"
-      delta_mb: "{{ uip_fs_delta_mb | int }}"
-      mount: "{{ item.mount }}"
-      fstype: "{{ item.fstype }}"
-  loop: "{{ uip_pre_fs_report | default([]) }}"
+      name: '{{ item.name }}'
+      path: '{{ item.path }}'
+      current_status: '{{ item.status }}'
+      free_mb: '{{ item.free_mb | int }}'
+      min_required_mb: '{{ item.min_required_mb | int }}'
+      delta_mb: '{{ uip_fs_delta_mb | int }}'
+      mount: '{{ item.mount }}'
+      fstype: '{{ item.fstype }}'
+  loop: '{{ uip_pre_fs_report | default([]) }}'
   when:
-    - item.status == "ko"
-    - item.path != "/boot"
+  - item.status == "ko"
+  - item.path != "/boot"
   tags:
-    - uip_remediate
-    - uip_remediate_fs
-    - uip_preupgrade
-
+  - uip_remediate
+  - uip_remediate_fs
+  - uip_preupgrade
 - name: Skip boot filesystem remediation intentionally
   ansible.builtin.set_fact:
-    uip_fs_skipped_results: "{{ uip_fs_skipped_results + [item | combine({'reason': 'boot_filesystem_not_modified'})] }}"
-  loop: "{{ uip_pre_fs_report | default([]) }}"
+    uip_fs_skipped_results: '{{ uip_fs_skipped_results + [item | combine({''reason'': ''boot_filesystem_not_modified''})]
+      }}'
+  loop: '{{ uip_pre_fs_report | default([]) }}'
   when:
-    - item.status == "ko"
-    - item.path == "/boot"
+  - item.status == "ko"
+  - item.path == "/boot"
   tags:
-    - uip_remediate
-    - uip_remediate_fs
-    - uip_preupgrade
-
+  - uip_remediate
+  - uip_remediate_fs
+  - uip_preupgrade
 - name: Detect filesystem source device
-  ansible.builtin.command: "findmnt -n -o SOURCE --target {{ item.path }}"
+  ansible.builtin.command: findmnt -n -o SOURCE --target {{ item.path }}
   register: uip_fs_source_checks
   changed_when: false
   failed_when: false
-  loop: "{{ uip_fs_candidates }}"
+  loop: '{{ uip_fs_candidates }}'
   tags:
-    - uip_remediate
-    - uip_remediate_fs
-    - uip_preupgrade
-
+  - uip_remediate
+  - uip_remediate_fs
+  - uip_preupgrade
 - name: Detect filesystem type from findmnt
-  ansible.builtin.command: "findmnt -n -o FSTYPE --target {{ item.path }}"
+  ansible.builtin.command: findmnt -n -o FSTYPE --target {{ item.path }}
   register: uip_fs_type_checks
   changed_when: false
   failed_when: false
-  loop: "{{ uip_fs_candidates }}"
+  loop: '{{ uip_fs_candidates }}'
   tags:
-    - uip_remediate
-    - uip_remediate_fs
-    - uip_preupgrade
-
+  - uip_remediate
+  - uip_remediate_fs
+  - uip_preupgrade
 - name: Resolve logical volume metadata
-  ansible.builtin.command: >-
-    lvs --noheadings --units m --nosuffix
-    -o lv_path,vg_name,lv_name,lv_size
-    {{ item.stdout }}
+  ansible.builtin.command: lvs --noheadings --units m --nosuffix -o lv_path,vg_name,lv_name,lv_size {{ item.stdout }}
   register: uip_fs_lvs_checks
   changed_when: false
   failed_when: false
-  loop: "{{ uip_fs_source_checks.results | default([]) }}"
+  loop: '{{ uip_fs_source_checks.results | default([]) }}'
   when:
-    - item.rc == 0
-    - item.stdout is match('^/dev/')
+  - item.rc == 0
+  - item.stdout is match('^/dev/')
   tags:
-    - uip_remediate
-    - uip_remediate_fs
-    - uip_preupgrade
-
+  - uip_remediate
+  - uip_remediate_fs
+  - uip_preupgrade
 - name: Resolve volume group free space
-  ansible.builtin.command: >-
-    vgs --noheadings --units m --nosuffix
-    -o vg_name,vg_free
-    {{ (item.stdout | trim).split()[1] }}
+  ansible.builtin.command: vgs --noheadings --units m --nosuffix -o vg_name,vg_free {{ (item.stdout | trim).split()[1] }}
   register: uip_fs_vgs_checks
   changed_when: false
   failed_when: false
-  loop: "{{ uip_fs_lvs_checks.results | default([]) }}"
+  loop: '{{ uip_fs_lvs_checks.results | default([]) }}'
   when:
-    - item.rc == 0
-    - (item.stdout | trim).split() | length >= 2
+  - item.rc == 0
+  - (item.stdout | trim).split() | length >= 2
   tags:
-    - uip_remediate
-    - uip_remediate_fs
-    - uip_preupgrade
-
+  - uip_remediate
+  - uip_remediate_fs
+  - uip_preupgrade
 - name: Build validated LVM extension plan
   ansible.builtin.set_fact:
-    uip_fs_extend_plan: "{{ uip_fs_extend_plan | default([]) + [uip_fs_plan_item] }}"
+    uip_fs_extend_plan: '{{ uip_fs_extend_plan | default([]) + [uip_fs_plan_item] }}'
   vars:
-    uip_src_item: "{{ item.item.item }}"
-    uip_lvs_fields: "{{ (item.stdout | trim).split() }}"
-    uip_vg_match: >-
-      {{
-        uip_fs_vgs_checks.results
-        | default([])
-        | selectattr('item.item.stdout', 'defined')
-        | selectattr('item.item.stdout', 'equalto', item.stdout)
-        | list
-      }}
-    uip_vg_free_mb: >-
-      {{
-        (
-          uip_fs_vgs_checks.results
-          | default([])
-          | selectattr('item.stdout', 'defined')
-          | selectattr('item.stdout', 'search', uip_lvs_fields[1])
-          | map(attribute='stdout')
-          | list
-          | first
-          | default('0 0')
-        ).split()[-1] | float | int
-      }}
-    uip_fs_fstype: >-
-      {{
-        (
-          uip_fs_type_checks.results
-          | selectattr('item.path', 'equalto', uip_src_item.path)
-          | map(attribute='stdout')
-          | list
-          | first
-          | default(uip_src_item.fstype)
-        )
-      }}
+    uip_src_item: '{{ item.item.item }}'
+    uip_lvs_fields: '{{ (item.stdout | trim).split() }}'
+    uip_vg_match: "{{\n  uip_fs_vgs_checks.results\n  | default([])\n  | selectattr('item.item.stdout', 'defined')\n  | selectattr('item.item.stdout',\
+      \ 'equalto', item.stdout)\n  | list\n}}"
+    uip_vg_free_mb: "{{\n  (\n    uip_fs_vgs_checks.results\n    | default([])\n    | selectattr('item.stdout', 'defined')\n\
+      \    | selectattr('item.stdout', 'search', uip_lvs_fields[1])\n    | map(attribute='stdout')\n    | list\n    | first\n\
+      \    | default('0 0')\n  ).split()[-1] | float | int\n}}"
+    uip_fs_fstype: "{{\n  (\n    uip_fs_type_checks.results\n    | selectattr('item.path', 'equalto', uip_src_item.path)\n\
+      \    | map(attribute='stdout')\n    | list\n    | first\n    | default(uip_src_item.fstype)\n  )\n}}"
     uip_fs_plan_item:
-      name: "{{ uip_src_item.name }}"
-      path: "{{ uip_src_item.path }}"
-      lv_path: "{{ uip_lvs_fields[0] }}"
-      vg_name: "{{ uip_lvs_fields[1] }}"
-      lv_name: "{{ uip_lvs_fields[2] }}"
-      fstype: "{{ uip_fs_fstype }}"
-      delta_mb: "{{ uip_src_item.delta_mb | int }}"
-      vg_free_mb: "{{ uip_vg_free_mb | int }}"
-      can_extend: "{{ (uip_vg_free_mb | int) >= (uip_src_item.delta_mb | int) and uip_fs_fstype in ['xfs', 'ext2', 'ext3', 'ext4'] }}"
-  loop: "{{ uip_fs_lvs_checks.results | default([]) }}"
+      name: '{{ uip_src_item.name }}'
+      path: '{{ uip_src_item.path }}'
+      lv_path: '{{ uip_lvs_fields[0] }}'
+      vg_name: '{{ uip_lvs_fields[1] }}'
+      lv_name: '{{ uip_lvs_fields[2] }}'
+      fstype: '{{ uip_fs_fstype }}'
+      delta_mb: '{{ uip_src_item.delta_mb | int }}'
+      vg_free_mb: '{{ uip_vg_free_mb | int }}'
+      can_extend: '{{ (uip_vg_free_mb | int) >= (uip_src_item.delta_mb | int) and uip_fs_fstype in [''xfs'', ''ext2'', ''ext3'',
+        ''ext4''] }}'
+  loop: '{{ uip_fs_lvs_checks.results | default([]) }}'
   when:
-    - item.rc == 0
-    - (item.stdout | trim).split() | length >= 4
+  - item.rc == 0
+  - (item.stdout | trim).split() | length >= 4
   tags:
-    - uip_remediate
-    - uip_remediate_fs
-    - uip_preupgrade
-
+  - uip_remediate
+  - uip_remediate_fs
+  - uip_preupgrade
 - name: Record filesystem extension skips
   ansible.builtin.set_fact:
-    uip_fs_skipped_results: "{{ uip_fs_skipped_results + [item | combine({'reason': uip_skip_reason})] }}"
+    uip_fs_skipped_results: '{{ uip_fs_skipped_results + [item | combine({''reason'': uip_skip_reason})] }}'
   vars:
-    uip_skip_reason: >-
-      {{
-        'unsupported_filesystem_' ~ item.fstype
-        if item.fstype not in ['xfs', 'ext2', 'ext3', 'ext4']
-        else 'insufficient_vg_free_mb'
-      }}
-  loop: "{{ uip_fs_extend_plan | default([]) }}"
+    uip_skip_reason: "{{\n  'unsupported_filesystem_' ~ item.fstype\n  if item.fstype not in ['xfs', 'ext2', 'ext3', 'ext4']\n\
+      \  else 'insufficient_vg_free_mb'\n}}"
+  loop: '{{ uip_fs_extend_plan | default([]) }}'
   when:
-    - not item.can_extend | bool
+  - not item.can_extend | bool
   tags:
-    - uip_remediate
-    - uip_remediate_fs
-    - uip_preupgrade
-
+  - uip_remediate
+  - uip_remediate_fs
+  - uip_preupgrade
 - name: Extend validated LVM filesystems
-  ansible.builtin.command: "lvextend -r -L +{{ item.delta_mb }}M {{ item.lv_path }}"
+  ansible.builtin.command: lvextend -r -L +{{ item.delta_mb }}M {{ item.lv_path }}
   register: uip_lvextend_results
   changed_when: uip_lvextend_results.rc == 0
   failed_when: false
-  loop: "{{ uip_fs_extend_plan | default([]) }}"
+  loop: '{{ uip_fs_extend_plan | default([]) }}'
   when:
-    - uip_remediate_lvm_extend | bool
-    - item.can_extend | bool
+  - uip_remediate_lvm_extend | bool
+  - item.can_extend | bool
   tags:
-    - uip_remediate
-    - uip_remediate_fs
-    - uip_preupgrade
-
+  - uip_remediate
+  - uip_remediate_fs
+  - uip_preupgrade
 - name: Persist filesystem extension execution report
   ansible.builtin.copy:
-    dest: "{{ uip_report_dir }}/remediate-filesystem-extend-execution.yml"
+    dest: '{{ uip_report_dir }}/remediate-filesystem-extend-execution.yml'
     owner: root
     group: root
-    mode: "0640"
-    content: |
-      plan:
+    mode: '0640'
+    content: 'plan:
+
       {{ uip_fs_extend_plan | default([]) | to_nice_yaml(indent=2) | indent(2, true) }}
+
       skipped:
+
       {{ uip_fs_skipped_results | default([]) | to_nice_yaml(indent=2) | indent(2, true) }}
+
       execution:
+
       {{ uip_lvextend_results.results | default([]) | to_nice_yaml(indent=2) | indent(2, true) }}
-  tags:
-    - uip_remediate
-    - uip_remediate_fs
-    - uip_preupgrade
 
+      '
+  tags:
+  - uip_remediate
+  - uip_remediate_fs
+  - uip_preupgrade
 - name: Refresh facts after filesystem remediation
-  ansible.builtin.setup:
+  ansible.builtin.setup: null
   tags:
-    - uip_remediate
-    - uip_remediate_fs
-    - uip_preupgrade
-
+  - uip_remediate
+  - uip_remediate_fs
+  - uip_preupgrade
 - name: Rebuild critical filesystem verification report after remediation
   ansible.builtin.set_fact:
-    uip_remediate_fs_report: "{{ uip_remediate_fs_report | default([]) + [uip_fs_item] }}"
+    uip_remediate_fs_report: '{{ uip_remediate_fs_report | default([]) + [uip_fs_item] }}'
   vars:
-    uip_fs_mount: >-
-      {{
-        (
-          ansible_mounts
-          | selectattr('mount', 'equalto', item.path)
-          | list
-          | first
-        ) | default({})
-      }}
-    uip_fs_free_mb: "{{ (uip_fs_mount.size_available | default(0) | int) // 1024 // 1024 }}"
+    uip_fs_mount: "{{\n  (\n    ansible_mounts\n    | selectattr('mount', 'equalto', item.path)\n    | list\n    | first\n\
+      \  ) | default({})\n}}"
+    uip_fs_free_mb: '{{ (uip_fs_mount.size_available | default(0) | int) // 1024 // 1024 }}'
     uip_fs_item:
-      name: "{{ item.name }}"
-      path: "{{ item.path }}"
-      free_mb: "{{ uip_fs_free_mb | int }}"
-      status: "{{ 'ok' if (uip_fs_free_mb | int) >= (item.min_required_mb | int) else item.status }}"
-      min_required_mb: "{{ item.min_required_mb | int }}"
-      mount: "{{ uip_fs_mount.mount | default(item.mount) }}"
-      fstype: "{{ uip_fs_mount.fstype | default(item.fstype) }}"
-  loop: "{{ uip_pre_fs_report | default([]) }}"
+      name: '{{ item.name }}'
+      path: '{{ item.path }}'
+      free_mb: '{{ uip_fs_free_mb | int }}'
+      status: '{{ ''ok'' if (uip_fs_free_mb | int) >= (item.min_required_mb | int) else item.status }}'
+      min_required_mb: '{{ item.min_required_mb | int }}'
+      mount: '{{ uip_fs_mount.mount | default(item.mount) }}'
+      fstype: '{{ uip_fs_mount.fstype | default(item.fstype) }}'
+  loop: '{{ uip_pre_fs_report | default([]) }}'
   tags:
-    - uip_remediate
-    - uip_remediate_fs
-    - uip_preupgrade
-
+  - uip_remediate
+  - uip_remediate_fs
+  - uip_preupgrade
 - name: Persist filesystem remediation report
   ansible.builtin.copy:
-    dest: "{{ uip_report_dir }}/remediate-filesystems.yml"
+    dest: '{{ uip_report_dir }}/remediate-filesystems.yml'
     owner: root
     group: root
-    mode: "0640"
-    content: "{{ uip_remediate_fs_report | to_nice_yaml }}"
+    mode: '0640'
+    content: '{{ uip_remediate_fs_report | to_nice_yaml }}'
   tags:
-    - uip_remediate
-    - uip_remediate_fs
-    - uip_preupgrade
-
+  - uip_remediate
+  - uip_remediate_fs
+  - uip_preupgrade
 - name: Build list of unresolved filesystem constraints
   ansible.builtin.set_fact:
-    uip_fs_unresolved: "{{ uip_remediate_fs_report | selectattr('status', 'equalto', 'ko') | list }}"
+    uip_fs_unresolved: '{{ uip_remediate_fs_report | selectattr(''status'', ''equalto'', ''ko'') | list }}'
   tags:
-    - uip_remediate
-    - uip_remediate_fs
-    - uip_preupgrade
-
+  - uip_remediate
+  - uip_remediate_fs
+  - uip_preupgrade
 - name: Fail when critical filesystem constraints remain unresolved
   ansible.builtin.fail:
-    msg: >-
-      Critical filesystem prerequisites remain unresolved:
-      {{ uip_fs_unresolved | to_nice_yaml }}
+    msg: 'Critical filesystem prerequisites remain unresolved: {{ uip_fs_unresolved | to_nice_yaml }}'
   when:
-    - uip_fs_unresolved | length > 0
+  - uip_fs_unresolved | length > 0
   tags:
-    - uip_remediate
-    - uip_remediate_fs
-    - uip_preupgrade
+  - uip_remediate
+  - uip_remediate_fs
+  - uip_preupgrade

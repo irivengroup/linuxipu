@@ -1,28 +1,38 @@
 ---
 - name: Clean RHEL package metadata
-  ansible.builtin.command: "{{ 'dnf' if ansible_pkg_mgr == 'dnf' else 'yum' }} clean all"
+  ansible.builtin.command: '{{ ''dnf'' if ansible_pkg_mgr == ''dnf'' else ''yum'' }} clean all'
   changed_when: false
   failed_when: false
   tags:
-    - uip_postupgrade
-
+  - uip_postupgrade
+  - uip_discovery
+  - uip_preupgrade
+  - uip_postcheck
 - name: Refresh RHSM metadata
   ansible.builtin.command: subscription-manager refresh
   changed_when: false
   failed_when: false
   when: uip_repo_mgr in ["satellite", "native"]
   tags:
-    - uip_postupgrade
-
+  - uip_postupgrade
+  - uip_discovery
+  - uip_preupgrade
+  - uip_postcheck
 - name: Persist RHEL repo post report
   ansible.builtin.copy:
-    dest: "{{ uip_report_dir }}/repo-post-rhel.yml"
+    dest: '{{ uip_report_dir }}/repo-post-rhel.yml'
     owner: root
     group: root
-    mode: "0640"
-    content: |
-      postupgrade: true
+    mode: '0640'
+    content: 'postupgrade: true
+
       repo_manager: "{{ uip_repo_mgr }}"
+
       package_manager: "{{ ansible_pkg_mgr }}"
+
+      '
   tags:
-    - uip_postupgrade
+  - uip_postupgrade
+  - uip_discovery
+  - uip_preupgrade
+  - uip_postcheck

@@ -4,47 +4,59 @@
     update_cache: true
     cache_valid_time: 0
   tags:
-    - uip_update_apt
-    - uip_preupgrade
-    - uip_apt
+  - uip_update_apt
+  - uip_preupgrade
+  - uip_apt
+  - uip_precheck
+  - uip_snapshot
 - name: Upgrade current APT baseline before OS upgrade
   ansible.builtin.apt:
     upgrade: dist
     autoremove: '{{ uip_update_autoremove | bool }}'
   tags:
-    - uip_update_apt
-    - uip_preupgrade
-    - uip_apt
+  - uip_update_apt
+  - uip_preupgrade
+  - uip_apt
+  - uip_precheck
+  - uip_snapshot
 - name: Clean APT package cache
   ansible.builtin.apt:
     autoclean: true
   when: uip_update_clean_cache | bool
   tags:
-    - uip_update_apt
-    - uip_preupgrade
-    - uip_apt
+  - uip_update_apt
+  - uip_preupgrade
+  - uip_apt
+  - uip_precheck
+  - uip_snapshot
 - name: Check Debian or Ubuntu reboot-required marker
   ansible.builtin.stat:
     path: /var/run/reboot-required
   register: uip_reboot_required_apt
   tags:
-    - uip_update_apt
-    - uip_update_reboot_check
-    - uip_preupgrade
-    - uip_apt
+  - uip_update_apt
+  - uip_update_reboot_check
+  - uip_preupgrade
+  - uip_apt
+  - uip_precheck
+  - uip_snapshot
 - name: Set Debian or Ubuntu reboot-required fact after baseline update
   ansible.builtin.set_fact:
     uip_update_reboot_required: '{{ uip_reboot_required_apt.stat.exists | default(false) }}'
   tags:
-    - uip_update_apt
-    - uip_update_reboot_check
-    - uip_preupgrade
-    - uip_apt
+  - uip_update_apt
+  - uip_update_reboot_check
+  - uip_preupgrade
+  - uip_apt
+  - uip_precheck
+  - uip_snapshot
 - name: Report Debian or Ubuntu reboot requirement after baseline update
   ansible.builtin.debug:
     msg: 'Baseline update reboot required: {{ uip_update_reboot_required }}'
   tags:
-    - uip_update_apt
-    - uip_update_reboot_check
-    - uip_preupgrade
-    - uip_apt
+  - uip_update_apt
+  - uip_update_reboot_check
+  - uip_preupgrade
+  - uip_apt
+  - uip_precheck
+  - uip_snapshot

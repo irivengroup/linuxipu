@@ -1,35 +1,26 @@
 ---
 - name: Prepare Ubuntu netplan match files for predicted interface names
   ansible.builtin.copy:
-    dest: "/etc/netplan/99-uip-{{ item.predicted }}.yaml"
+    dest: /etc/netplan/99-uip-{{ item.predicted }}.yaml
     owner: root
     group: root
-    mode: "0600"
-    content: |
-      network:
-        version: 2
-        ethernets:
-          {{ item.predicted }}:
-            match:
-              name: "{{ item.predicted }}"
-            dhcp4: true
-            dhcp6: true
-            optional: true
-  loop: "{{ uip_network_future_ifaces | default([]) }}"
+    mode: '0600'
+    content: "network:\n  version: 2\n  ethernets:\n    {{ item.predicted }}:\n      match:\n        name: \"{{ item.predicted\
+      \ }}\"\n      dhcp4: true\n      dhcp6: true\n      optional: true\n"
+  loop: '{{ uip_network_future_ifaces | default([]) }}'
   when:
-    - uip_network_future_apply | bool
-    - item.rename | bool
+  - uip_network_future_apply | bool
+  - item.rename | bool
   tags:
-    - uip_upgrade
-    - uip_postupgrade
-
+  - uip_upgrade
+  - uip_postupgrade
 - name: Generate Ubuntu netplan configuration without applying
   ansible.builtin.command: netplan generate
   register: uip_network_ubuntu_netplan_generate
   changed_when: false
   failed_when: uip_network_ubuntu_netplan_generate.rc != 0
   when:
-    - uip_network_future_apply | bool
+  - uip_network_future_apply | bool
   tags:
-    - uip_upgrade
-    - uip_postupgrade
+  - uip_upgrade
+  - uip_postupgrade

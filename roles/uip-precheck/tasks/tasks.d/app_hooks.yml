@@ -1,24 +1,23 @@
 ---
 - name: Run application pre-snapshot hooks
-  ansible.builtin.command: "{{ item }}"
-  loop: "{{ uip_app_pre_snapshot_cmds }}"
+  ansible.builtin.command: '{{ item }}'
+  loop: '{{ uip_app_pre_snapshot_cmds }}'
   register: uip_app_pre_snapshot_results
   changed_when: true
   failed_when: false
   when: uip_app_pre_snapshot_cmds | length > 0
   tags:
-    - uip_precheck
-    - uip_precheck_app
-    - uip_preupgrade
-
+  - uip_precheck
+  - uip_precheck_app
+  - uip_preupgrade
 - name: Persist application hook report
   ansible.builtin.copy:
-    dest: "{{ uip_report_dir }}/precheck-app-hooks.yml"
+    dest: '{{ uip_report_dir }}/precheck-app-hooks.yml'
     owner: root
     group: root
-    mode: "0640"
-    content: "{{ uip_app_pre_snapshot_results.results | default([]) | to_nice_yaml }}"
+    mode: '0640'
+    content: '{{ uip_app_pre_snapshot_results.results | default([]) | to_nice_yaml }}'
   tags:
-    - uip_precheck
-    - uip_precheck_app
-    - uip_preupgrade
+  - uip_precheck
+  - uip_precheck_app
+  - uip_preupgrade

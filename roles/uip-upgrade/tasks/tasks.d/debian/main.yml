@@ -3,7 +3,7 @@
   ansible.builtin.apt:
     upgrade: dist
   when:
-    - uip_mode == "enforce"
+  - uip_mode == "enforce"
   tags:
-    - uip_upgrade
-    - uip_postupgrade
+  - uip_upgrade
+  - uip_postupgrade

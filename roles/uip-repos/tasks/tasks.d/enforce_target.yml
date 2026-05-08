@@ -2,20 +2,23 @@
 - name: Collect repository files after configuration
   ansible.builtin.find:
     paths:
-      - /etc/yum.repos.d
-      - /etc/apt
-      - /etc/zypp/repos.d
+    - /etc/yum.repos.d
+    - /etc/apt
+    - /etc/zypp/repos.d
     patterns:
-      - '*.repo'
-      - '*.list'
-      - '*.sources'
+    - '*.repo'
+    - '*.list'
+    - '*.sources'
     recurse: true
     file_type: file
   register: uip_target_repo_files
   failed_when: false
   tags:
-    - uip_repos_enforce_target
-    - uip_preupgrade
+  - uip_repos_enforce_target
+  - uip_preupgrade
+  - uip_discovery
+  - uip_postcheck
+  - uip_postupgrade
 - name: Read repository files after configuration
   ansible.builtin.slurp:
     src: '{{ item.path }}'
@@ -23,50 +26,72 @@
   register: uip_target_repo_raw
   failed_when: false
   tags:
-    - uip_repos_enforce_target
-    - uip_preupgrade
+  - uip_repos_enforce_target
+  - uip_preupgrade
+  - uip_discovery
+  - uip_postcheck
+  - uip_postupgrade
 - name: Build target repository corpus
   ansible.builtin.set_fact:
     uip_target_repo_text: "{{\n  (uip_target_repo_raw.results | default([]))\n  | selectattr('content', 'defined')\n  | map(attribute='content')\n\
       \  | map('b64decode')\n  | join('\\n')\n}}"
   tags:
-    - uip_repos_enforce_target
-    - uip_preupgrade
+  - uip_repos_enforce_target
+  - uip_preupgrade
+  - uip_discovery
+  - uip_postcheck
+  - uip_postupgrade
 - name: Set expected target repository URL list
   ansible.builtin.set_fact:
     uip_target_urls: "{{\n  uip_repo_def.target_urls\n  if uip_repo_def.target_urls is defined\n  else [uip_repo_def.dst_url]\n\
       \  if uip_repo_def.dst_url is defined\n  else [uip_repo_def.base_url ~ '/' ~ uip_repo_def.dst_repo]\n  if uip_repo_def.base_url\
       \ is defined and uip_repo_def.dst_repo is defined\n  else []\n}}"
   tags:
-    - uip_repos_enforce_target
-    - uip_preupgrade
+  - uip_repos_enforce_target
+  - uip_preupgrade
+  - uip_discovery
+  - uip_postcheck
+  - uip_postupgrade
 - name: Assert repositories point to target OS URLs
   ansible.builtin.assert:
     that:
-      - uip_target_urls | length > 0
-      - item in uip_target_repo_text
+    - uip_target_urls | length > 0
+    - item in uip_target_repo_text
     fail_msg: Target repository URL {{ item }} not found in configured repositories.
   loop: '{{ uip_target_urls }}'
   when: uip_repo_mgr not in ['native'] or uip_pkg_mgr == 'apt'
   tags:
-    - uip_repos_enforce_target
-    - uip_preupgrade
+  - uip_repos_enforce_target
+  - uip_preupgrade
+  - uip_discovery
+  - uip_postcheck
+  - uip_postupgrade
 - name: Save target repository URL report
   ansible.builtin.copy:
     dest: '{{ uip_report_dir }}/repo-target-urls.yml'
     mode: '0640'
     content: '{{ uip_target_urls | to_nice_yaml }}'
   tags:
-    - uip_repos_enforce_target
-    - uip_preupgrade
-
-
+  - uip_repos_enforce_target
+  - uip_preupgrade
+  - uip_discovery
+  - uip_postcheck
+  - uip_postupgrade
 - name: Include RHEL repository pre lifecycle tasks
   ansible.builtin.import_tasks: rhel/pre.yml
   when: uip_os == "rhel"
-
+  tags:
+  - uip_discovery
+  - uip_preupgrade
+  - uip_postcheck
+  - uip_postupgrade
 - name: Include RHEL repository post lifecycle tasks
   ansible.builtin.import_tasks: rhel/post.yml
   when:
-    - uip_os == "rhel"
-    - uip_repo_postupgrade_mode | default(false) | bool
+  - uip_os == "rhel"
+  - uip_repo_postupgrade_mode | default(false) | bool
+  tags:
+  - uip_discovery
+  - uip_preupgrade
+  - uip_postcheck
+  - uip_postupgrade

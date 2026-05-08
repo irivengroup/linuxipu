@@ -6,7 +6,7 @@
   failed_when: false
   when: uip_remediate_boot_cleanup | bool
   tags:
-    - uip_remediate
-    - uip_remediate_suse
-    - uip_remediate_kernel
-    - uip_preupgrade
+  - uip_remediate
+  - uip_remediate_suse
+  - uip_remediate_kernel
+  - uip_preupgrade

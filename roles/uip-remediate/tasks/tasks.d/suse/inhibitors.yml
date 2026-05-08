@@ -5,11 +5,10 @@
   changed_when: false
   failed_when: false
   tags:
-    - uip_remediate
-    - uip_remediate_suse
-    - uip_remediate_inhibitors
-    - uip_preupgrade
-
+  - uip_remediate
+  - uip_remediate_suse
+  - uip_remediate_inhibitors
+  - uip_preupgrade
 - name: Rebuild SUSE initrd
   ansible.builtin.command: mkinitrd
   register: uip_suse_mkinitrd
@@ -17,7 +16,7 @@
   failed_when: uip_suse_mkinitrd.rc != 0
   when: uip_initramfs_rebuild | bool
   tags:
-    - uip_remediate
-    - uip_remediate_suse
-    - uip_remediate_initramfs
-    - uip_preupgrade
+  - uip_remediate
+  - uip_remediate_suse
+  - uip_remediate_initramfs
+  - uip_preupgrade

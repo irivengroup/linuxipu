@@ -2,18 +2,17 @@
 - name: Include RHEL 6 to 7 precheck tasks
   ansible.builtin.import_tasks: rhel6_to_7.yml
   when:
-    - uip_src_ver | string == "6"
-    - uip_dst_ver | string == "7"
+  - uip_src_ver | string == "6"
+  - uip_dst_ver | string == "7"
   tags:
-    - uip_precheck
-    - uip_precheck_rhel
-    - uip_preupgrade
-
+  - uip_precheck
+  - uip_precheck_rhel
+  - uip_preupgrade
 - name: Include RHEL Leapp precheck tasks
   ansible.builtin.import_tasks: leapp.yml
   when:
-    - not (uip_src_ver | string == "6" and uip_dst_ver | string == "7")
+  - not (uip_src_ver | string == "6" and uip_dst_ver | string == "7")
   tags:
-    - uip_precheck
-    - uip_precheck_rhel
-    - uip_preupgrade
+  - uip_precheck
+  - uip_precheck_rhel
+  - uip_preupgrade
