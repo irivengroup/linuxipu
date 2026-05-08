@@ -1,33 +1,34 @@
-# UIP Workflow
+[← Retour à l’index](index.md)
 
-Effective orchestration:
+**Breadcrumbs :** Index → Cycle complet UIP
 
-```text
-playbooks/uip.yml
-├── uip-common
-├── uip-discovery
-│   ├── uip-lock
-│   └── uip-repos
-├── uip-snapshot
-├── uip-precheck
-│   └── uip-update
-│       └── uip-reboot when baseline update requires it
-├── uip-remediate
-├── uip-upgrade
-│   └── uip-reboot after OS upgrade
-├── uip-postcheck
-│   └── uip-repos target enforcement
-└── uip-report
-```
+# Cycle complet UIP
 
-Tag intent:
 
-```text
-uip_preupgrade  : all operations before OS upgrade execution
-uip_upgrade     : OS upgrade execution and immediate upgrade reboot orchestration
-uip_postupgrade : operations after OS upgrade begins, including reboot, postcheck and report
-```
+Phases :
 
-Nested role entrypoints:
+1. discovery
+2. snapshot
+3. precheck
+4. remediate
+5. upgrade
+6. reboot
+7. postcheck
+8. report
+9. rollback si nécessaire
 
-```textuip_repos  -> called by uip-discovery and uip-postcheck
+Chaque phase produit :
+
+- traces
+- fichiers d’état
+- rapports YAML
+- éléments exploitables pour audit
+
+
+---
+
+**Breadcrumbs :** Index → Cycle complet UIP
+
+[← Retour à l’index](index.md)
+
+© IRIVEN Group — All Rights Reserved
