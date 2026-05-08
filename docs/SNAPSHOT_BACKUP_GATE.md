@@ -18,10 +18,27 @@ systemd-detect-virt
 Credentials are loaded automatically from:
 
 ```text
-roles/uip-common/vars/._uipcreds.yml
+roles/uip-common/vars/vmproviders.yml
 ```
 
 Vault this file in production.
+
+The credential model supports multiple regions or datacenters per provider:
+
+```text
+aws.regions
+azure.regions
+gcp.regions
+openstack.datacenters
+vmware.datacenters
+```
+
+Optional overrides:
+
+```yaml
+uip_vmprovider_region: eu-west-3
+uip_vmprovider_datacenter: dc1
+```
 
 Snapshot state is persisted to:
 
@@ -29,4 +46,4 @@ Snapshot state is persisted to:
 {{ uip_state_dir }}/snapshot.yml
 ```
 
-Rollback reads this file to identify the provider and snapshot reference.
+Rollback reads this file to identify the provider, scope and snapshot reference.

@@ -14,6 +14,7 @@
     mode: "0640"
     content: |
       provider: "openstack"
+      provider_scope: "{{ uip_vmprovider_scope }}"
       snapshot_id: "{{ uip_snapshot_id }}"
       provider_snapshot_ref: "{{ uip_provider_snapshot_ref }}"
       api_mode: "rest"

@@ -1,13 +1,45 @@
 ---
+- name: Select VM provider scope
+  ansible.builtin.set_fact:
+    uip_vmprovider_scope: >-
+      {{
+        uip_vmprovider_region
+        if uip_vm_provider in ['aws', 'azure', 'gcp'] and (uip_vmprovider_region | length > 0)
+        else uip_vmproviders[uip_vm_provider].default_region
+        if uip_vm_provider in ['aws', 'azure', 'gcp']
+        else uip_vmprovider_datacenter
+        if uip_vm_provider in ['openstack', 'vmware'] and (uip_vmprovider_datacenter | length > 0)
+        else uip_vmproviders[uip_vm_provider].default_datacenter
+      }}
+  tags:
+    - uip_snapshot
+    - uip_preupgrade
+
+- name: Select VM provider credentials
+  ansible.builtin.set_fact:
+    uip_vmprovider_creds: >-
+      {{
+        uip_vmproviders[uip_vm_provider].regions[uip_vmprovider_scope]
+        if uip_vm_provider in ['aws', 'azure', 'gcp']
+        else uip_vmproviders[uip_vm_provider].datacenters[uip_vmprovider_scope]
+      }}
+  no_log: true
+  tags:
+    - uip_snapshot
+    - uip_preupgrade
+
 - name: Assert VM snapshot credentials are available
   ansible.builtin.assert:
     that:
-      - uip_creds is defined
-      - uip_creds[uip_vm_provider] is defined
-      - uip_creds[uip_vm_provider].enabled | bool
+      - uip_vmproviders is defined
+      - uip_vmproviders[uip_vm_provider] is defined
+      - uip_vmproviders[uip_vm_provider].enabled | bool
+      - uip_vmprovider_creds is defined
+      - uip_vmprovider_creds.enabled | bool
     fail_msg: >-
-      VM snapshot is mandatory for {{ uip_vm_provider }} but credentials are
-      missing or disabled in roles/uip-common/vars/._uipcreds.yml.
+      VM snapshot is mandatory for {{ uip_vm_provider }}/{{ uip_vmprovider_scope }}
+      but credentials are missing or disabled in
+      roles/uip-common/vars/vmproviders.yml.
   no_log: true
   tags:
     - uip_snapshot
@@ -29,6 +61,7 @@
       host: "{{ inventory_hostname }}"
       server_type: "{{ uip_server_type }}"
       provider: "{{ uip_vm_provider }}"
+      provider_scope: "{{ uip_vmprovider_scope }}"
       snapshot_id: "{{ uip_snapshot_id }}"
       provider_snapshot_ref: "{{ uip_provider_snapshot_ref | default(uip_snapshot_id) }}"
       rollback_ready: true

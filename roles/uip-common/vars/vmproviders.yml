@@ -1,0 +1,89 @@
+---
+# Vault this file in production:
+# ansible-vault encrypt roles/uip-common/vars/vmproviders.yml
+
+uip_vmproviders:
+  aws:
+    enabled: false
+    default_region: eu-west-3
+    regions:
+      eu-west-3:
+        enabled: false
+        access_key_id: ""
+        secret_access_key: ""
+        session_token: ""
+      eu-west-1:
+        enabled: false
+        access_key_id: ""
+        secret_access_key: ""
+        session_token: ""
+
+  azure:
+    enabled: false
+    default_region: francecentral
+    regions:
+      francecentral:
+        enabled: false
+        tenant_id: ""
+        client_id: ""
+        client_secret: ""
+        subscription_id: ""
+      westeurope:
+        enabled: false
+        tenant_id: ""
+        client_id: ""
+        client_secret: ""
+        subscription_id: ""
+
+  gcp:
+    enabled: false
+    default_region: europe-west9
+    regions:
+      europe-west9:
+        enabled: false
+        project_id: ""
+        service_account_token: ""
+      europe-west1:
+        enabled: false
+        project_id: ""
+        service_account_token: ""
+
+  openstack:
+    enabled: false
+    default_region: dc1
+    datacenters:
+      dc1:
+        enabled: false
+        auth_url: ""
+        region_name: ""
+        username: ""
+        password: ""
+        project_id: ""
+        user_domain_name: "Default"
+        project_domain_name: "Default"
+      dc2:
+        enabled: false
+        auth_url: ""
+        region_name: ""
+        username: ""
+        password: ""
+        project_id: ""
+        user_domain_name: "Default"
+        project_domain_name: "Default"
+
+  vmware:
+    enabled: false
+    default_datacenter: dc1
+    datacenters:
+      dc1:
+        enabled: false
+        vcenter_url: ""
+        username: ""
+        password: ""
+        validate_certs: false
+      dc2:
+        enabled: false
+        vcenter_url: ""
+        username: ""
+        password: ""
+        validate_certs: false

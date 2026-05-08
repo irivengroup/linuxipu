@@ -1,18 +1,18 @@
 ---
-- name: Check UIP platform credentials file
+- name: Check UIP VM provider credentials file
   ansible.builtin.stat:
-    path: "{{ role_path }}/vars/._uipcreds.yml"
-  register: uip_creds_file
+    path: "{{ role_path }}/vars/vmproviders.yml"
+  register: uip_vmproviders_file
   no_log: true
   tags:
     - always
     - uip_common
     - uip_preupgrade
 
-- name: Load UIP platform credentials when present
+- name: Load UIP VM provider credentials when present
   ansible.builtin.include_vars:
-    file: "{{ role_path }}/vars/._uipcreds.yml"
-  when: uip_creds_file.stat.exists
+    file: "{{ role_path }}/vars/vmproviders.yml"
+  when: uip_vmproviders_file.stat.exists
   no_log: true
   tags:
     - always

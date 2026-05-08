@@ -10,12 +10,12 @@
 
 - name: Authenticate to VMware vCenter REST API
   ansible.builtin.uri:
-    url: "{{ uip_creds.vmware.vcenter_url }}/rest/com/vmware/cis/session"
+    url: "{{ uip_vmprovider_creds.vcenter_url }}/rest/com/vmware/cis/session"
     method: POST
-    user: "{{ uip_creds.vmware.username }}"
-    password: "{{ uip_creds.vmware.password }}"
+    user: "{{ uip_vmprovider_creds.username }}"
+    password: "{{ uip_vmprovider_creds.password }}"
     force_basic_auth: true
-    validate_certs: "{{ uip_creds.vmware.validate_certs | bool }}"
+    validate_certs: "{{ uip_vmprovider_creds.validate_certs | bool }}"
     status_code: 200
     timeout: "{{ uip_snapshot_api_timeout }}"
   register: uip_vmware_session
@@ -26,9 +26,9 @@
 
 - name: Create VMware VM snapshot
   ansible.builtin.uri:
-    url: "{{ uip_creds.vmware.vcenter_url }}/rest/vcenter/vm/{{ uip_vmware_vm_moid }}/snapshots"
+    url: "{{ uip_vmprovider_creds.vcenter_url }}/rest/vcenter/vm/{{ uip_vmware_vm_moid }}/snapshots"
     method: POST
-    validate_certs: "{{ uip_creds.vmware.validate_certs | bool }}"
+    validate_certs: "{{ uip_vmprovider_creds.validate_certs | bool }}"
     headers:
       vmware-api-session-id: "{{ uip_vmware_session.json.value }}"
     body_format: json
@@ -51,6 +51,21 @@
 - name: Set VMware snapshot reference
   ansible.builtin.set_fact:
     uip_provider_snapshot_ref: "{{ uip_vmware_snapshot.json.value | default(uip_snapshot_id) }}"
+  tags:
+    - uip_snapshot
+    - uip_preupgrade
+
+- name: Persist VMware snapshot provider scope report
+  ansible.builtin.copy:
+    dest: "{{ uip_report_dir }}/snapshot-vmware.yml"
+    owner: root
+    group: root
+    mode: "0640"
+    content: |
+      provider: "vmware"
+      provider_scope: "{{ uip_vmprovider_scope }}"
+      snapshot_id: "{{ uip_snapshot_id }}"
+      provider_snapshot_ref: "{{ uip_provider_snapshot_ref }}"
   tags:
     - uip_snapshot
     - uip_preupgrade

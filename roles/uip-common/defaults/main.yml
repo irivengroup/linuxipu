@@ -167,3 +167,7 @@ uip_snapshot_name_prefix: uip
 uip_snapshot_state_file: "{{ uip_state_dir }}/snapshot.yml"
 
 uip_snapshot_report_file: "{{ uip_report_dir }}/snapshot.yml"
+
+uip_vmprovider_region: ""
+
+uip_vmprovider_datacenter: ""
