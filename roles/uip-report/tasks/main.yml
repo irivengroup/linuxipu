@@ -1,4 +1,10 @@
 ---
+- name: Include UIP decision report tasks
+  ansible.builtin.import_tasks: tasks.d/decision.yml
+  tags:
+    - uip_report
+    - uip_postupgrade
+
 - name: Generate YAML report
   ansible.builtin.copy:
     dest: '{{ uip_report_dir }}/uip-report.yml'

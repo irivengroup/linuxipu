@@ -1,0 +1,156 @@
+---
+- name: Check UIP report directory
+  ansible.builtin.stat:
+    path: "{{ uip_report_dir }}"
+  register: uip_decision_report_dir
+  tags:
+    - uip_report
+    - uip_postupgrade
+
+- name: Find UIP generated reports
+  ansible.builtin.find:
+    paths: "{{ uip_report_dir }}"
+    patterns:
+      - "*.yml"
+      - "*.yaml"
+    file_type: file
+  register: uip_decision_report_files
+  when: uip_decision_report_dir.stat.exists
+  tags:
+    - uip_report
+    - uip_postupgrade
+
+- name: Build UIP report file index
+  ansible.builtin.set_fact:
+    uip_decision_report_paths: "{{ uip_decision_report_files.files | default([]) | map(attribute='path') | list }}"
+  tags:
+    - uip_report
+    - uip_postupgrade
+
+- name: Check UIP state artifacts
+  ansible.builtin.stat:
+    path: "{{ item.path }}"
+  loop:
+    - key: snapshot
+      path: "{{ uip_snapshot_state_file }}"
+    - key: reboot
+      path: "{{ uip_reboot_state_file }}"
+    - key: state
+      path: "{{ uip_state_file }}"
+    - key: done
+      path: "{{ uip_done_file }}"
+    - key: lock
+      path: "{{ uip_lock_file }}"
+  register: uip_decision_state_artifacts
+  tags:
+    - uip_report
+    - uip_postupgrade
+
+- name: Build state artifact map
+  ansible.builtin.set_fact:
+    uip_decision_state_map: "{{ uip_decision_state_map | default({}) | combine({item.item.key: item.stat.exists}) }}"
+  loop: "{{ uip_decision_state_artifacts.results }}"
+  tags:
+    - uip_report
+    - uip_postupgrade
+
+- name: Compute decision report statuses
+  ansible.builtin.set_fact:
+    uip_decision_status:
+      precheck: >-
+        {{
+          'ok'
+          if (uip_decision_report_paths | select('search', 'precheck') | list | length) > 0
+          else 'unknown'
+        }}
+      snapshot: >-
+        {{
+          'ok'
+          if uip_decision_state_map.snapshot | default(false)
+          else 'skipped_or_unknown'
+          if uip_server_type | default('unknown') == 'physical'
+          else 'ko'
+        }}
+      repos: >-
+        {{
+          'ok'
+          if (uip_decision_report_paths | select('search', 'repo') | list | length) > 0
+          else 'unknown'
+        }}
+      bootability: >-
+        {{
+          'ok'
+          if (uip_decision_report_paths | select('search', 'bootability') | list | length) > 0
+          else 'unknown'
+        }}
+      network_future: >-
+        {{
+          'ok'
+          if (uip_decision_report_paths | select('search', 'network-future') | list | length) > 0
+          else 'unknown'
+        }}
+      upgrade: "{{ 'ok' if uip_decision_state_map.reboot | default(false) else 'unknown' }}"
+      postcheck: "{{ 'ok' if uip_decision_state_map.done | default(false) else 'unknown' }}"
+      rollback_ready: "{{ 'yes' if uip_decision_state_map.snapshot | default(false) else 'external_or_manual' }}"
+      lock_released: "{{ 'yes' if not (uip_decision_state_map.lock | default(false)) else 'no' }}"
+  tags:
+    - uip_report
+    - uip_postupgrade
+
+- name: Build critical decision failures
+  ansible.builtin.set_fact:
+    uip_decision_critical_failures: >-
+      {{
+        []
+        + (['snapshot'] if uip_decision_status.snapshot == 'ko' else [])
+        + (['lock_not_released'] if uip_decision_status.lock_released == 'no' else [])
+      }}
+  tags:
+    - uip_report
+    - uip_postupgrade
+
+- name: Write UIP decision report
+  ansible.builtin.copy:
+    dest: "{{ uip_decision_report_file }}"
+    owner: root
+    group: root
+    mode: "0640"
+    content: |
+      host: "{{ inventory_hostname }}"
+      os: "{{ uip_os | default('unknown') }}"
+      src_ver: "{{ uip_src_ver | default('unknown') }}"
+      dst_ver: "{{ uip_dst_ver | default('unknown') }}"
+      path: "{{ uip_path_key | default('unknown') }}"
+      repo_mgr: "{{ uip_repo_mgr | default('unknown') }}"
+      server_type: "{{ uip_server_type | default('unknown') }}"
+      vm_provider: "{{ uip_vm_provider | default('none') }}"
+      generated_at: "{{ ansible_date_time.iso8601 }}"
+      status:
+      {{ uip_decision_status | to_nice_yaml(indent=2) | indent(2, true) }}
+      critical_failures:
+      {{ uip_decision_critical_failures | to_nice_yaml(indent=2) | indent(2, true) }}
+      report_files:
+      {{ uip_decision_report_paths | to_nice_yaml(indent=2) | indent(2, true) }}
+  tags:
+    - uip_report
+    - uip_postupgrade
+
+- name: Display UIP decision summary
+  ansible.builtin.debug:
+    msg:
+      - "UIP decision report: {{ uip_decision_report_file }}"
+      - "Statuses: {{ uip_decision_status }}"
+      - "Critical failures: {{ uip_decision_critical_failures }}"
+  tags:
+    - uip_report
+    - uip_postupgrade
+
+- name: Fail when decision report has critical failures
+  ansible.builtin.fail:
+    msg: "UIP decision report contains critical failures: {{ uip_decision_critical_failures }}"
+  when:
+    - uip_decision_report_fail_on_critical | bool
+    - uip_decision_critical_failures | length > 0
+  tags:
+    - uip_report
+    - uip_postupgrade

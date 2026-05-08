@@ -203,3 +203,7 @@ uip_monitoring_maintenance_enabled: false
 uip_monitoring_maintenance_hooks: []
 
 uip_agent_reenroll_hooks: []
+
+uip_decision_report_file: "{{ uip_report_dir }}/uip-decision-report.yml"
+
+uip_decision_report_fail_on_critical: false
