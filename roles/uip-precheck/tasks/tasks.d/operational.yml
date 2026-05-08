@@ -1,0 +1,59 @@
+---
+- name: Capture current weekday
+  ansible.builtin.command: date +%a
+  register: uip_change_day
+  changed_when: false
+  when: uip_change_window_enforced | bool
+  tags:
+    - uip_precheck
+    - uip_preupgrade
+
+- name: Assert change window or breakglass
+  ansible.builtin.assert:
+    that:
+      - >
+        (not uip_change_window_enforced | bool)
+        or
+        ((uip_change_day.stdout | lower) in uip_allowed_change_days)
+        or
+        (uip_breakglass_enabled | bool and (uip_breakglass_reason | length > 5))
+    fail_msg: >-
+      Change window policy denied execution.
+      Use approved window or explicit breakglass with justification.
+  tags:
+    - uip_precheck
+    - uip_preupgrade
+
+- name: Detect operational drift indicators
+  ansible.builtin.shell: |
+    set -o pipefail
+    echo "custom kernels:"
+    rpm -qa kernel\* 2>/dev/null || dpkg -l | grep linux-image || true
+    echo "orphan repos:"
+    find /etc/yum.repos.d /etc/apt/sources.list.d -type f 2>/dev/null || true
+  args:
+    executable: /bin/bash
+  register: uip_drift_probe
+  changed_when: false
+  failed_when: false
+  when: uip_drift_detection_enabled | bool
+  tags:
+    - uip_precheck
+    - uip_preupgrade
+
+- name: Persist operational drift report
+  ansible.builtin.copy:
+    dest: "{{ uip_report_dir }}/operational-drift.yml"
+    owner: root
+    group: root
+    mode: "0640"
+    content: |
+      breakglass_enabled: "{{ uip_breakglass_enabled }}"
+      breakglass_reason: "{{ uip_breakglass_reason }}"
+      weekday: "{{ uip_change_day.stdout | default('n/a') }}"
+      drift: |
+      {{ uip_drift_probe.stdout | default('') | indent(2, true) }}
+  when: uip_drift_detection_enabled | bool
+  tags:
+    - uip_precheck
+    - uip_preupgrade

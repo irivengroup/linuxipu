@@ -151,3 +151,10 @@
     - uip_postupgrade
     - uip_discovery
     - uip_preupgrade
+
+- name: Include operational health score tasks
+  ansible.builtin.import_tasks: tasks.d/health_score.yml
+  tags:
+    - uip_postcheck
+    - uip_postupgrade
+

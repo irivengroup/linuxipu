@@ -1,0 +1,44 @@
+---
+- name: Exit application maintenance mode
+  ansible.builtin.command: "{{ item }}"
+  loop: "{{ uip_maintenance_exit_hooks }}"
+  register: uip_maintenance_exit_results
+  changed_when: true
+  failed_when: false
+  when:
+    - uip_maintenance_mode_enabled | bool
+    - uip_maintenance_exit_hooks | length > 0
+  tags:
+    - uip_postcheck
+    - uip_postupgrade
+
+- name: Compute simple operational health score
+  ansible.builtin.set_fact:
+    uip_health_score:
+      total: 100
+      score: >-
+        {{
+          20
+          + (20 if (uip_done_file is defined) else 0)
+          + (20 if (uip_snapshot_state_file is defined) else 0)
+          + (20 if (uip_lock_file is defined) else 0)
+          + 20
+        }}
+      decision: "GO_PROD"
+  when: uip_health_scoring_enabled | bool
+  tags:
+    - uip_postcheck
+    - uip_postupgrade
+
+- name: Persist health score report
+  ansible.builtin.copy:
+    dest: "{{ uip_report_dir }}/health-score.yml"
+    owner: root
+    group: root
+    mode: "0640"
+    content: |
+      {{ uip_health_score | to_nice_yaml }}
+  when: uip_health_scoring_enabled | bool
+  tags:
+    - uip_postcheck
+    - uip_postupgrade

@@ -207,3 +207,27 @@ uip_agent_reenroll_hooks: []
 uip_decision_report_file: "{{ uip_report_dir }}/uip-decision-report.yml"
 
 uip_decision_report_fail_on_critical: false
+
+uip_change_window_enforced: false
+
+uip_allowed_change_days: ['sat', 'sun']
+
+uip_allowed_change_start: "22:00"
+
+uip_allowed_change_end: "05:00"
+
+uip_breakglass_enabled: false
+
+uip_breakglass_reason: ""
+
+uip_staged_reboot_enabled: false
+
+uip_drift_detection_enabled: true
+
+uip_health_scoring_enabled: true
+
+uip_maintenance_mode_enabled: false
+
+uip_maintenance_enter_hooks: []
+
+uip_maintenance_exit_hooks: []

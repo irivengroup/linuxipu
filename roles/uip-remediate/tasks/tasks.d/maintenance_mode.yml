@@ -1,0 +1,25 @@
+---
+- name: Enter application maintenance mode
+  ansible.builtin.command: "{{ item }}"
+  loop: "{{ uip_maintenance_enter_hooks }}"
+  register: uip_maintenance_enter_results
+  changed_when: true
+  failed_when: false
+  when:
+    - uip_maintenance_mode_enabled | bool
+    - uip_maintenance_enter_hooks | length > 0
+  tags:
+    - uip_remediate
+    - uip_preupgrade
+
+- name: Persist maintenance mode enter report
+  ansible.builtin.copy:
+    dest: "{{ uip_report_dir }}/maintenance-mode-enter.yml"
+    owner: root
+    group: root
+    mode: "0640"
+    content: "{{ uip_maintenance_enter_results.results | default([]) | to_nice_yaml }}"
+  when: uip_maintenance_mode_enabled | bool
+  tags:
+    - uip_remediate
+    - uip_preupgrade

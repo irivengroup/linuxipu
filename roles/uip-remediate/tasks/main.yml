@@ -72,3 +72,10 @@
     - uip_remediate
     - uip_remediate_suse
     - uip_preupgrade
+
+- name: Include maintenance mode tasks
+  ansible.builtin.import_tasks: tasks.d/maintenance_mode.yml
+  tags:
+    - uip_remediate
+    - uip_preupgrade
+

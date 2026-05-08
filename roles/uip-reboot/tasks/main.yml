@@ -215,3 +215,14 @@
   tags:
     - uip_preupgrade
     - uip_postupgrade
+
+- name: Staged reboot safety marker
+  ansible.builtin.debug:
+    msg: >-
+      Staged reboot mode={{ uip_staged_reboot_enabled }}.
+      Cluster/quorum orchestration should validate one-node-at-a-time workflow.
+  when: uip_staged_reboot_enabled | bool
+  tags:
+    - uip_reboot
+    - uip_postupgrade
+
