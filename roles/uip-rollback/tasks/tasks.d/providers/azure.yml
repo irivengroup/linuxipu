@@ -1,0 +1,9 @@
+---
+- name: Fail with explicit AZURE provider rollback procedure
+  ansible.builtin.fail:
+    msg: >-
+      Provider-side rollback is enabled for azure, but destructive restore
+      must be implemented through approved enterprise API workflow. Snapshot:
+      {{ uip_rollback_snapshot_state.provider_snapshot_ref }}
+  tags:
+    - uip_rollback

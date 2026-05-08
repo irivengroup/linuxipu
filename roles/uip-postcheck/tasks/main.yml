@@ -119,6 +119,12 @@
     - uip_postupgrade
     - uip_discovery
     - uip_preupgrade
+- name: Include agent re-enrollment tasks
+  ansible.builtin.import_tasks: tasks.d/agent_reenroll.yml
+  tags:
+    - uip_postcheck
+    - uip_postupgrade
+
 - name: Run repository post-upgrade validation
   ansible.builtin.include_role:
     name: uip-repos

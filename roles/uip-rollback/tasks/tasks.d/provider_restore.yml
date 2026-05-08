@@ -1,0 +1,9 @@
+---
+- name: Include provider-side snapshot rollback
+  ansible.builtin.include_tasks: "providers/{{ uip_rollback_snapshot_state.provider }}.yml"
+  when:
+    - uip_rollback_provider_restore_enabled | bool
+    - uip_rollback_snapshot_state is defined
+    - uip_rollback_snapshot_state.rollback_ready | default(false) | bool
+  tags:
+    - uip_rollback

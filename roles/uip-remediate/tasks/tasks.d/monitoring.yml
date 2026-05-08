@@ -1,0 +1,24 @@
+---
+- name: Run monitoring maintenance hooks before upgrade
+  ansible.builtin.command: "{{ item }}"
+  loop: "{{ uip_monitoring_maintenance_hooks }}"
+  register: uip_monitoring_maintenance_results
+  changed_when: true
+  failed_when: false
+  when:
+    - uip_monitoring_maintenance_enabled | bool
+    - uip_monitoring_maintenance_hooks | length > 0
+  tags:
+    - uip_remediate
+    - uip_preupgrade
+
+- name: Persist monitoring maintenance report
+  ansible.builtin.copy:
+    dest: "{{ uip_report_dir }}/monitoring-maintenance.yml"
+    owner: root
+    group: root
+    mode: "0640"
+    content: "{{ uip_monitoring_maintenance_results.results | default([]) | to_nice_yaml }}"
+  tags:
+    - uip_remediate
+    - uip_preupgrade

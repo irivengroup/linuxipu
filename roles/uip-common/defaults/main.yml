@@ -171,3 +171,35 @@ uip_snapshot_report_file: "{{ uip_report_dir }}/snapshot.yml"
 uip_vmprovider_region: ""
 
 uip_vmprovider_datacenter: ""
+
+uip_snapshot_verify_completion: true
+
+uip_snapshot_poll_retries: 30
+
+uip_snapshot_poll_delay: 20
+
+uip_snapshot_fail_if_unverified: true
+
+uip_rollback_provider_restore_enabled: false
+
+uip_network_validate_future_routes: true
+
+uip_network_validate_future_dns: true
+
+uip_network_validate_bond_vlan_bridge: true
+
+uip_bootability_validate_default_entry: true
+
+uip_bootability_validate_rescue: true
+
+uip_fs_lvm_safety_checks: true
+
+uip_repo_validate_target_package: true
+
+uip_repo_validation_packages: ["bash"]
+
+uip_monitoring_maintenance_enabled: false
+
+uip_monitoring_maintenance_hooks: []
+
+uip_agent_reenroll_hooks: []

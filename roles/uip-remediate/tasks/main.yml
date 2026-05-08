@@ -19,6 +19,12 @@
     - uip_remediate_fs
     - uip_preupgrade
 
+- name: Include monitoring maintenance tasks
+  ansible.builtin.import_tasks: tasks.d/monitoring.yml
+  tags:
+    - uip_remediate
+    - uip_preupgrade
+
 - name: Include disruptive agent remediation tasks
   ansible.builtin.import_tasks: tasks.d/agents.yml
   tags:

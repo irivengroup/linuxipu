@@ -51,6 +51,12 @@
     - uip_snapshot
     - uip_preupgrade
 
+- name: Verify VM snapshot completion
+  ansible.builtin.import_tasks: verify.yml
+  tags:
+    - uip_snapshot
+    - uip_preupgrade
+
 - name: Persist VM snapshot state for rollback
   ansible.builtin.copy:
     dest: "{{ uip_snapshot_state_file }}"

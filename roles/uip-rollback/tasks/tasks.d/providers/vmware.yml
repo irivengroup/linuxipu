@@ -1,0 +1,9 @@
+---
+- name: Fail safe before VMware destructive rollback
+  ansible.builtin.fail:
+    msg: >-
+      VMware provider rollback requires an operator-approved restore workflow.
+      Snapshot reference: {{ uip_rollback_snapshot_state.provider_snapshot_ref }}.
+      Keep uip_rollback_provider_restore_enabled=false until restore is approved.
+  tags:
+    - uip_rollback

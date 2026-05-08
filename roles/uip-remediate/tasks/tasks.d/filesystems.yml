@@ -204,6 +204,32 @@
     - uip_remediate_fs
     - uip_preupgrade
 
+- name: Capture LVM thin pool and degraded state
+  ansible.builtin.command: lvs --noheadings -o lv_name,vg_name,lv_attr,data_percent,metadata_percent
+  register: uip_lvm_safety_lvs
+  changed_when: false
+  failed_when: false
+  when: uip_fs_lvm_safety_checks | bool
+  tags:
+    - uip_remediate
+    - uip_remediate_fs
+    - uip_preupgrade
+
+- name: Persist LVM safety precheck report
+  ansible.builtin.copy:
+    dest: "{{ uip_report_dir }}/remediate-filesystem-lvm-safety.yml"
+    owner: root
+    group: root
+    mode: "0640"
+    content: |
+      lvs: |
+      {{ uip_lvm_safety_lvs.stdout | default('') | indent(2, true) }}
+  when: uip_fs_lvm_safety_checks | bool
+  tags:
+    - uip_remediate
+    - uip_remediate_fs
+    - uip_preupgrade
+
 - name: Extend validated LVM filesystems
   ansible.builtin.command: "lvextend -r -L +{{ item.delta_mb }}M {{ item.lv_path }}"
   register: uip_lvextend_results

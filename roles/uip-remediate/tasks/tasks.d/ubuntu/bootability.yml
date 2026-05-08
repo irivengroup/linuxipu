@@ -206,3 +206,42 @@
     - uip_remediate_ubuntu
     - uip_remediate_bootloader
     - uip_preupgrade
+
+- name: Capture GRUB default environment when available
+  ansible.builtin.command: grub2-editenv list
+  register: uip_bootability_grubenv
+  changed_when: false
+  failed_when: false
+  when: uip_bootability_validate_default_entry | bool
+  tags:
+    - uip_remediate
+    - uip_remediate_bootloader
+    - uip_preupgrade
+
+- name: Check rescue kernel artifacts
+  ansible.builtin.shell: |
+    set -o pipefail
+    ls /boot/*rescue* 2>/dev/null || true
+  args:
+    executable: /bin/bash
+  register: uip_bootability_rescue
+  changed_when: false
+  failed_when: false
+  when: uip_bootability_validate_rescue | bool
+  tags:
+    - uip_remediate
+    - uip_remediate_bootloader
+    - uip_preupgrade
+
+- name: Assert rescue boot artifact is available
+  ansible.builtin.assert:
+    that:
+      - uip_bootability_rescue.stdout | length > 0
+    fail_msg: "No rescue boot artifact found under /boot."
+  when:
+    - uip_bootability_validate_rescue | bool
+    - uip_os == "rhel"
+  tags:
+    - uip_remediate
+    - uip_remediate_bootloader
+    - uip_preupgrade

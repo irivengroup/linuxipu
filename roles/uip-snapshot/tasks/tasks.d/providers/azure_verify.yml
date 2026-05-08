@@ -1,0 +1,23 @@
+---
+- name: Mark AZURE snapshot verification as pending external API implementation
+  ansible.builtin.set_fact:
+    uip_snapshot_verified: "{{ not (uip_snapshot_fail_if_unverified | bool) }}"
+  tags:
+    - uip_snapshot
+    - uip_preupgrade
+
+- name: Persist AZURE snapshot verification report
+  ansible.builtin.copy:
+    dest: "{{ uip_report_dir }}/snapshot-azure-verify.yml"
+    owner: root
+    group: root
+    mode: "0640"
+    content: |
+      provider: "azure"
+      provider_scope: "{{ uip_vmprovider_scope }}"
+      snapshot_id: "{{ uip_snapshot_id }}"
+      verified: "{{ uip_snapshot_verified }}"
+      note: "Provider-specific signed REST polling must be implemented or uip_snapshot_fail_if_unverified=false."
+  tags:
+    - uip_snapshot
+    - uip_preupgrade

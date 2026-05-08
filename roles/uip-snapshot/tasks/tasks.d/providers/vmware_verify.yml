@@ -1,0 +1,42 @@
+---
+- name: Verify VMware snapshot exists
+  ansible.builtin.uri:
+    url: "{{ uip_vmprovider_creds.vcenter_url }}/rest/vcenter/vm/{{ uip_vmware_vm_moid }}/snapshots"
+    method: GET
+    validate_certs: "{{ uip_vmprovider_creds.validate_certs | bool }}"
+    headers:
+      vmware-api-session-id: "{{ uip_vmware_session.json.value }}"
+    status_code: 200
+    timeout: "{{ uip_snapshot_api_timeout }}"
+  register: uip_vmware_snapshot_list
+  retries: "{{ uip_snapshot_poll_retries }}"
+  delay: "{{ uip_snapshot_poll_delay }}"
+  until: uip_vmware_snapshot_list.status == 200
+  no_log: true
+  tags:
+    - uip_snapshot
+    - uip_preupgrade
+
+- name: Set VMware snapshot verification result
+  ansible.builtin.set_fact:
+    uip_snapshot_verified: >-
+      {{
+        uip_provider_snapshot_ref in
+        (
+          uip_vmware_snapshot_list.json.value
+          | default([])
+          | map(attribute='snapshot')
+          | list
+        )
+        or
+        uip_snapshot_id in
+        (
+          uip_vmware_snapshot_list.json.value
+          | default([])
+          | map(attribute='name')
+          | list
+        )
+      }}
+  tags:
+    - uip_snapshot
+    - uip_preupgrade

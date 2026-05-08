@@ -33,6 +33,12 @@
     - uip_upgrade
     - uip_postupgrade
 
+- name: Include future network route DNS and topology validation
+  ansible.builtin.import_tasks: route_dns.yml
+  tags:
+    - uip_upgrade
+    - uip_postupgrade
+
 - name: Include future network risk gate
   ansible.builtin.import_tasks: validate.yml
   tags:

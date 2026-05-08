@@ -1,0 +1,38 @@
+---
+- name: Validate package availability from active repositories
+  ansible.builtin.command: "{{ uip_repo_pkg_query_cmd }} {{ item }}"
+  vars:
+    uip_repo_pkg_query_cmd: >-
+      {{
+        'dnf repoquery'
+        if ansible_pkg_mgr == 'dnf'
+        else 'yum list available'
+        if ansible_pkg_mgr == 'yum'
+        else 'apt-cache policy'
+        if ansible_pkg_mgr == 'apt'
+        else 'zypper --non-interactive search --match-exact'
+      }}
+  loop: "{{ uip_repo_validation_packages }}"
+  register: uip_repo_validation_pkg_results
+  changed_when: false
+  failed_when: false
+  when: uip_repo_validate_target_package | bool
+  tags:
+    - uip_discovery
+    - uip_preupgrade
+    - uip_postcheck
+    - uip_postupgrade
+
+- name: Persist repository package validation report
+  ansible.builtin.copy:
+    dest: "{{ uip_report_dir }}/repo-package-validation.yml"
+    owner: root
+    group: root
+    mode: "0640"
+    content: "{{ uip_repo_validation_pkg_results.results | default([]) | to_nice_yaml }}"
+  when: uip_repo_validate_target_package | bool
+  tags:
+    - uip_discovery
+    - uip_preupgrade
+    - uip_postcheck
+    - uip_postupgrade

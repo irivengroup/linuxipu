@@ -28,6 +28,11 @@
     - uip_rollback
     - uip_rollback_state
 
+- name: Include provider-side snapshot restoration
+  ansible.builtin.import_tasks: tasks.d/provider_restore.yml
+  tags:
+    - uip_rollback
+
 - name: Include rollback fstab restoration
   ansible.builtin.import_tasks: tasks.d/fstab.yml
   when: uip_rollback_restore_fstab | bool

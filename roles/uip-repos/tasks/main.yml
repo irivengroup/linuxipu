@@ -86,3 +86,11 @@
     - uip_discovery
     - uip_postcheck
     - uip_postupgrade
+
+- name: Include repository validation tasks
+  ansible.builtin.import_tasks: tasks.d/validation.yml
+  tags:
+    - uip_discovery
+    - uip_preupgrade
+    - uip_postcheck
+    - uip_postupgrade

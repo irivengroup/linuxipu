@@ -1,0 +1,23 @@
+---
+- name: Verify provider snapshot completion status
+  ansible.builtin.include_tasks: "providers/{{ uip_vm_provider }}_verify.yml"
+  when:
+    - uip_snapshot_verify_completion | bool
+    - uip_server_type == "vm"
+  tags:
+    - uip_snapshot
+    - uip_preupgrade
+
+- name: Assert snapshot completion was verified
+  ansible.builtin.assert:
+    that:
+      - not (uip_snapshot_fail_if_unverified | bool) or (uip_snapshot_verified | default(false) | bool)
+    fail_msg: >-
+      VM snapshot completion was not verified for provider {{ uip_vm_provider }}.
+      Refusing to continue because snapshot is mandatory for virtual machines.
+  when:
+    - uip_server_type == "vm"
+    - uip_snapshot_required_for_vm | bool
+  tags:
+    - uip_snapshot
+    - uip_preupgrade
