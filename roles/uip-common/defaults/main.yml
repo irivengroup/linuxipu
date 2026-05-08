@@ -95,3 +95,7 @@ uip_patch_automation_services:
   - dnf-automatic.timer
   - yum-cron
   - packagekit
+
+uip_reboot_max_attempts: 2
+
+uip_reboot_guard_file: "{{ uip_state_dir }}/reboot-guard.yml"
