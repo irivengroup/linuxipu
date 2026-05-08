@@ -19,6 +19,13 @@
     - uip_remediate_fs
     - uip_preupgrade
 
+- name: Include disruptive agent remediation tasks
+  ansible.builtin.import_tasks: tasks.d/agents.yml
+  tags:
+    - uip_remediate
+    - uip_remediate_agents
+    - uip_preupgrade
+
 - name: Include RHEL remediation tasks
   ansible.builtin.import_tasks: tasks.d/rhel/main.yml
   when: uip_os == "rhel"

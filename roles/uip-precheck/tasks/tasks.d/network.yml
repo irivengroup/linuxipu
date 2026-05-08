@@ -1,0 +1,61 @@
+---
+- name: Validate configured DNS targets
+  ansible.builtin.command: "getent hosts {{ item }}"
+  loop: "{{ uip_pre_dns_targets }}"
+  register: uip_dns_checks
+  changed_when: false
+  failed_when: false
+  when: uip_pre_dns_targets | length > 0
+  tags:
+    - uip_precheck
+    - uip_precheck_network
+    - uip_preupgrade
+
+- name: Capture resolver configuration
+  ansible.builtin.command: cat /etc/resolv.conf
+  register: uip_resolv_conf
+  changed_when: false
+  failed_when: false
+  tags:
+    - uip_precheck
+    - uip_precheck_network
+    - uip_preupgrade
+
+- name: Check repository health endpoints
+  ansible.builtin.uri:
+    url: "{{ item }}"
+    method: HEAD
+    status_code:
+      - 200
+      - 301
+      - 302
+      - 401
+      - 403
+    validate_certs: false
+    timeout: 15
+  loop: "{{ uip_pre_repo_health_urls }}"
+  register: uip_repo_health
+  failed_when: false
+  when: uip_pre_repo_health_urls | length > 0
+  tags:
+    - uip_precheck
+    - uip_precheck_network
+    - uip_preupgrade
+
+- name: Persist network precheck report
+  ansible.builtin.copy:
+    dest: "{{ uip_report_dir }}/precheck-network.yml"
+    owner: root
+    group: root
+    mode: "0640"
+    content: |
+      dns:
+      {{ uip_dns_checks.results | default([]) | to_nice_yaml(indent=2) | indent(2, true) }}
+      resolv_conf: |
+      {{ uip_resolv_conf.stdout | default('') | indent(2, true) }}
+      repo_health:
+      {{ uip_repo_health.results | default([]) | to_nice_yaml(indent=2) | indent(2, true) }}
+  tags:
+    - uip_precheck
+    - uip_precheck_network
+    - uip_preupgrade

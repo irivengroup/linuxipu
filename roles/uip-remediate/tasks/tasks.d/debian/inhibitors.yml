@@ -20,3 +20,15 @@
     - uip_remediate_debian
     - uip_remediate_inhibitors
     - uip_preupgrade
+
+- name: Rebuild Debian initramfs
+  ansible.builtin.command: update-initramfs -u -k all
+  register: uip_debian_initramfs
+  changed_when: true
+  failed_when: uip_debian_initramfs.rc != 0
+  when: uip_initramfs_rebuild | bool
+  tags:
+    - uip_remediate
+    - uip_remediate_debian
+    - uip_remediate_initramfs
+    - uip_preupgrade

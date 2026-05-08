@@ -32,3 +32,31 @@
     - uip_precheck_sys
     - uip_precheck
     - uip_preupgrade
+
+- name: Include DNS and repository reachability checks
+  ansible.builtin.import_tasks: network.yml
+  tags:
+    - uip_precheck
+    - uip_precheck_network
+    - uip_preupgrade
+
+- name: Include boot and storage readiness checks
+  ansible.builtin.import_tasks: boot.yml
+  tags:
+    - uip_precheck
+    - uip_precheck_boot
+    - uip_preupgrade
+
+- name: Include automation and agent checks
+  ansible.builtin.import_tasks: agents.yml
+  tags:
+    - uip_precheck
+    - uip_precheck_agents
+    - uip_preupgrade
+
+- name: Include application hook precheck tasks
+  ansible.builtin.import_tasks: app_hooks.yml
+  tags:
+    - uip_precheck
+    - uip_precheck_app
+    - uip_preupgrade

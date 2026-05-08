@@ -1,0 +1,40 @@
+---
+- name: Stop disruptive agents before upgrade
+  ansible.builtin.service:
+    name: "{{ item }}"
+    state: stopped
+  loop: "{{ uip_active_agents | default([]) }}"
+  failed_when: false
+  when: uip_disable_agents | bool
+  tags:
+    - uip_remediate
+    - uip_remediate_agents
+    - uip_preupgrade
+
+- name: Stop patch automation before upgrade
+  ansible.builtin.service:
+    name: "{{ item }}"
+    state: stopped
+  loop: "{{ uip_active_patch_automation | default([]) }}"
+  failed_when: false
+  when: uip_disable_patch_automation | bool
+  tags:
+    - uip_remediate
+    - uip_remediate_agents
+    - uip_preupgrade
+
+- name: Persist stopped agent state
+  ansible.builtin.copy:
+    dest: "{{ uip_report_dir }}/remediate-stopped-agents.yml"
+    owner: root
+    group: root
+    mode: "0640"
+    content: |
+      stopped_agents:
+      {{ uip_active_agents | default([]) | to_nice_yaml(indent=2) | indent(2, true) }}
+      stopped_patch_automation:
+      {{ uip_active_patch_automation | default([]) | to_nice_yaml(indent=2) | indent(2, true) }}
+  tags:
+    - uip_remediate
+    - uip_remediate_agents
+    - uip_preupgrade

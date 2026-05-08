@@ -45,6 +45,29 @@
     - uip_postcheck
     - uip_postupgrade
 
+
+- name: Restart previously stopped agents after upgrade
+  ansible.builtin.service:
+    name: "{{ item }}"
+    state: started
+  loop: "{{ uip_active_agents | default([]) }}"
+  failed_when: false
+  when: uip_disable_agents | bool
+  tags:
+    - uip_postcheck
+    - uip_postupgrade
+
+- name: Run application post-upgrade validation hooks
+  ansible.builtin.command: "{{ item }}"
+  loop: "{{ uip_app_post_validation_cmds }}"
+  register: uip_app_post_validation_results
+  changed_when: false
+  failed_when: false
+  when: uip_app_post_validation_cmds | length > 0
+  tags:
+    - uip_postcheck
+    - uip_postupgrade
+
 - name: Write done marker
   ansible.builtin.copy:
     dest: '{{ uip_done_file }}'

@@ -51,3 +51,47 @@ uip_remediate_fix_inhibitors: true
 uip_remediate_comment_network_mounts: true
 
 uip_rhel6_to_7_instrepo: ""
+
+uip_pre_dns_targets: []
+
+uip_pre_repo_health_urls: []
+
+uip_pre_min_boot_inode_pct_free: 5
+
+uip_pre_min_var_lib_leapp_mb: 4096
+
+uip_disable_agents: true
+
+uip_disable_patch_automation: true
+
+uip_app_pre_snapshot_cmds: []
+
+uip_app_post_validation_cmds: []
+
+uip_initramfs_rebuild: true
+
+uip_validate_grubby: true
+
+uip_selinux_relabel_onboot: false
+
+uip_report_final_file: "{{ uip_report_dir }}/uip-final-report.yml"
+
+uip_agent_services:
+  - falcon-sensor
+  - sentinelone
+  - sentineld
+  - taniumclient
+  - qualys-cloud-agent
+  - ds_agent
+  - cbdaemon
+  - puppet
+  - chef-client
+  - salt-minion
+
+uip_patch_automation_services:
+  - unattended-upgrades
+  - apt-daily.timer
+  - apt-daily-upgrade.timer
+  - dnf-automatic.timer
+  - yum-cron
+  - packagekit

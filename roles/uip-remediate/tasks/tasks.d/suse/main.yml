@@ -1,14 +1,4 @@
 ---
-- name: Refresh SUSE repositories
-  ansible.builtin.command: zypper --non-interactive refresh
-  changed_when: false
-  failed_when: false
-  tags:
-    - uip_remediate
-    - uip_remediate_suse
-    - uip_remediate_Refresh_repo
-    - uip_preupgrade
-
 - name: Include SUSE kernel remediation tasks
   ansible.builtin.import_tasks: kernel.yml
   tags:

@@ -30,3 +30,73 @@
     - uip_remediate_rhel
     - uip_remediate_inhibitors
     - uip_preupgrade
+
+- name: Check RHEL subscription-manager status
+  ansible.builtin.command: subscription-manager status
+  register: uip_rhsm_status_remediate
+  changed_when: false
+  failed_when: false
+  tags:
+    - uip_remediate
+    - uip_remediate_rhel
+    - uip_remediate_inhibitors
+    - uip_preupgrade
+
+- name: Capture SELinux state
+  ansible.builtin.command: getenforce
+  register: uip_selinux_state
+  changed_when: false
+  failed_when: false
+  tags:
+    - uip_remediate
+    - uip_remediate_rhel
+    - uip_remediate_selinux
+    - uip_preupgrade
+
+- name: Schedule SELinux relabel when requested
+  ansible.builtin.file:
+    path: /.autorelabel
+    state: touch
+    mode: "0644"
+  when: uip_selinux_relabel_onboot | bool
+  tags:
+    - uip_remediate
+    - uip_remediate_rhel
+    - uip_remediate_selinux
+    - uip_preupgrade
+
+- name: Rebuild RHEL initramfs
+  ansible.builtin.command: dracut -f
+  register: uip_dracut_rebuild
+  changed_when: true
+  failed_when: uip_dracut_rebuild.rc != 0
+  when: uip_initramfs_rebuild | bool
+  tags:
+    - uip_remediate
+    - uip_remediate_rhel
+    - uip_remediate_initramfs
+    - uip_preupgrade
+
+- name: Validate RHEL default kernel with grubby
+  ansible.builtin.command: grubby --default-kernel
+  register: uip_grubby_default_kernel
+  changed_when: false
+  failed_when: false
+  when: uip_validate_grubby | bool
+  tags:
+    - uip_remediate
+    - uip_remediate_rhel
+    - uip_remediate_grub
+    - uip_preupgrade
+
+- name: Capture RHEL grubby kernel inventory
+  ansible.builtin.command: grubby --info=ALL
+  register: uip_grubby_info
+  changed_when: false
+  failed_when: false
+  when: uip_validate_grubby | bool
+  tags:
+    - uip_remediate
+    - uip_remediate_rhel
+    - uip_remediate_grub
+    - uip_preupgrade

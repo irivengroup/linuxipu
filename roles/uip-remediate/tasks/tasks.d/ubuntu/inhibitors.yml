@@ -22,3 +22,15 @@
     - uip_remediate_ubuntu
     - uip_remediate_inhibitors
     - uip_preupgrade
+
+- name: Rebuild Ubuntu initramfs
+  ansible.builtin.command: update-initramfs -u -k all
+  register: uip_ubuntu_initramfs
+  changed_when: true
+  failed_when: uip_ubuntu_initramfs.rc != 0
+  when: uip_initramfs_rebuild | bool
+  tags:
+    - uip_remediate
+    - uip_remediate_ubuntu
+    - uip_remediate_initramfs
+    - uip_preupgrade

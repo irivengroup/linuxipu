@@ -1,0 +1,55 @@
+---
+- name: Gather service facts for agent detection
+  ansible.builtin.service_facts:
+  tags:
+    - uip_precheck
+    - uip_precheck_agents
+    - uip_preupgrade
+
+- name: Build active disruptive agent list
+  ansible.builtin.set_fact:
+    uip_active_agents: >-
+      {{
+        ansible_facts.services
+        | dict2items
+        | selectattr('key', 'in', uip_agent_services)
+        | selectattr('value.state', 'equalto', 'running')
+        | map(attribute='key')
+        | list
+      }}
+  tags:
+    - uip_precheck
+    - uip_precheck_agents
+    - uip_preupgrade
+
+- name: Build active patch automation list
+  ansible.builtin.set_fact:
+    uip_active_patch_automation: >-
+      {{
+        ansible_facts.services
+        | dict2items
+        | selectattr('key', 'in', uip_patch_automation_services)
+        | selectattr('value.state', 'equalto', 'running')
+        | map(attribute='key')
+        | list
+      }}
+  tags:
+    - uip_precheck
+    - uip_precheck_agents
+    - uip_preupgrade
+
+- name: Persist disruptive agents report
+  ansible.builtin.copy:
+    dest: "{{ uip_report_dir }}/precheck-agents.yml"
+    owner: root
+    group: root
+    mode: "0640"
+    content: |
+      active_agents:
+      {{ uip_active_agents | default([]) | to_nice_yaml(indent=2) | indent(2, true) }}
+      active_patch_automation:
+      {{ uip_active_patch_automation | default([]) | to_nice_yaml(indent=2) | indent(2, true) }}
+  tags:
+    - uip_precheck
+    - uip_precheck_agents
+    - uip_preupgrade
