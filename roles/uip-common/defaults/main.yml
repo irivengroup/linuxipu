@@ -99,3 +99,15 @@ uip_patch_automation_services:
 uip_reboot_max_attempts: 2
 
 uip_reboot_guard_file: "{{ uip_state_dir }}/reboot-guard.yml"
+
+uip_lock_stale_hours: 24
+
+uip_lock_allow_stale_override: false
+
+uip_lock_enforce_same_path: true
+
+uip_lock_block_completed: true
+
+uip_lock_active_state: "active"
+
+uip_lock_completed_state: "completed"

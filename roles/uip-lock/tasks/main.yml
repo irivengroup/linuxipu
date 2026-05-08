@@ -1,60 +1,183 @@
 ---
-- name: Check existing lock
+- name: Ensure UIP state directory exists
+  ansible.builtin.file:
+    path: "{{ uip_state_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0750"
+  tags:
+    - uip_preupgrade
+
+- name: Ensure UIP report directory exists for lock reports
+  ansible.builtin.file:
+    path: "{{ uip_report_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0750"
+  tags:
+    - uip_preupgrade
+
+- name: Assert source and target versions are defined
+  ansible.builtin.assert:
+    that:
+      - uip_os is defined
+      - uip_src_ver is defined
+      - uip_dst_ver is defined
+      - uip_path_key is defined
+    fail_msg: "UIP lock requires uip_os, uip_src_ver, uip_dst_ver and uip_path_key."
+  tags:
+    - uip_preupgrade
+
+- name: Assert requested path exists in uip_paths
+  ansible.builtin.assert:
+    that:
+      - uip_paths[uip_os][uip_src_ver | string][uip_dst_ver | string] is defined
+    fail_msg: >-
+      Unsupported upgrade path {{ uip_os }} {{ uip_src_ver }} -> {{ uip_dst_ver }}.
+      Only declared n -> n+1 paths are allowed.
+  tags:
+    - uip_preupgrade
+
+- name: Assert requested path key matches mapping
+  ansible.builtin.assert:
+    that:
+      - uip_paths[uip_os][uip_src_ver | string][uip_dst_ver | string].key == uip_path_key
+    fail_msg: >-
+      Path key mismatch. Requested {{ uip_path_key }} but mapping defines
+      {{ uip_paths[uip_os][uip_src_ver | string][uip_dst_ver | string].key }}.
+  tags:
+    - uip_preupgrade
+
+- name: Check active lock file
   ansible.builtin.stat:
-    path: '{{ uip_lock_file }}'
+    path: "{{ uip_lock_file }}"
   register: uip_lock_stat
   tags:
     - uip_preupgrade
-- name: Read existing lock - uip_preupgrade
+
+- name: Read active lock file
   ansible.builtin.slurp:
-    src: '{{ uip_lock_file }}'
+    src: "{{ uip_lock_file }}"
   register: uip_lock_raw
   when: uip_lock_stat.stat.exists
   tags:
     - uip_preupgrade
-- name: Decode existing lock
+
+- name: Decode active lock file
   ansible.builtin.set_fact:
-    uip_lock_data: '{{ uip_lock_raw.content | b64decode | from_yaml }}'
+    uip_existing_lock: "{{ uip_lock_raw.content | b64decode | from_yaml }}"
   when: uip_lock_stat.stat.exists
   tags:
     - uip_preupgrade
-- name: Assert existing lock matches current upgrade path
+
+- name: Determine lock age
+  ansible.builtin.set_fact:
+    uip_lock_age_seconds: "{{ (ansible_date_time.epoch | int) - (uip_lock_stat.stat.mtime | int) }}"
+  when: uip_lock_stat.stat.exists
+  tags:
+    - uip_preupgrade
+
+- name: Assert existing lock belongs to same upgrade path
   ansible.builtin.assert:
     that:
-      - uip_resume | bool
-      - uip_lock_data.path == uip_path_key
-      - uip_lock_data.dst_ver | string == uip_dst_ver | string
-    fail_msg: Existing lock blocks this run. Use uip_resume=true only for the same path.
-  when: uip_lock_stat.stat.exists
+      - not uip_lock_stat.stat.exists
+        or not (uip_lock_enforce_same_path | bool)
+        or uip_existing_lock.path == uip_path_key
+    fail_msg: >-
+      Active UIP lock belongs to another path.
+      existing={{ uip_existing_lock.path | default('unknown') }},
+      requested={{ uip_path_key }}.
   tags:
     - uip_preupgrade
-- name: Create upgrade lock
+
+- name: Assert active lock is not stale unless override is allowed
+  ansible.builtin.assert:
+    that:
+      - not uip_lock_stat.stat.exists
+        or (uip_lock_age_seconds | int) < ((uip_lock_stale_hours | int) * 3600)
+        or (uip_lock_allow_stale_override | bool)
+    fail_msg: >-
+      Existing UIP lock is stale or abandoned.
+      lock={{ uip_lock_file }},
+      age_seconds={{ uip_lock_age_seconds | default('unknown') }}.
+      Review state files before retrying, or set uip_lock_allow_stale_override=true.
+  tags:
+    - uip_preupgrade
+
+- name: Check completed marker
+  ansible.builtin.stat:
+    path: "{{ uip_done_file }}"
+  register: uip_done_stat
+  tags:
+    - uip_preupgrade
+
+- name: Read completed marker
+  ansible.builtin.slurp:
+    src: "{{ uip_done_file }}"
+  register: uip_done_raw
+  when: uip_done_stat.stat.exists
+  tags:
+    - uip_preupgrade
+
+- name: Decode completed marker
+  ansible.builtin.set_fact:
+    uip_done_state: "{{ uip_done_raw.content | b64decode | from_yaml }}"
+  when: uip_done_stat.stat.exists
+  tags:
+    - uip_preupgrade
+
+- name: Block rerun of already completed same path
+  ansible.builtin.assert:
+    that:
+      - not uip_done_stat.stat.exists
+        or not (uip_lock_block_completed | bool)
+        or uip_done_state.path != uip_path_key
+    fail_msg: >-
+      This host already completed UIP path {{ uip_path_key }}.
+      Remove {{ uip_done_file }} only after a controlled operator review.
+  tags:
+    - uip_preupgrade
+
+- name: Create or refresh active UIP lock
   ansible.builtin.copy:
-    dest: '{{ uip_lock_file }}'
+    dest: "{{ uip_lock_file }}"
     owner: root
     group: root
-    mode: '0640'
-    content: 'id: "{{ inventory_hostname }}-{{ uip_path_key }}"
-
+    mode: "0640"
+    content: |
+      id: "{{ inventory_hostname }}-{{ uip_path_key }}"
       host: "{{ inventory_hostname }}"
-
-      distro: "{{ uip_os }}"
-
+      os: "{{ uip_os }}"
       src_ver: "{{ uip_src_ver }}"
-
       dst_ver: "{{ uip_dst_ver }}"
-
       path: "{{ uip_path_key }}"
-
-      state: "created"
-
-      repo_mgr: "{{ uip_repo_mgr }}"
-
+      state: "{{ uip_lock_active_state }}"
+      repo_mgr: "{{ uip_repo_mgr | default('unknown') }}"
       started_at: "{{ ansible_date_time.iso8601 }}"
-
       updated_at: "{{ ansible_date_time.iso8601 }}"
+  tags:
+    - uip_preupgrade
 
-      '
-  when: not uip_lock_stat.stat.exists
+- name: Persist lock validation report
+  ansible.builtin.copy:
+    dest: "{{ uip_report_dir }}/lock-validation.yml"
+    owner: root
+    group: root
+    mode: "0640"
+    content: |
+      host: "{{ inventory_hostname }}"
+      os: "{{ uip_os }}"
+      src_ver: "{{ uip_src_ver }}"
+      dst_ver: "{{ uip_dst_ver }}"
+      path: "{{ uip_path_key }}"
+      lock_file: "{{ uip_lock_file }}"
+      existed_before: "{{ uip_lock_stat.stat.exists }}"
+      age_seconds: "{{ uip_lock_age_seconds | default(0) }}"
+      stale_hours: "{{ uip_lock_stale_hours }}"
+      allow_stale_override: "{{ uip_lock_allow_stale_override }}"
+      completed_marker_exists: "{{ uip_done_stat.stat.exists }}"
+      validated_at: "{{ ansible_date_time.iso8601 }}"
   tags:
     - uip_preupgrade
