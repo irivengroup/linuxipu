@@ -223,5 +223,4 @@
       Cluster/quorum orchestration should validate one-node-at-a-time workflow.
   when: uip_staged_reboot_enabled | bool
   tags:
-    - uip_reboot
     - uip_postupgrade
