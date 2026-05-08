@@ -1,0 +1,59 @@
+---
+- name: Build default dependency service list
+  ansible.builtin.set_fact:
+    uip_dependency_services_effective: >-
+      {{
+        uip_dependency_graph_services
+        if (uip_dependency_graph_services | length > 0)
+        else (ansible_facts.services.keys() | list if ansible_facts.services is defined else [])
+      }}
+  when: uip_dependency_graph_enabled | bool
+  tags:
+    - uip_precheck
+    - uip_preupgrade
+
+- name: Capture enabled service dependency graph
+  ansible.builtin.shell: |
+    set -o pipefail
+    svc="{{ item }}"
+    systemctl is-enabled "$svc" >/dev/null 2>&1 || exit 0
+    echo "### ${svc}"
+    systemctl list-dependencies --plain --no-pager "$svc" || true
+    echo "### unit"
+    systemctl cat "$svc" || true
+  args:
+    executable: /bin/bash
+  loop: "{{ uip_dependency_services_effective | default([]) }}"
+  register: uip_dependency_graph_raw
+  changed_when: false
+  failed_when: false
+  when: uip_dependency_graph_enabled | bool
+  tags:
+    - uip_precheck
+    - uip_preupgrade
+
+- name: Capture mount dependency graph
+  ansible.builtin.command: systemctl list-dependencies --plain --no-pager local-fs.target remote-fs.target
+  register: uip_dependency_mounts_raw
+  changed_when: false
+  failed_when: false
+  when: uip_dependency_graph_enabled | bool
+  tags:
+    - uip_precheck
+    - uip_preupgrade
+
+- name: Persist service dependency graph
+  ansible.builtin.copy:
+    dest: "{{ uip_report_dir }}/service-dependency-graph.yml"
+    owner: root
+    group: root
+    mode: "0640"
+    content: |
+      services:
+      {{ uip_dependency_graph_raw.results | default([]) | to_nice_yaml(indent=2) | indent(2, true) }}
+      mounts: |
+      {{ uip_dependency_mounts_raw.stdout | default('') | indent(2, true) }}
+  when: uip_dependency_graph_enabled | bool
+  tags:
+    - uip_precheck
+    - uip_preupgrade

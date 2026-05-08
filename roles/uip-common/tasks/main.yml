@@ -125,3 +125,11 @@
     - always
     - uip_common
     - uip_preupgrade
+
+- name: Include breakglass audit tasks
+  ansible.builtin.import_tasks: tasks.d/breakglass.yml
+  tags:
+    - always
+    - uip_common
+    - uip_preupgrade
+    - uip_postupgrade

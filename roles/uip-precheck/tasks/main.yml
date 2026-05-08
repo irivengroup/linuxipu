@@ -30,6 +30,12 @@
     - uip_precheck_suse
     - uip_preupgrade
 
+- name: Include service dependency graph tasks
+  ansible.builtin.import_tasks: tasks.d/dependency_graph.yml
+  tags:
+    - uip_precheck
+    - uip_preupgrade
+
 - name: Include operational governance tasks
   ansible.builtin.import_tasks: tasks.d/operational.yml
   tags:

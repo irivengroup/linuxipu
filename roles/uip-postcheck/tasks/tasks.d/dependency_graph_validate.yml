@@ -1,0 +1,24 @@
+---
+- name: Capture failed systemd units after upgrade
+  ansible.builtin.command: systemctl --failed --no-legend --no-pager
+  register: uip_post_failed_units
+  changed_when: false
+  failed_when: false
+  when: uip_dependency_graph_enabled | bool
+  tags:
+    - uip_postcheck
+    - uip_postupgrade
+
+- name: Persist post-upgrade dependency health report
+  ansible.builtin.copy:
+    dest: "{{ uip_report_dir }}/service-dependency-postcheck.yml"
+    owner: root
+    group: root
+    mode: "0640"
+    content: |
+      failed_units: |
+      {{ uip_post_failed_units.stdout | default('') | indent(2, true) }}
+  when: uip_dependency_graph_enabled | bool
+  tags:
+    - uip_postcheck
+    - uip_postupgrade

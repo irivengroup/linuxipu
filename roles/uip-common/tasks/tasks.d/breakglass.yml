@@ -1,0 +1,38 @@
+---
+- name: Validate breakglass justification when enabled
+  ansible.builtin.assert:
+    that:
+      - not (uip_breakglass_enabled | bool)
+        or (uip_breakglass_reason | length > 5)
+      - not (uip_breakglass_enabled | bool)
+        or (uip_breakglass_operator | length > 1)
+      - not (uip_breakglass_enabled | bool)
+        or (uip_breakglass_ticket | length > 1)
+    fail_msg: >-
+      Breakglass requires uip_breakglass_reason, uip_breakglass_operator and
+      uip_breakglass_ticket.
+  tags:
+    - always
+    - uip_common
+    - uip_preupgrade
+    - uip_postupgrade
+
+- name: Persist breakglass audit trail
+  ansible.builtin.copy:
+    dest: "{{ uip_report_dir }}/breakglass-audit.yml"
+    owner: root
+    group: root
+    mode: "0640"
+    content: |
+      enabled: "{{ uip_breakglass_enabled }}"
+      operator: "{{ uip_breakglass_operator }}"
+      ticket: "{{ uip_breakglass_ticket }}"
+      reason: "{{ uip_breakglass_reason }}"
+      expires_at: "{{ uip_breakglass_expires_at }}"
+      recorded_at: "{{ ansible_date_time.iso8601 }}"
+  when: uip_breakglass_enabled | bool
+  tags:
+    - always
+    - uip_common
+    - uip_preupgrade
+    - uip_postupgrade

@@ -1,0 +1,62 @@
+---
+- name: Capture current kernel panic related sysctl values
+  ansible.builtin.shell: |
+    set -o pipefail
+    for key in kernel.panic kernel.panic_on_oops kernel.unknown_nmi_panic; do
+      sysctl -n "$key" 2>/dev/null | sed "s/^/${key}=/"
+    done
+    cat /proc/cmdline | sed 's/^/cmdline=/'
+  args:
+    executable: /bin/bash
+  register: uip_kernel_panic_current
+  changed_when: false
+  failed_when: false
+  when: uip_kernel_panic_capture_enabled | bool
+  tags:
+    - uip_remediate
+    - uip_preupgrade
+
+- name: Configure kernel panic reboot timeout
+  ansible.posix.sysctl:
+    name: kernel.panic
+    value: "{{ uip_kernel_panic_timeout }}"
+    state: present
+    reload: true
+  when:
+    - uip_kernel_panic_capture_enabled | bool
+    - uip_kernel_panic_capture_apply | bool
+  tags:
+    - uip_remediate
+    - uip_preupgrade
+
+- name: Configure panic on oops
+  ansible.posix.sysctl:
+    name: kernel.panic_on_oops
+    value: "{{ 1 if uip_kernel_panic_oops | bool else 0 }}"
+    state: present
+    reload: true
+  when:
+    - uip_kernel_panic_capture_enabled | bool
+    - uip_kernel_panic_capture_apply | bool
+  tags:
+    - uip_remediate
+    - uip_preupgrade
+
+- name: Persist kernel panic capture report
+  ansible.builtin.copy:
+    dest: "{{ uip_report_dir }}/kernel-panic-capture.yml"
+    owner: root
+    group: root
+    mode: "0640"
+    content: |
+      enabled: "{{ uip_kernel_panic_capture_enabled }}"
+      apply: "{{ uip_kernel_panic_capture_apply }}"
+      desired_panic_timeout: "{{ uip_kernel_panic_timeout }}"
+      desired_panic_on_oops: "{{ uip_kernel_panic_oops }}"
+      desired_console_args: "{{ uip_kernel_console_args }}"
+      current: |
+      {{ uip_kernel_panic_current.stdout | default('') | indent(2, true) }}
+  when: uip_kernel_panic_capture_enabled | bool
+  tags:
+    - uip_remediate
+    - uip_preupgrade
