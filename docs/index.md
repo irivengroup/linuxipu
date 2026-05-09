@@ -27,6 +27,7 @@
 - [Precheck](role-precheck.md)
 - [Snapshot](role-snapshot.md)
 - [Repos](role-repos.md)
+- [Repository Binding](repository-binding.md)
 - [Remediate](role-remediate.md)
 - [Upgrade](role-upgrade.md)
 - [Reboot](role-reboot.md)

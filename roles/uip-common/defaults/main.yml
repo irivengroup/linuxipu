@@ -251,3 +251,23 @@ uip_breakglass_operator: ""
 uip_breakglass_ticket: ""
 
 uip_breakglass_expires_at: ""
+
+uip_repo_src_ak: ""
+
+uip_repo_dst_ak: ""
+
+uip_repo_src_env: ""
+
+uip_repo_dst_env: ""
+
+uip_repo_src_content_view: ""
+
+uip_repo_dst_content_view: ""
+
+uip_repo_explicit_binding_required: false
+
+uip_repo_manager_bindings: {}
+
+uip_repo_binding_state_file: "{{ uip_state_dir }}/repo-binding.yml"
+
+uip_repo_binding_report_file: "{{ uip_report_dir }}/repo-binding.yml"

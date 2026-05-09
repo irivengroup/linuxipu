@@ -9,3 +9,24 @@
     - uip_discovery
     - uip_postcheck
     - uip_postupgrade
+
+
+- name: Apply explicit repository binding intent
+  ansible.builtin.debug:
+    msg:
+      - "repo_manager={{ uip_repo_mgr }}"
+      - "source_activation_key={{ uip_repo_src_binding | default('') }}"
+      - "target_activation_key={{ uip_repo_dst_binding | default('') }}"
+      - "source_environment={{ uip_repo_src_environment | default('') }}"
+      - "target_environment={{ uip_repo_dst_environment | default('') }}"
+      - "source_content_view={{ uip_repo_src_cv | default('') }}"
+      - "target_content_view={{ uip_repo_dst_cv | default('') }}"
+  when:
+    - (uip_repo_dst_binding | default('') | length > 0)
+      or (uip_repo_dst_environment | default('') | length > 0)
+      or (uip_repo_dst_cv | default('') | length > 0)
+  tags:
+    - uip_discovery
+    - uip_preupgrade
+    - uip_postcheck
+    - uip_postupgrade

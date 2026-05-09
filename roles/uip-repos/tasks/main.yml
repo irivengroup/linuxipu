@@ -1,4 +1,12 @@
 ---
+- name: Include repository binding resolution
+  ansible.builtin.import_tasks: tasks.d/binding.yml
+  tags:
+    - uip_discovery
+    - uip_preupgrade
+    - uip_postcheck
+    - uip_postupgrade
+
 - name: Include common repository checks
   ansible.builtin.import_tasks: tasks.d/common.yml
   tags:

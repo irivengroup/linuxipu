@@ -1,4 +1,37 @@
 ---
+- name: Check repository binding rollback state
+  ansible.builtin.stat:
+    path: "{{ uip_repo_binding_state_file }}"
+  register: uip_rollback_repo_binding_state
+  tags:
+    - uip_rollback
+
+- name: Read repository binding rollback state
+  ansible.builtin.slurp:
+    src: "{{ uip_repo_binding_state_file }}"
+  register: uip_rollback_repo_binding_raw
+  when: uip_rollback_repo_binding_state.stat.exists
+  tags:
+    - uip_rollback
+
+- name: Decode repository binding rollback state
+  ansible.builtin.set_fact:
+    uip_rollback_repo_binding: "{{ uip_rollback_repo_binding_raw.content | b64decode | from_yaml }}"
+  when: uip_rollback_repo_binding_state.stat.exists
+  tags:
+    - uip_rollback
+
+- name: Report repository binding rollback target
+  ansible.builtin.debug:
+    msg:
+      - "Repository manager={{ uip_rollback_repo_binding.repo_manager | default('unknown') }}"
+      - "Rollback source activation key={{ uip_rollback_repo_binding.source.activation_key | default('') }}"
+      - "Rollback source environment={{ uip_rollback_repo_binding.source.environment | default('') }}"
+      - "Rollback source content view={{ uip_rollback_repo_binding.source.content_view | default('') }}"
+  when: uip_rollback_repo_binding is defined
+  tags:
+    - uip_rollback
+
 - name: Restore RHEL source repositories when using subscription-manager
   ansible.builtin.command: "subscription-manager repos --enable={{ item }}"
   loop: "{{ uip_repo_def.repos_disable | default([]) }}"
