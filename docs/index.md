@@ -50,3 +50,5 @@
 © IRIVEN Group — All Rights Reserved
 
 - [Linting Policy](linting.md)
+
+- [Vendor Alignment](vendor-alignment.md)

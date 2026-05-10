@@ -1,104 +1,90 @@
 ---
-- name: Resolve explicit repository bindings
+- name: Resolve repository binding from existing repository mapping
   ansible.builtin.set_fact:
-    uip_repo_src_binding: >-
-      {{
-        uip_repo_src_ak
-        if uip_repo_src_ak | length > 0
-        else uip_repo_manager_bindings.get(uip_repo_mgr, {}).get('src_ak', '')
-      }}
-    uip_repo_dst_binding: >-
-      {{
-        uip_repo_dst_ak
-        if uip_repo_dst_ak | length > 0
-        else uip_repo_manager_bindings.get(uip_repo_mgr, {}).get('dst_ak', '')
-      }}
-    uip_repo_src_environment: >-
-      {{
-        uip_repo_src_env
-        if uip_repo_src_env | length > 0
-        else uip_repo_manager_bindings.get(uip_repo_mgr, {}).get('src_env', '')
-      }}
-    uip_repo_dst_environment: >-
-      {{
-        uip_repo_dst_env
-        if uip_repo_dst_env | length > 0
-        else uip_repo_manager_bindings.get(uip_repo_mgr, {}).get('dst_env', '')
-      }}
-    uip_repo_src_cv: >-
-      {{
-        uip_repo_src_content_view
-        if uip_repo_src_content_view | length > 0
-        else uip_repo_manager_bindings.get(uip_repo_mgr, {}).get('src_content_view', '')
-      }}
-    uip_repo_dst_cv: >-
-      {{
-        uip_repo_dst_content_view
-        if uip_repo_dst_content_view | length > 0
-        else uip_repo_manager_bindings.get(uip_repo_mgr, {}).get('dst_content_view', '')
-      }}
+    uip_repos_binding:
+      manager: "{{ uip_repo_mgr }}"
+      source:
+        activation_key: "{{ uip_repo_def.src_ak | default('') }}"
+        repository: "{{ uip_repo_def.src_repo | default('') }}"
+        channel: "{{ uip_repo_def.src_channel | default('') }}"
+        series: "{{ uip_repo_def.src_series | default('') }}"
+        mount: "{{ uip_repo_def.src_mount | default('') }}"
+        lifecycle_environment: "{{ uip_repo_def.src_lce | default('') }}"
+        content_view: "{{ uip_repo_def.src_cv | default('') }}"
+      target:
+        activation_key: "{{ uip_repo_def.dst_ak | default(uip_repo_def.activation_key | default('')) }}"
+        repository: "{{ uip_repo_def.dst_repo | default('') }}"
+        channel: "{{ uip_repo_def.dst_channel | default('') }}"
+        series: "{{ uip_repo_def.dst_series | default('') }}"
+        mount: "{{ uip_repo_def.dst_mount | default('') }}"
+        lifecycle_environment: "{{ uip_repo_def.dst_lce | default('') }}"
+        content_view: "{{ uip_repo_def.dst_cv | default('') }}"
+        url: "{{ uip_repo_def.dst_url | default('') }}"
+        urls: "{{ uip_repo_def.target_urls | default([]) }}"
   tags:
-    - uip_discovery
     - uip_preupgrade
+    - uip_discovery
     - uip_postcheck
     - uip_postupgrade
 
-- name: Validate explicit repository binding when strict mode is enabled
+- name: Validate mapped repository transition has target intent
   ansible.builtin.assert:
     that:
-      - not (uip_repo_explicit_binding_required | bool)
-        or (uip_repo_dst_binding | length > 0)
-        or (uip_repo_dst_environment | length > 0)
-        or (uip_repo_dst_cv | length > 0)
+      - >-
+        (uip_repos_binding.target.activation_key | length > 0)
+        or (uip_repos_binding.target.repository | length > 0)
+        or (uip_repos_binding.target.channel | length > 0)
+        or (uip_repos_binding.target.series | length > 0)
+        or (uip_repos_binding.target.mount | length > 0)
+        or (uip_repos_binding.target.url | length > 0)
+        or (uip_repos_binding.target.urls | length > 0)
+        or (uip_repo_def.repos_enable | default([]) | length > 0)
     fail_msg: >-
-      Explicit repository binding is required for {{ uip_repo_mgr }}, but no
-      target activation key, environment or content view was provided.
+      Repository mapping for {{ uip_repo_mgr }} does not define a usable target
+      binding in uip_repo_map for {{ uip_os }} {{ uip_src_ver }} -> {{ uip_dst_ver }}.
   tags:
-    - uip_discovery
     - uip_preupgrade
+    - uip_discovery
     - uip_postcheck
     - uip_postupgrade
 
-- name: Persist repository binding state for rollback
+- name: Persist repository transition binding state
   ansible.builtin.copy:
-    dest: "{{ uip_repo_binding_state_file }}"
+    dest: "{{ uip_lock_dir }}/repo-binding.yml"
     owner: root
     group: root
     mode: "0640"
     content: |
       repo_manager: "{{ uip_repo_mgr }}"
+      os: "{{ uip_os }}"
+      src_ver: "{{ uip_src_ver }}"
+      dst_ver: "{{ uip_dst_ver }}"
       source:
-        activation_key: "{{ uip_repo_src_binding }}"
-        environment: "{{ uip_repo_src_environment }}"
-        content_view: "{{ uip_repo_src_cv }}"
+      {{ uip_repos_binding.source | to_nice_yaml(indent=2) | indent(2, true) }}
       target:
-        activation_key: "{{ uip_repo_dst_binding }}"
-        environment: "{{ uip_repo_dst_environment }}"
-        content_view: "{{ uip_repo_dst_cv }}"
-      src_ver: "{{ uip_src_ver | default('unknown') }}"
-      dst_ver: "{{ uip_dst_ver | default('unknown') }}"
+      {{ uip_repos_binding.target | to_nice_yaml(indent=2) | indent(2, true) }}
       recorded_at: "{{ ansible_date_time.iso8601 }}"
   tags:
-    - uip_discovery
     - uip_preupgrade
+    - uip_discovery
 
-- name: Persist repository binding report
+- name: Persist repository transition binding report
   ansible.builtin.copy:
-    dest: "{{ uip_repo_binding_report_file }}"
+    dest: "{{ uip_report_dir }}/repo-binding.yml"
     owner: root
     group: root
     mode: "0640"
     content: |
       repo_manager: "{{ uip_repo_mgr }}"
-      explicit_binding_required: "{{ uip_repo_explicit_binding_required }}"
-      source_activation_key: "{{ uip_repo_src_binding }}"
-      target_activation_key: "{{ uip_repo_dst_binding }}"
-      source_environment: "{{ uip_repo_src_environment }}"
-      target_environment: "{{ uip_repo_dst_environment }}"
-      source_content_view: "{{ uip_repo_src_cv }}"
-      target_content_view: "{{ uip_repo_dst_cv }}"
+      os: "{{ uip_os }}"
+      src_ver: "{{ uip_src_ver }}"
+      dst_ver: "{{ uip_dst_ver }}"
+      source:
+      {{ uip_repos_binding.source | to_nice_yaml(indent=2) | indent(2, true) }}
+      target:
+      {{ uip_repos_binding.target | to_nice_yaml(indent=2) | indent(2, true) }}
   tags:
-    - uip_discovery
     - uip_preupgrade
+    - uip_discovery
     - uip_postcheck
     - uip_postupgrade

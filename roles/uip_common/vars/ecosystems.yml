@@ -1,0 +1,77 @@
+---
+uip_ecosystem_vendor_policies:
+  rhel:
+    publisher: Red Hat
+    supported_tools:
+      rhel6_to_7: redhat-upgrade-tool
+      leapp: leapp
+    required_repo_binding_keys:
+      satellite:
+        - src_ak
+        - dst_ak
+        - src_cv
+        - dst_cv
+        - src_lce
+        - dst_lce
+      native:
+        - repos_enable
+        - repos_disable
+    required_controls:
+      - subscription-manager when RHSM/Satellite/native repos are used
+      - leapp answerfile must be resolved before leapp upgrade
+      - target repositories must match target major release
+  ubuntu:
+    publisher: Canonical
+    supported_tools:
+      lts: do-release-upgrade
+    required_repo_binding_keys:
+      landscape:
+        - src_series
+        - dst_series
+        - profile
+      native:
+        - dst_url
+    required_controls:
+      - Prompt=lts for LTS upgrade paths
+      - noninteractive do-release-upgrade frontend
+      - third-party APT sources disabled or explicitly allowed
+  debian:
+    publisher: Debian Project
+    supported_tools:
+      apt: apt-get dist-upgrade
+    required_repo_binding_keys:
+      native:
+        - dst_url
+      artifactory:
+        - src_repo
+        - dst_repo
+        - dst_url
+      nexus:
+        - src_repo
+        - dst_repo
+        - dst_url
+      pulp:
+        - src_repo
+        - dst_repo
+        - dst_url
+    required_controls:
+      - noninteractive debconf frontend
+      - apt listchanges noninteractive mode
+      - third-party APT sources disabled or explicitly allowed
+  sles:
+    publisher: SUSE
+    supported_tools:
+      migration: zypper migration
+    required_repo_binding_keys:
+      suse_mgr:
+        - src_channel
+        - dst_channel
+      uyuni:
+        - src_channel
+        - dst_channel
+      native:
+        - migration_target
+    required_controls:
+      - SUSEConnect registration available when enforced
+      - zypper migration available for service pack migration
+      - target channels/modules match target service pack

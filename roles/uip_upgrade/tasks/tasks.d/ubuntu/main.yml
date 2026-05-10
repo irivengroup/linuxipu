@@ -1,6 +1,8 @@
 ---
 - name: Run Ubuntu do-release-upgrade
-  ansible.builtin.command: do-release-upgrade -f DistUpgradeViewNonInteractive
+  ansible.builtin.command: "do-release-upgrade -f {{ uip_ubuntu_do_release_upgrade_frontend }}"
+  environment:
+    DEBIAN_FRONTEND: noninteractive
   register: uip_ubuntu_upgrade
   changed_when: true
   tags:

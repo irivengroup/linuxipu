@@ -1,4 +1,24 @@
 ---
+- name: Check UIP ecosystem vendor policy file
+  ansible.builtin.stat:
+    path: "{{ role_path }}/vars/ecosystems.yml"
+  register: uip_common_ecosystems_file
+  tags:
+    - always
+    - uip_common
+    - uip_preupgrade
+    - uip_postupgrade
+
+- name: Load UIP ecosystem vendor policy variables
+  ansible.builtin.include_vars:
+    file: "{{ role_path }}/vars/ecosystems.yml"
+  when: uip_common_ecosystems_file.stat.exists
+  tags:
+    - always
+    - uip_common
+    - uip_preupgrade
+    - uip_postupgrade
+
 - name: Check UIP service contracts file
   ansible.builtin.stat:
     path: "{{ role_path }}/vars/services.yml"

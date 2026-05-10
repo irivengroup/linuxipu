@@ -1,0 +1,271 @@
+---
+- name: Initialize vendor alignment inhibitor list
+  ansible.builtin.set_fact:
+    uip_vendor_inhibitors: []
+    uip_vendor_policy: "{{ uip_ecosystem_vendor_policies.get(uip_os, {}) }}"
+  when: uip_vendor_alignment_enabled | bool
+  tags:
+    - uip_precheck
+    - uip_preupgrade
+
+- name: Validate vendor-supported N to N plus one path is mapped
+  ansible.builtin.assert:
+    that:
+      - uip_path_def is defined
+      - uip_path_key is defined
+    fail_msg: >-
+      Unsupported or unmapped upgrade path for {{ uip_os }} {{ uip_src_ver }} -> {{ uip_dst_ver }}.
+  when: uip_vendor_alignment_enabled | bool
+  tags:
+    - uip_precheck
+    - uip_preupgrade
+
+- name: Check RHEL subscription-manager availability
+  ansible.builtin.command: command -v subscription-manager
+  register: uip_precheck_rhel_subscription_manager_cmd
+  changed_when: false
+  failed_when: false
+  when:
+    - uip_vendor_alignment_enabled | bool
+    - uip_os == 'rhel'
+    - uip_rhel_subscription_enforce | bool
+    - uip_repo_mgr in uip_rhel_rhsm_required_managers
+  tags:
+    - uip_precheck
+    - uip_preupgrade
+
+- name: Add RHEL subscription-manager inhibitor
+  ansible.builtin.set_fact:
+    uip_vendor_inhibitors: >-
+      {{
+        uip_vendor_inhibitors
+        + [
+            {
+              'id': 'rhel_subscription_manager_missing',
+              'severity': 'BLOCKER',
+              'category': 'vendor_alignment',
+              'name': 'RHEL subscription-manager availability',
+              'message': 'subscription-manager is required for the selected RHEL repository mode',
+              'remediable': false,
+              'status': 'open'
+            }
+          ]
+      }}
+  when:
+    - uip_precheck_rhel_subscription_manager_cmd is defined
+    - uip_precheck_rhel_subscription_manager_cmd.rc | default(0) != 0
+  tags:
+    - uip_precheck
+    - uip_preupgrade
+
+- name: Check RHEL Leapp availability
+  ansible.builtin.command: command -v leapp
+  register: uip_precheck_rhel_leapp_cmd
+  changed_when: false
+  failed_when: false
+  when:
+    - uip_vendor_alignment_enabled | bool
+    - uip_os == 'rhel'
+    - not (uip_src_ver | string == '6' and uip_dst_ver | string == '7')
+  tags:
+    - uip_precheck
+    - uip_preupgrade
+
+- name: Add RHEL Leapp inhibitor
+  ansible.builtin.set_fact:
+    uip_vendor_inhibitors: >-
+      {{
+        uip_vendor_inhibitors
+        + [
+            {
+              'id': 'rhel_leapp_missing',
+              'severity': 'BLOCKER',
+              'category': 'vendor_alignment',
+              'name': 'RHEL Leapp availability',
+              'message': 'leapp is required for this RHEL major upgrade path',
+              'remediable': true,
+              'status': 'open'
+            }
+          ]
+      }}
+  when:
+    - uip_precheck_rhel_leapp_cmd is defined
+    - uip_precheck_rhel_leapp_cmd.rc | default(0) != 0
+  tags:
+    - uip_precheck
+    - uip_preupgrade
+
+- name: Check Ubuntu release-upgrades prompt policy
+  ansible.builtin.command: >-
+    grep -E '^Prompt=lts$' {{ uip_ubuntu_release_upgrades_prompt_file }}
+  register: uip_precheck_ubuntu_prompt
+  changed_when: false
+  failed_when: false
+  when:
+    - uip_vendor_alignment_enabled | bool
+    - uip_os == 'ubuntu'
+    - uip_ubuntu_release_upgrades_prompt_lts | bool
+  tags:
+    - uip_precheck
+    - uip_preupgrade
+
+- name: Add Ubuntu Prompt lts inhibitor
+  ansible.builtin.set_fact:
+    uip_vendor_inhibitors: >-
+      {{
+        uip_vendor_inhibitors
+        + [
+            {
+              'id': 'ubuntu_prompt_lts_not_set',
+              'severity': 'BLOCKER',
+              'category': 'vendor_alignment',
+              'name': 'Ubuntu LTS prompt policy',
+              'message': 'Prompt=lts must be configured for controlled Ubuntu LTS upgrades',
+              'remediable': true,
+              'status': 'open'
+            }
+          ]
+      }}
+  when:
+    - uip_precheck_ubuntu_prompt is defined
+    - uip_precheck_ubuntu_prompt.rc | default(0) != 0
+  tags:
+    - uip_precheck
+    - uip_preupgrade
+
+- name: Check Debian or Ubuntu third-party APT source files
+  ansible.builtin.find:
+    paths: /etc/apt/sources.list.d
+    patterns:
+      - '*.list'
+      - '*.sources'
+    file_type: file
+  register: uip_precheck_apt_third_party_sources
+  when:
+    - uip_vendor_alignment_enabled | bool
+    - uip_os in ['debian', 'ubuntu']
+    - >-
+      not (
+        (uip_os == 'debian' and uip_debian_allow_third_party_apt_sources | bool)
+        or (uip_os == 'ubuntu' and uip_ubuntu_allow_third_party_apt_sources | bool)
+      )
+  tags:
+    - uip_precheck
+    - uip_preupgrade
+
+- name: Add APT third-party sources inhibitor
+  ansible.builtin.set_fact:
+    uip_vendor_inhibitors: >-
+      {{
+        uip_vendor_inhibitors
+        + [
+            {
+              'id': uip_os ~ '_third_party_apt_sources_present',
+              'severity': 'BLOCKER',
+              'category': 'vendor_alignment',
+              'name': 'APT third-party sources policy',
+              'message': 'Third-party APT source files must be disabled or explicitly allowed',
+              'remediable': true,
+              'status': 'open'
+            }
+          ]
+      }}
+  when:
+    - uip_precheck_apt_third_party_sources is defined
+    - uip_precheck_apt_third_party_sources.matched | default(0) | int > 0
+  tags:
+    - uip_precheck
+    - uip_preupgrade
+
+- name: Check SUSEConnect availability
+  ansible.builtin.command: command -v SUSEConnect
+  register: uip_precheck_sles_suseconnect_cmd
+  changed_when: false
+  failed_when: false
+  when:
+    - uip_vendor_alignment_enabled | bool
+    - uip_os == 'sles'
+    - uip_sles_suseconnect_enforce | bool
+  tags:
+    - uip_precheck
+    - uip_preupgrade
+
+- name: Add SUSEConnect inhibitor
+  ansible.builtin.set_fact:
+    uip_vendor_inhibitors: >-
+      {{
+        uip_vendor_inhibitors
+        + [
+            {
+              'id': 'sles_suseconnect_missing',
+              'severity': 'BLOCKER',
+              'category': 'vendor_alignment',
+              'name': 'SUSEConnect availability',
+              'message': 'SUSEConnect is required by the selected SLES vendor policy',
+              'remediable': false,
+              'status': 'open'
+            }
+          ]
+      }}
+  when:
+    - uip_precheck_sles_suseconnect_cmd is defined
+    - uip_precheck_sles_suseconnect_cmd.rc | default(0) != 0
+  tags:
+    - uip_precheck
+    - uip_preupgrade
+
+- name: Check zypper migration availability
+  ansible.builtin.command: zypper migration --help
+  register: uip_precheck_sles_zypper_migration
+  changed_when: false
+  failed_when: false
+  when:
+    - uip_vendor_alignment_enabled | bool
+    - uip_os == 'sles'
+    - uip_sles_zypper_migration_enforce | bool
+  tags:
+    - uip_precheck
+    - uip_preupgrade
+
+- name: Add zypper migration inhibitor
+  ansible.builtin.set_fact:
+    uip_vendor_inhibitors: >-
+      {{
+        uip_vendor_inhibitors
+        + [
+            {
+              'id': 'sles_zypper_migration_unavailable',
+              'severity': 'BLOCKER',
+              'category': 'vendor_alignment',
+              'name': 'SLES zypper migration availability',
+              'message': 'zypper migration must be available for SLES migration paths',
+              'remediable': true,
+              'status': 'open'
+            }
+          ]
+      }}
+  when:
+    - uip_precheck_sles_zypper_migration is defined
+    - uip_precheck_sles_zypper_migration.rc | default(0) != 0
+  tags:
+    - uip_precheck
+    - uip_preupgrade
+
+- name: Persist vendor alignment report
+  ansible.builtin.copy:
+    dest: "{{ uip_vendor_alignment_report_file }}"
+    owner: root
+    group: root
+    mode: "0640"
+    content: |
+      os: "{{ uip_os }}"
+      source_version: "{{ uip_src_ver }}"
+      target_version: "{{ uip_dst_ver }}"
+      repo_manager: "{{ uip_repo_mgr }}"
+      publisher: "{{ uip_vendor_policy.publisher | default('unknown') }}"
+      inhibitors:
+      {{ uip_vendor_inhibitors | default([]) | to_nice_yaml(indent=2) | indent(2, true) }}
+  when: uip_vendor_alignment_enabled | bool
+  tags:
+    - uip_precheck
+    - uip_preupgrade

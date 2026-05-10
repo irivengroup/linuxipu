@@ -1,4 +1,10 @@
 ---
+- name: Include vendor alignment remediation tasks
+  ansible.builtin.import_tasks: tasks.d/vendor_alignment.yml
+  tags:
+    - uip_remediate
+    - uip_preupgrade
+
 - name: Include precheck report parsing tasks
   ansible.builtin.import_tasks: tasks.d/precheck_report.yml
   tags:

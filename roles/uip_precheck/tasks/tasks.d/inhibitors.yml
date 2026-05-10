@@ -127,6 +127,18 @@
     - uip_precheck
     - uip_preupgrade
 
+
+- name: Add vendor alignment blockers
+  ansible.builtin.set_fact:
+    uip_inhibitors: "{{ uip_inhibitors + [item] }}"
+  loop: "{{ uip_vendor_inhibitors | default([]) }}"
+  when:
+    - item.severity | default('BLOCKER') == 'BLOCKER'
+    - item.status | default('open') != 'ok'
+  tags:
+    - uip_precheck
+    - uip_preupgrade
+
 - name: Compute blocking inhibitor list
   ansible.builtin.set_fact:
     uip_blocking_inhibitors: >-

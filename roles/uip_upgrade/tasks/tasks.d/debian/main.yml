@@ -2,6 +2,9 @@
 - name: Run Debian dist-upgrade
   ansible.builtin.apt:
     upgrade: dist
+  environment:
+    DEBIAN_FRONTEND: "{{ uip_debian_debconf_frontend }}"
+    APT_LISTCHANGES_FRONTEND: "{{ uip_debian_apt_listchanges_frontend }}"
   when:
     - uip_mode == "enforce"
   tags:

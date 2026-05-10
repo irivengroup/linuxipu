@@ -1,6 +1,8 @@
 ---
 - name: Run Leapp upgrade
-  ansible.builtin.command: leapp upgrade
+  ansible.builtin.command: >-
+    leapp upgrade
+    {{ '--target ' ~ uip_rhel_leapp_target_release if uip_rhel_leapp_target_release | length > 0 else '' }}
   register: uip_leapp_upgrade
   changed_when: true
   failed_when: uip_leapp_upgrade.rc != 0

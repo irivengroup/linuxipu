@@ -51,6 +51,12 @@
     - uip_precheck
     - uip_preupgrade
 
+- name: Include vendor alignment tasks
+  ansible.builtin.import_tasks: tasks.d/vendor_alignment.yml
+  tags:
+    - uip_precheck
+    - uip_preupgrade
+
 - name: Include inhibitor aggregation tasks
   ansible.builtin.import_tasks: tasks.d/inhibitors.yml
   tags:

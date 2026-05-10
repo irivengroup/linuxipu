@@ -1,20 +1,20 @@
 ---
-- name: Check repository binding rollback state
+- name: Check repository transition binding rollback state
   ansible.builtin.stat:
-    path: "{{ uip_repo_binding_state_file }}"
+    path: "{{ uip_lock_dir }}/repo-binding.yml"
   register: uip_rollback_repo_binding_state
   tags:
     - uip_rollback
 
-- name: Read repository binding rollback state
+- name: Read repository transition binding rollback state
   ansible.builtin.slurp:
-    src: "{{ uip_repo_binding_state_file }}"
+    src: "{{ uip_lock_dir }}/repo-binding.yml"
   register: uip_rollback_repo_binding_raw
   when: uip_rollback_repo_binding_state.stat.exists
   tags:
     - uip_rollback
 
-- name: Decode repository binding rollback state
+- name: Decode repository transition binding rollback state
   ansible.builtin.set_fact:
     uip_rollback_repo_binding: "{{ uip_rollback_repo_binding_raw.content | b64decode | from_yaml }}"
   when: uip_rollback_repo_binding_state.stat.exists

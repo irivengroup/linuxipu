@@ -1,0 +1,72 @@
+---
+- name: Ensure Ubuntu release-upgrades prompt is lts
+  ansible.builtin.lineinfile:
+    path: "{{ uip_ubuntu_release_upgrades_prompt_file }}"
+    regexp: '^Prompt='
+    line: Prompt=lts
+    create: true
+    owner: root
+    group: root
+    mode: "0644"
+  when:
+    - uip_vendor_alignment_enabled | bool
+    - uip_os == 'ubuntu'
+    - uip_ubuntu_release_upgrades_prompt_lts | bool
+  tags:
+    - uip_remediate
+    - uip_preupgrade
+
+- name: Disable Debian third-party APT source files when not allowed
+  ansible.builtin.command: >-
+    find /etc/apt/sources.list.d -type f \( -name '*.list' -o -name '*.sources' \)
+    -exec mv {} {}.uip-disabled \;
+  changed_when: true
+  failed_when: false
+  when:
+    - uip_vendor_alignment_enabled | bool
+    - uip_os == 'debian'
+    - not (uip_debian_allow_third_party_apt_sources | bool)
+  tags:
+    - uip_remediate
+    - uip_preupgrade
+
+- name: Disable Ubuntu third-party APT source files when not allowed
+  ansible.builtin.command: >-
+    find /etc/apt/sources.list.d -type f \( -name '*.list' -o -name '*.sources' \)
+    -exec mv {} {}.uip-disabled \;
+  changed_when: true
+  failed_when: false
+  when:
+    - uip_vendor_alignment_enabled | bool
+    - uip_os == 'ubuntu'
+    - not (uip_ubuntu_allow_third_party_apt_sources | bool)
+  tags:
+    - uip_remediate
+    - uip_preupgrade
+
+- name: Apply RHEL Leapp answerfile confirmations when enabled
+  ansible.builtin.command: "leapp answer --section {{ item }}"
+  register: uip_remediate_rhel_leapp_answerfile
+  changed_when: true
+  failed_when: false
+  loop: "{{ uip_rhel_leapp_answer_sections }}"
+  when:
+    - uip_vendor_alignment_enabled | bool
+    - uip_os == 'rhel'
+    - uip_rhel_leapp_auto_answerfile | bool
+    - not (uip_src_ver | string == '6' and uip_dst_ver | string == '7')
+  tags:
+    - uip_remediate
+    - uip_preupgrade
+
+- name: Refresh SUSE products and repositories before migration
+  ansible.builtin.command: zypper --non-interactive refresh
+  register: uip_remediate_sles_zypper_refresh
+  changed_when: false
+  failed_when: false
+  when:
+    - uip_vendor_alignment_enabled | bool
+    - uip_os == 'sles'
+  tags:
+    - uip_remediate
+    - uip_preupgrade

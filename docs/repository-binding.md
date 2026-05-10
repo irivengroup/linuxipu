@@ -4,75 +4,83 @@
 
 # Repository Binding
 
-Linux UIP supports explicit source and target repository binding for all supported repository managers.
+Repository binding is driven by the existing `uip_repo_map` entries.
 
-This prevents ambiguous automatic repository selection in enterprise contexts.
+No parallel repository binding variable model is introduced.
 
-## Direct variables
+## Satellite
 
-```yaml
-uip_repo_src_ak: rhel8-prod-source
-uip_repo_dst_ak: rhel9-prod-target
-uip_repo_src_env: prod-rhel8
-uip_repo_dst_env: prod-rhel9
-uip_repo_src_content_view: cv-rhel8
-uip_repo_dst_content_view: cv-rhel9
-```
-
-## Manager-specific map
+Uses existing keys:
 
 ```yaml
-uip_repo_manager_bindings:
-  satellite:
-    src_ak: rhel8-prod
-    dst_ak: rhel9-prod
-    src_env: prod-rhel8
-    dst_env: prod-rhel9
-    src_content_view: cv-rhel8
-    dst_content_view: cv-rhel9
-  artifactory:
-    src_ak: rhel8-prod-repo
-    dst_ak: rhel9-prod-repo
-  nexus:
-    src_ak: ubuntu-22-prod
-    dst_ak: ubuntu-24-prod
-  pulp:
-    src_ak: debian-12-publication
-    dst_ak: debian-13-publication
-  landscape:
-    src_ak: ubuntu-22-series
-    dst_ak: ubuntu-24-series
-  suse_mgr:
-    src_ak: sles15sp4-channel
-    dst_ak: sles15sp5-channel
-  uyuni:
-    src_ak: sles15sp4-channel
-    dst_ak: sles15sp5-channel
-  airgap:
-    src_ak: rhel8-bundle
-    dst_ak: rhel9-bundle
-  native:
-    src_ak: vendor-rhel8
-    dst_ak: vendor-rhel9
+src_ak: ak-rhel8-prod
+dst_ak: ak-rhel9-prod
+src_cv: cv-rhel8-prod
+dst_cv: cv-rhel9-prod
+src_lce: PROD
+dst_lce: PROD
 ```
 
-## Strict mode
+## Artifactory / Nexus / Pulp
+
+Uses existing keys:
 
 ```yaml
-uip_repo_explicit_binding_required: true
+src_repo: rpm-rhel8-prod
+dst_repo: rpm-rhel9-prod
+dst_url: https://repo.example.com/rhel9-prod
 ```
 
-When strict mode is enabled, UIP fails if no target binding is provided.
+## Landscape
 
-## Rollback
+Uses existing keys:
 
-The binding state is persisted in:
+```yaml
+src_series: jammy
+dst_series: noble
+profile: ubuntu-24.04-prod
+```
+
+## SUSE Manager / Uyuni
+
+Uses existing keys:
+
+```yaml
+src_channel: sles15sp4-prod
+dst_channel: sles15sp5-prod
+activation_key: sles15sp5-ak
+```
+
+## Airgap
+
+Uses existing keys:
+
+```yaml
+src_mount: /mnt/repos/rhel8
+dst_mount: /mnt/repos/rhel9
+dst_url: file:///mnt/repos/rhel9
+```
+
+## Native
+
+Uses existing keys:
+
+```yaml
+repos_enable:
+  - target-repo
+repos_disable:
+  - source-repo
+```
+
+## Runtime state
+
+UIP persists the resolved transition in:
 
 ```text
-{{ uip_state_dir }}/repo-binding.yml
+/var/lib/uip/repo-binding.yml
 ```
 
-Rollback reads this file to restore the source repository intent.
+Rollback reads this file to restore the source binding intent.
 
 ---
 

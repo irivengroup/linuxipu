@@ -252,28 +252,45 @@ uip_breakglass_ticket: ""
 
 uip_breakglass_expires_at: ""
 
-uip_repo_src_ak: ""
-
-uip_repo_dst_ak: ""
-
-uip_repo_src_env: ""
-
-uip_repo_dst_env: ""
-
-uip_repo_src_content_view: ""
-
-uip_repo_dst_content_view: ""
-
-uip_repo_explicit_binding_required: false
-
-uip_repo_manager_bindings: {}
-
-uip_repo_binding_state_file: "{{ uip_state_dir }}/repo-binding.yml"
-
-uip_repo_binding_report_file: "{{ uip_report_dir }}/repo-binding.yml"
-
 uip_inhibitors_gate_enabled: true
 
 uip_inhibitors_file: "{{ uip_report_dir }}/inhibitors.yml"
 
 uip_inhibitors_summary_file: "{{ uip_report_dir }}/inhibitors-summary.yml"
+
+# Vendor-aligned ecosystem controls.
+uip_vendor_alignment_enabled: true
+uip_vendor_alignment_fail_on_blocker: false
+uip_vendor_alignment_report_file: "{{ uip_report_dir }}/vendor-alignment.yml"
+
+# Red Hat / RHEL-family controls.
+uip_rhel_subscription_enforce: true
+uip_rhel_satellite_enforce_activation_key: true
+uip_rhel_leapp_enforce_answerfile: true
+uip_rhel_leapp_auto_answerfile: true
+uip_rhel_leapp_answer_sections:
+  - remove_pam_pkcs11_module_check.confirm=True
+uip_rhel_leapp_target_release: ""
+uip_rhel_rhsm_required_managers:
+  - satellite
+  - native
+
+# Ubuntu controls.
+uip_ubuntu_release_upgrades_prompt_lts: true
+uip_ubuntu_release_upgrades_prompt_file: /etc/update-manager/release-upgrades
+uip_ubuntu_do_release_upgrade_frontend: DistUpgradeViewNonInteractive
+uip_ubuntu_allow_third_party_apt_sources: false
+uip_ubuntu_apt_noninteractive: true
+
+# Debian controls.
+uip_debian_debconf_frontend: noninteractive
+uip_debian_apt_listchanges_frontend: none
+uip_debian_allow_third_party_apt_sources: false
+uip_debian_sources_backup_enabled: true
+
+# SUSE / SLES controls.
+uip_sles_suseconnect_enforce: true
+uip_sles_zypper_migration_enforce: true
+uip_sles_releasever: ""
+uip_sles_allow_module_auto_activation: false
+

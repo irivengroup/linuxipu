@@ -1,6 +1,8 @@
 ---
 - name: Run SUSE migration
-  ansible.builtin.command: '{{ uip_upg_tool }}'
+  ansible.builtin.command: >-
+    {{ uip_upg_tool }}
+    {{ '--releasever ' ~ uip_sles_releasever if uip_sles_releasever | length > 0 else '' }}
   register: uip_suse_upgrade
   changed_when: true
   tags:
