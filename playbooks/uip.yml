@@ -4,37 +4,85 @@
   become: true
   gather_facts: true
   serial: '{{ uip_serial }}'
-  roles:
-    - role: uip_common
+  tasks:
+    - name: Run common initialization
+      ansible.builtin.include_role:
+        name: uip_common
       tags:
         - always
         - uip_common
         - uip_preupgrade
-    - role: uip_discovery
+
+    - name: Run discovery
+      ansible.builtin.include_role:
+        name: uip_discovery
       tags:
         - uip_discovery
         - uip_preupgrade
-    - role: uip_snapshot
+
+    - name: Run snapshot
+      ansible.builtin.include_role:
+        name: uip_snapshot
       tags:
         - uip_snapshot
         - uip_preupgrade
-    - role: uip_precheck
+
+    - name: Run precheck baseline
+      ansible.builtin.include_role:
+        name: uip_precheck
       tags:
         - uip_precheck
         - uip_preupgrade
-    - role: uip_remediate
+
+    - name: Run remediation for detected inhibitors
+      ansible.builtin.include_role:
+        name: uip_remediate
+      when:
+        - uip_inhibitors_gate_enabled | bool
+        - uip_blocking_inhibitors | default([]) | length > 0
       tags:
         - uip_remediate
         - uip_preupgrade
-    - role: uip_upgrade
+
+    - name: Re-run precheck after remediation
+      ansible.builtin.include_role:
+        name: uip_precheck
+      when:
+        - uip_inhibitors_gate_enabled | bool
+      tags:
+        - uip_precheck
+        - uip_preupgrade
+
+    - name: Block upgrade when blocking inhibitors remain
+      ansible.builtin.assert:
+        that:
+          - uip_blocking_inhibitors | default([]) | length == 0
+        fail_msg: >-
+          Blocking inhibitors remain after remediation. Upgrade is stopped.
+          See {{ uip_inhibitors_summary_file }} and {{ uip_inhibitors_file }}.
+      when:
+        - uip_inhibitors_gate_enabled | bool
+      tags:
+        - uip_precheck
+        - uip_preupgrade
+
+    - name: Run OS upgrade
+      ansible.builtin.include_role:
+        name: uip_upgrade
       tags:
         - uip_upgrade
         - uip_postupgrade
-    - role: uip_postcheck
+
+    - name: Run postcheck
+      ansible.builtin.include_role:
+        name: uip_postcheck
       tags:
         - uip_postcheck
         - uip_postupgrade
-    - role: uip_report
+
+    - name: Run report
+      ansible.builtin.include_role:
+        name: uip_report
       tags:
         - always
         - uip_report

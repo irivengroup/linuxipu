@@ -50,3 +50,9 @@
   tags:
     - uip_precheck
     - uip_preupgrade
+
+- name: Include inhibitor aggregation tasks
+  ansible.builtin.import_tasks: tasks.d/inhibitors.yml
+  tags:
+    - uip_precheck
+    - uip_preupgrade

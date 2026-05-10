@@ -26,6 +26,7 @@
 <summary><strong>3. Rôles et fonctionnalités</strong></summary>
 
 - [Precheck](role-precheck.md)
+- [Inhibitor Gate](inhibitor-gate.md)
 - [Application Dependency Contracts](application-contracts.md)
 - [Snapshot](role-snapshot.md)
 - [Repos](role-repos.md)

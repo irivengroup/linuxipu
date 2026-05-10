@@ -1,0 +1,134 @@
+---
+- name: Reset inhibitor catalog for current precheck pass
+  ansible.builtin.set_fact:
+    uip_inhibitors: []
+  tags:
+    - uip_precheck
+    - uip_preupgrade
+
+- name: Add filesystem blocker inhibitors
+  ansible.builtin.set_fact:
+    uip_inhibitors: >-
+      {{
+        uip_inhibitors
+        + [
+            {
+              'id': 'fs_' ~ item.name,
+              'severity': 'BLOCKER',
+              'category': 'filesystem',
+              'name': item.name,
+              'message': item.path ~ ' has ' ~ (item.free_mb | string)
+                         ~ ' MB free, requires ' ~ (item.min_required_mb | string) ~ ' MB',
+              'remediable': (item.path != '/boot'),
+              'status': 'open'
+            }
+          ]
+      }}
+  loop: "{{ uip_critical_fs_report | default([]) }}"
+  when: item.status | default('ok') == 'ko'
+  tags:
+    - uip_precheck
+    - uip_preupgrade
+
+- name: Add generic boot blockers
+  ansible.builtin.set_fact:
+    uip_inhibitors: "{{ uip_inhibitors + [item | combine({'severity': item.severity | default('BLOCKER'), 'status': item.status | default('open'), 'category': item.category | default('boot')})] }}"
+  loop: "{{ uip_boot_inhibitors | default([]) }}"
+  when:
+    - item.severity | default('BLOCKER') == 'BLOCKER'
+    - item.status | default('open') != 'ok'
+  tags:
+    - uip_precheck
+    - uip_preupgrade
+
+- name: Add generic repository blockers
+  ansible.builtin.set_fact:
+    uip_inhibitors: "{{ uip_inhibitors + [item | combine({'severity': item.severity | default('BLOCKER'), 'status': item.status | default('open'), 'category': item.category | default('repository')})] }}"
+  loop: "{{ uip_repo_inhibitors | default([]) }}"
+  when:
+    - item.severity | default('BLOCKER') == 'BLOCKER'
+    - item.status | default('open') != 'ok'
+  tags:
+    - uip_precheck
+    - uip_preupgrade
+
+- name: Add generic network blockers
+  ansible.builtin.set_fact:
+    uip_inhibitors: "{{ uip_inhibitors + [item | combine({'severity': item.severity | default('BLOCKER'), 'status': item.status | default('open'), 'category': item.category | default('network')})] }}"
+  loop: "{{ uip_network_inhibitors | default([]) }}"
+  when:
+    - item.severity | default('BLOCKER') == 'BLOCKER'
+    - item.status | default('open') != 'ok'
+  tags:
+    - uip_precheck
+    - uip_preupgrade
+
+- name: Add application contract blockers
+  ansible.builtin.set_fact:
+    uip_inhibitors: >-
+      {{
+        uip_inhibitors
+        + [
+            {
+              'id': 'app_contract_' ~ (item.item.name | default('unknown')),
+              'severity': 'BLOCKER',
+              'category': 'application',
+              'name': item.item.name | default('application_contract'),
+              'message': 'Application contract baseline failed',
+              'remediable': false,
+              'status': 'open'
+            }
+          ]
+      }}
+  loop: >-
+    {{
+      (uip_app_contracts_systemd_baseline.results | default([]))
+      + (uip_app_contracts_command_baseline.results | default([]))
+      + (uip_app_contracts_mount_baseline.results | default([]))
+      + (uip_app_contracts_tcp_baseline.results | default([]))
+      + (uip_app_contracts_http_baseline.results | default([]))
+    }}
+  when:
+    - item.failed | default(false) or (item.rc is defined and item.rc != 0)
+  tags:
+    - uip_precheck
+    - uip_preupgrade
+
+- name: Compute blocking inhibitor list
+  ansible.builtin.set_fact:
+    uip_blocking_inhibitors: >-
+      {{
+        uip_inhibitors
+        | default([])
+        | selectattr('severity', 'equalto', 'BLOCKER')
+        | rejectattr('status', 'equalto', 'ok')
+        | list
+      }}
+  tags:
+    - uip_precheck
+    - uip_preupgrade
+
+- name: Persist inhibitor report
+  ansible.builtin.copy:
+    dest: "{{ uip_inhibitors_file }}"
+    owner: root
+    group: root
+    mode: "0640"
+    content: "{{ uip_inhibitors | default([]) | to_nice_yaml }}"
+  tags:
+    - uip_precheck
+    - uip_preupgrade
+
+- name: Persist inhibitor summary
+  ansible.builtin.copy:
+    dest: "{{ uip_inhibitors_summary_file }}"
+    owner: root
+    group: root
+    mode: "0640"
+    content: |
+      blocking_count: "{{ uip_blocking_inhibitors | default([]) | length }}"
+      blockers:
+      {{ uip_blocking_inhibitors | default([]) | to_nice_yaml(indent=2) | indent(2, true) }}
+  tags:
+    - uip_precheck
+    - uip_preupgrade

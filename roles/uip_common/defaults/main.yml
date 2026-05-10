@@ -271,3 +271,9 @@ uip_repo_manager_bindings: {}
 uip_repo_binding_state_file: "{{ uip_state_dir }}/repo-binding.yml"
 
 uip_repo_binding_report_file: "{{ uip_report_dir }}/repo-binding.yml"
+
+uip_inhibitors_gate_enabled: true
+
+uip_inhibitors_file: "{{ uip_report_dir }}/inhibitors.yml"
+
+uip_inhibitors_summary_file: "{{ uip_report_dir }}/inhibitors-summary.yml"
