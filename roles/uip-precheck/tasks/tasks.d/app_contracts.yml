@@ -1,0 +1,119 @@
+---
+- name: Normalize application contract list
+  ansible.builtin.set_fact:
+    uip_app_contracts_effective: "{{ uip_app_contracts | default([]) }}"
+  tags:
+    - uip_precheck
+    - uip_preupgrade
+
+- name: Validate application contract schema
+  ansible.builtin.assert:
+    that:
+      - item.name is defined
+      - item.type is defined
+      - item.type in ['systemd', 'tcp', 'command', 'mount', 'http']
+    fail_msg: "Invalid application contract definition: {{ item | to_json }}"
+  loop: "{{ uip_app_contracts_effective }}"
+  when: uip_app_contracts_enabled | bool
+  tags:
+    - uip_precheck
+    - uip_preupgrade
+
+- name: Baseline systemd application contracts
+  ansible.builtin.command: "systemctl is-active {{ item.service }}"
+  register: uip_app_contracts_systemd_baseline
+  changed_when: false
+  failed_when: false
+  loop: "{{ uip_app_contracts_effective | selectattr('type', 'equalto', 'systemd') | list }}"
+  when:
+    - uip_app_contracts_enabled | bool
+    - item.service is defined
+  tags:
+    - uip_precheck
+    - uip_preupgrade
+
+- name: Baseline TCP application contracts
+  ansible.builtin.wait_for:
+    host: "{{ item.host | default('127.0.0.1') }}"
+    port: "{{ item.port }}"
+    timeout: "{{ uip_app_contracts_timeout }}"
+    state: started
+  register: uip_app_contracts_tcp_baseline
+  failed_when: false
+  loop: "{{ uip_app_contracts_effective | selectattr('type', 'equalto', 'tcp') | list }}"
+  when:
+    - uip_app_contracts_enabled | bool
+    - item.port is defined
+  tags:
+    - uip_precheck
+    - uip_preupgrade
+
+- name: Baseline command application contracts
+  ansible.builtin.command: "{{ item.command }}"
+  register: uip_app_contracts_command_baseline
+  changed_when: false
+  failed_when: false
+  loop: "{{ uip_app_contracts_effective | selectattr('type', 'equalto', 'command') | list }}"
+  when:
+    - uip_app_contracts_enabled | bool
+    - item.command is defined
+  tags:
+    - uip_precheck
+    - uip_preupgrade
+
+- name: Baseline mount application contracts
+  ansible.builtin.command: "findmnt --target {{ item.path }}"
+  register: uip_app_contracts_mount_baseline
+  changed_when: false
+  failed_when: false
+  loop: "{{ uip_app_contracts_effective | selectattr('type', 'equalto', 'mount') | list }}"
+  when:
+    - uip_app_contracts_enabled | bool
+    - item.path is defined
+  tags:
+    - uip_precheck
+    - uip_preupgrade
+
+- name: Baseline HTTP application contracts
+  ansible.builtin.uri:
+    url: "{{ item.url }}"
+    method: GET
+    status_code: "{{ item.expected_code | default(200) }}"
+    timeout: "{{ uip_app_contracts_timeout }}"
+    return_content: false
+  register: uip_app_contracts_http_baseline
+  failed_when: false
+  loop: "{{ uip_app_contracts_effective | selectattr('type', 'equalto', 'http') | list }}"
+  when:
+    - uip_app_contracts_enabled | bool
+    - item.url is defined
+  tags:
+    - uip_precheck
+    - uip_preupgrade
+
+- name: Persist application contracts baseline
+  ansible.builtin.copy:
+    dest: "{{ uip_app_contracts_baseline_file }}"
+    owner: root
+    group: root
+    mode: "0640"
+    content: |
+      enabled: "{{ uip_app_contracts_enabled }}"
+      contract_count: "{{ uip_app_contracts_effective | length }}"
+      contracts:
+      {{ uip_app_contracts_effective | to_nice_yaml(indent=2) | indent(2, true) }}
+      baseline:
+        systemd:
+      {{ uip_app_contracts_systemd_baseline.results | default([]) | to_nice_yaml(indent=2) | indent(4, true) }}
+        tcp:
+      {{ uip_app_contracts_tcp_baseline.results | default([]) | to_nice_yaml(indent=2) | indent(4, true) }}
+        command:
+      {{ uip_app_contracts_command_baseline.results | default([]) | to_nice_yaml(indent=2) | indent(4, true) }}
+        mount:
+      {{ uip_app_contracts_mount_baseline.results | default([]) | to_nice_yaml(indent=2) | indent(4, true) }}
+        http:
+      {{ uip_app_contracts_http_baseline.results | default([]) | to_nice_yaml(indent=2) | indent(4, true) }}
+  when: uip_app_contracts_enabled | bool
+  tags:
+    - uip_precheck
+    - uip_preupgrade

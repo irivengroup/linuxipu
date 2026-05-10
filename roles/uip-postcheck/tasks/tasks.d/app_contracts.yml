@@ -1,0 +1,165 @@
+---
+- name: Normalize application contract list for postcheck
+  ansible.builtin.set_fact:
+    uip_app_contracts_effective: "{{ uip_app_contracts | default([]) }}"
+  tags:
+    - uip_postcheck
+    - uip_postupgrade
+
+- name: Validate systemd application contracts after upgrade
+  ansible.builtin.command: "systemctl is-active {{ item.service }}"
+  register: uip_app_contracts_systemd_postcheck
+  changed_when: false
+  failed_when: false
+  retries: "{{ uip_app_contracts_retries }}"
+  delay: "{{ uip_app_contracts_delay }}"
+  until: uip_app_contracts_systemd_postcheck.rc == 0
+  loop: "{{ uip_app_contracts_effective | selectattr('type', 'equalto', 'systemd') | list }}"
+  when:
+    - uip_app_contracts_enabled | bool
+    - item.service is defined
+  tags:
+    - uip_postcheck
+    - uip_postupgrade
+
+- name: Validate TCP application contracts after upgrade
+  ansible.builtin.wait_for:
+    host: "{{ item.host | default('127.0.0.1') }}"
+    port: "{{ item.port }}"
+    timeout: "{{ uip_app_contracts_timeout }}"
+    state: started
+  register: uip_app_contracts_tcp_postcheck
+  failed_when: false
+  retries: "{{ uip_app_contracts_retries }}"
+  delay: "{{ uip_app_contracts_delay }}"
+  until: not (uip_app_contracts_tcp_postcheck.failed | default(false))
+  loop: "{{ uip_app_contracts_effective | selectattr('type', 'equalto', 'tcp') | list }}"
+  when:
+    - uip_app_contracts_enabled | bool
+    - item.port is defined
+  tags:
+    - uip_postcheck
+    - uip_postupgrade
+
+- name: Validate command application contracts after upgrade
+  ansible.builtin.command: "{{ item.command }}"
+  register: uip_app_contracts_command_postcheck
+  changed_when: false
+  failed_when: false
+  retries: "{{ uip_app_contracts_retries }}"
+  delay: "{{ uip_app_contracts_delay }}"
+  until: uip_app_contracts_command_postcheck.rc == 0
+  loop: "{{ uip_app_contracts_effective | selectattr('type', 'equalto', 'command') | list }}"
+  when:
+    - uip_app_contracts_enabled | bool
+    - item.command is defined
+  tags:
+    - uip_postcheck
+    - uip_postupgrade
+
+- name: Validate mount application contracts after upgrade
+  ansible.builtin.command: "findmnt --target {{ item.path }}"
+  register: uip_app_contracts_mount_postcheck
+  changed_when: false
+  failed_when: false
+  retries: "{{ uip_app_contracts_retries }}"
+  delay: "{{ uip_app_contracts_delay }}"
+  until: uip_app_contracts_mount_postcheck.rc == 0
+  loop: "{{ uip_app_contracts_effective | selectattr('type', 'equalto', 'mount') | list }}"
+  when:
+    - uip_app_contracts_enabled | bool
+    - item.path is defined
+  tags:
+    - uip_postcheck
+    - uip_postupgrade
+
+- name: Validate HTTP application contracts after upgrade
+  ansible.builtin.uri:
+    url: "{{ item.url }}"
+    method: GET
+    status_code: "{{ item.expected_code | default(200) }}"
+    timeout: "{{ uip_app_contracts_timeout }}"
+    return_content: false
+  register: uip_app_contracts_http_postcheck
+  failed_when: false
+  retries: "{{ uip_app_contracts_retries }}"
+  delay: "{{ uip_app_contracts_delay }}"
+  until: not (uip_app_contracts_http_postcheck.failed | default(false))
+  loop: "{{ uip_app_contracts_effective | selectattr('type', 'equalto', 'http') | list }}"
+  when:
+    - uip_app_contracts_enabled | bool
+    - item.url is defined
+  tags:
+    - uip_postcheck
+    - uip_postupgrade
+
+- name: Compute application contract failure count
+  ansible.builtin.set_fact:
+    uip_app_contracts_failed_count: >-
+      {{
+        (
+          (uip_app_contracts_systemd_postcheck.results | default([]) | selectattr('rc', 'defined') | selectattr('rc', 'ne', 0) | list | length)
+          + (uip_app_contracts_command_postcheck.results | default([]) | selectattr('rc', 'defined') | selectattr('rc', 'ne', 0) | list | length)
+          + (uip_app_contracts_mount_postcheck.results | default([]) | selectattr('rc', 'defined') | selectattr('rc', 'ne', 0) | list | length)
+          + (uip_app_contracts_tcp_postcheck.results | default([]) | selectattr('failed', 'defined') | selectattr('failed') | list | length)
+          + (uip_app_contracts_http_postcheck.results | default([]) | selectattr('failed', 'defined') | selectattr('failed') | list | length)
+        )
+      }}
+  when: uip_app_contracts_enabled | bool
+  tags:
+    - uip_postcheck
+    - uip_postupgrade
+
+- name: Compute application readiness score
+  ansible.builtin.set_fact:
+    uip_app_contracts_score:
+      total: "{{ uip_app_contracts_effective | length }}"
+      failed: "{{ uip_app_contracts_failed_count | int }}"
+      passed: "{{ (uip_app_contracts_effective | length) - (uip_app_contracts_failed_count | int) }}"
+      status: "{{ 'ok' if (uip_app_contracts_failed_count | int) == 0 else 'ko' }}"
+  when: uip_app_contracts_enabled | bool
+  tags:
+    - uip_postcheck
+    - uip_postupgrade
+
+- name: Persist application contracts postcheck report
+  ansible.builtin.copy:
+    dest: "{{ uip_app_contracts_postcheck_file }}"
+    owner: root
+    group: root
+    mode: "0640"
+    content: |
+      score:
+      {{ uip_app_contracts_score | default({}) | to_nice_yaml(indent=2) | indent(2, true) }}
+      contracts:
+      {{ uip_app_contracts_effective | to_nice_yaml(indent=2) | indent(2, true) }}
+  when: uip_app_contracts_enabled | bool
+  tags:
+    - uip_postcheck
+    - uip_postupgrade
+
+- name: Persist application readiness score
+  ansible.builtin.copy:
+    dest: "{{ uip_app_contracts_score_file }}"
+    owner: root
+    group: root
+    mode: "0640"
+    content: "{{ uip_app_contracts_score | default({}) | to_nice_yaml }}"
+  when: uip_app_contracts_enabled | bool
+  tags:
+    - uip_postcheck
+    - uip_postupgrade
+
+- name: Fail on failed application contracts after upgrade
+  ansible.builtin.fail:
+    msg: >-
+      Application Dependency Contracts failed after upgrade.
+      Failed contracts: {{ uip_app_contracts_failed_count }}.
+      See {{ uip_app_contracts_postcheck_file }}.
+  when:
+    - uip_app_contracts_enabled | bool
+    - uip_app_contracts_fail_on_postcheck | bool
+    - (uip_app_contracts_failed_count | int) > 0
+  tags:
+    - uip_postcheck
+    - uip_postupgrade

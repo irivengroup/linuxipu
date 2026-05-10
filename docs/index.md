@@ -25,6 +25,7 @@
 <summary><strong>3. Rôles et fonctionnalités</strong></summary>
 
 - [Precheck](role-precheck.md)
+- [Application Dependency Contracts](application-contracts.md)
 - [Snapshot](role-snapshot.md)
 - [Repos](role-repos.md)
 - [Repository Binding](repository-binding.md)

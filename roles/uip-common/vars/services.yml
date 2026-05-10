@@ -1,0 +1,11 @@
+---
+uip_app_contracts_enabled: true
+uip_app_contracts_fail_on_postcheck: true
+uip_app_contracts_fail_on_precheck: false
+uip_app_contracts_timeout: 5
+uip_app_contracts_retries: 3
+uip_app_contracts_delay: 5
+uip_app_contracts: []
+uip_app_contracts_baseline_file: "{{ uip_report_dir }}/app-contracts-baseline.yml"
+uip_app_contracts_postcheck_file: "{{ uip_report_dir }}/app-contracts-postcheck.yml"
+uip_app_contracts_score_file: "{{ uip_report_dir }}/app-contracts-score.yml"

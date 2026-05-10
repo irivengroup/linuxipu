@@ -157,6 +157,12 @@
     - uip_postcheck
     - uip_postupgrade
 
+- name: Include application dependency contract validation tasks
+  ansible.builtin.import_tasks: tasks.d/app_contracts.yml
+  tags:
+    - uip_postcheck
+    - uip_postupgrade
+
 - name: Include operational health score tasks
   ansible.builtin.import_tasks: tasks.d/health_score.yml
   tags:

@@ -36,6 +36,12 @@
     - uip_precheck
     - uip_preupgrade
 
+- name: Include application dependency contract baseline tasks
+  ansible.builtin.import_tasks: tasks.d/app_contracts.yml
+  tags:
+    - uip_precheck
+    - uip_preupgrade
+
 - name: Include operational governance tasks
   ansible.builtin.import_tasks: tasks.d/operational.yml
   tags:
