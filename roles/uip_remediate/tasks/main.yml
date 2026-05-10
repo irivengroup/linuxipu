@@ -1,4 +1,10 @@
 ---
+- name: Include precheck report parsing tasks
+  ansible.builtin.import_tasks: tasks.d/precheck_report.yml
+  tags:
+    - uip_remediate
+    - uip_preupgrade
+
 - name: Include common remediation tasks
   ansible.builtin.import_tasks: tasks.d/common.yml
   tags:

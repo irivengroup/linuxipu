@@ -1,0 +1,50 @@
+---
+- name: Check precheck inhibitor report
+  ansible.builtin.stat:
+    path: "{{ uip_inhibitors_file }}"
+  register: uip_remediate_precheck_report_stat
+  tags:
+    - uip_remediate
+    - uip_preupgrade
+
+- name: Load precheck inhibitor report
+  ansible.builtin.slurp:
+    src: "{{ uip_inhibitors_file }}"
+  register: uip_remediate_precheck_report_raw
+  when:
+    - uip_remediate_precheck_report_stat.stat.exists
+  tags:
+    - uip_remediate
+    - uip_preupgrade
+
+- name: Decode precheck inhibitor report
+  ansible.builtin.set_fact:
+    uip_remediate_detected_anomalies: "{{ uip_remediate_precheck_report_raw.content | b64decode | from_yaml }}"
+  when:
+    - uip_remediate_precheck_report_raw.content is defined
+  tags:
+    - uip_remediate
+    - uip_preupgrade
+
+- name: Initialize detected anomaly list when no report exists
+  ansible.builtin.set_fact:
+    uip_remediate_detected_anomalies: []
+  when:
+    - uip_remediate_detected_anomalies is not defined
+  tags:
+    - uip_remediate
+    - uip_preupgrade
+
+- name: Summarize detected anomalies before remediation
+  ansible.builtin.copy:
+    dest: "{{ uip_report_dir }}/remediation-input.yml"
+    owner: root
+    group: root
+    mode: "0640"
+    content: |
+      anomaly_count: "{{ uip_remediate_detected_anomalies | length }}"
+      anomalies:
+      {{ uip_remediate_detected_anomalies | to_nice_yaml(indent=2) | indent(2, true) }}
+  tags:
+    - uip_remediate
+    - uip_preupgrade

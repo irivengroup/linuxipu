@@ -34,12 +34,9 @@
         - uip_precheck
         - uip_preupgrade
 
-    - name: Run remediation for detected inhibitors
+    - name: Run remediation for detected anomalies
       ansible.builtin.include_role:
         name: uip_remediate
-      when:
-        - uip_inhibitors_gate_enabled | bool
-        - uip_blocking_inhibitors | default([]) | length > 0
       tags:
         - uip_remediate
         - uip_preupgrade

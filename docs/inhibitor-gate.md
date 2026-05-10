@@ -4,30 +4,37 @@
 
 # Inhibitor Gate
 
-Linux UIP enforces the following pre-upgrade gate:
+Linux UIP enforces the following pre-upgrade control loop:
 
 ```text
-precheck → remediate → precheck → upgrade
+precheck → remediate → precheck → gate → upgrade
 ```
 
-The upgrade phase is allowed only when no blocking inhibitor remains.
+`uip_remediate` always runs after the first precheck.
+
+It parses the precheck reports, attempts to fix all detected anomalies it knows how to remediate, and preserves all existing remediation features.
+
+The second precheck is the authority for the upgrade decision.
+
+## Gate rule
+
+The upgrade phase is allowed only when no `BLOCKER` inhibitor remains after the remediation pass and the second precheck.
 
 ## Reports
 
 ```text
 {{ uip_report_dir }}/inhibitors.yml
 {{ uip_report_dir }}/inhibitors-summary.yml
+{{ uip_report_dir }}/remediation-input.yml
 ```
-
-## Blocking behavior
-
-If a `BLOCKER` remains after remediation, the playbook stops before `uip_upgrade`.
 
 ## Control variable
 
 ```yaml
 uip_inhibitors_gate_enabled: true
 ```
+
+If blockers remain, the playbook stops before `uip_upgrade`.
 
 ---
 
