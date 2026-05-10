@@ -4,15 +4,15 @@
   become: true
   gather_facts: true
   roles:
-    - role: uip-common
+    - role: uipCommon
       tags:
         - always
         - uip_common
         - uip_rollback
-    - role: uip-rollback
+    - role: uipRollback
       tags:
         - uip_rollback
-    - role: uip-report
+    - role: uipReport
       tags:
         - always
         - uip_report

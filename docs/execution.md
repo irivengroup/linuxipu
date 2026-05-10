@@ -32,13 +32,13 @@ ansible-playbook playbooks/uip.yml -i inventory --tags uip_snapshot
 ## Rollback
 
 ```bash
-ansible-playbook playbooks/uip-rollback.yml -i inventory
+ansible-playbook playbooks/uipRollback.yml -i inventory
 ```
 
 ## Rollback ciblé
 
 ```bash
-ansible-playbook playbooks/uip-rollback.yml -i inventory -l srv-prod-01
+ansible-playbook playbooks/uipRollback.yml -i inventory -l srv-prod-01
 ```
 
 

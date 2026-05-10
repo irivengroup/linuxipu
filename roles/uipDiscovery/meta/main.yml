@@ -1,0 +1,32 @@
+---
+galaxy_info:
+  role_name: uipDiscovery
+  description: "Discovery of platform characteristics, infrastructure context, and environment metadata."
+  author: Alfred TCHONDJO
+  company: IRIVEN Group
+  license: "license (BSD, MIT)"
+  min_ansible_version: "2.15"
+  platforms:
+    - name: EL
+      versions:
+        - "6"
+        - "7"
+        - "8"
+        - "9"
+    - name: Ubuntu
+      versions:
+        - all
+    - name: Debian
+      versions:
+        - all
+    - name: SLES
+      versions:
+        - all
+  galaxy_tags:
+    - linux
+    - upgrade
+    - automation
+    - enterprise
+    - ansible
+
+dependencies: []

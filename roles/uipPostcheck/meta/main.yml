@@ -1,0 +1,32 @@
+---
+galaxy_info:
+  role_name: uipPostcheck
+  description: "Post-upgrade validation of system integrity, network continuity, repository alignment, and production readiness."
+  author: Alfred TCHONDJO
+  company: IRIVEN Group
+  license: "license (BSD, MIT)"
+  min_ansible_version: "2.15"
+  platforms:
+    - name: EL
+      versions:
+        - "6"
+        - "7"
+        - "8"
+        - "9"
+    - name: Ubuntu
+      versions:
+        - all
+    - name: Debian
+      versions:
+        - all
+    - name: SLES
+      versions:
+        - all
+  galaxy_tags:
+    - linux
+    - upgrade
+    - automation
+    - enterprise
+    - ansible
+
+dependencies: []

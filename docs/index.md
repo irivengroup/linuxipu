@@ -8,6 +8,7 @@
 <summary><strong>1. Vue d’ensemble du framework</strong></summary>
 
 - [Architecture générale](architecture.md)
+- [Role Naming](role-naming.md)
 - [Cycle complet UIP](workflow.md)
 
 </details>

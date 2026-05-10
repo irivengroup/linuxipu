@@ -4,17 +4,17 @@
 
 # Application Dependency Contracts
 
-Application Dependency Contracts are implemented in the dedicated `uip-agents` role.
+Application Dependency Contracts are implemented in the dedicated `uipAgents` role.
 
 The role is called by:
 
-- `uip-precheck` with `uip_agents_phase: baseline`
-- `uip-postcheck` with `uip_agents_phase: postcheck`
+- `uipPrecheck` with `uip_agents_phase: baseline`
+- `uipPostcheck` with `uip_agents_phase: postcheck`
 
 Contracts are declared in:
 
 ```text
-roles/uip-common/vars/services.yml
+roles/uipCommon/vars/services.yml
 ```
 
 ## Supported contract types

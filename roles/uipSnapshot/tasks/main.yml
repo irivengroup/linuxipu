@@ -1,0 +1,38 @@
+---
+- name: Detect server virtualization context
+  ansible.builtin.import_tasks: tasks.d/detect.yml
+  tags:
+    - uip_snapshot
+    - uip_preupgrade
+
+- name: Skip snapshot workflow for physical servers
+  ansible.builtin.debug:
+    msg: "Physical server detected. VM snapshot gate skipped."
+  when:
+    - uip_server_type == "physical"
+    - uip_snapshot_skip_physical | bool
+  tags:
+    - uip_snapshot
+    - uip_preupgrade
+
+- name: Create VM snapshot when required
+  ansible.builtin.import_tasks: tasks.d/create.yml
+  when:
+    - uip_server_type == "vm"
+    - uip_snapshot_required_for_vm | bool
+  tags:
+    - uip_snapshot
+    - uip_preupgrade
+
+- name: Run baseline update after successful snapshot gate
+  ansible.builtin.include_role:
+    name: uipUpdate
+    apply:
+      tags:
+        - uip_snapshot
+        - uip_preupgrade
+  when:
+    - uip_update_before_upgrade | bool
+  tags:
+    - uip_snapshot
+    - uip_preupgrade

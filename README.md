@@ -124,15 +124,15 @@ This prevents post-upgrade repository drift.
 ## Main Upgrade Workflow
 
 ```text
-uip-common
-→ uip-discovery
-→ uip-snapshot
-→ uip-precheck
-→ uip-remediate
-→ uip-upgrade
-→ uip-reboot
-→ uip-postcheck
-→ uip-report
+uipCommon
+→ uipDiscovery
+→ uipSnapshot
+→ uipPrecheck
+→ uipRemediate
+→ uipUpgrade
+→ uipReboot
+→ uipPostcheck
+→ uipReport
 ```
 
 ---
@@ -140,7 +140,7 @@ uip-common
 ## Rollback Workflow
 
 ```text
-uip-rollback
+uipRollback
 ```
 
 ---
@@ -149,17 +149,17 @@ uip-rollback
 
 | Role | Purpose |
 |---|---|
-| `uip-common` | Shared variables, mappings, credentials loading, breakglass validation |
-| `uip-discovery` | OS detection, BIOS/UEFI, VM provider detection, topology discovery |
-| `uip-snapshot` | Mandatory VM snapshot creation and rollback preparation |
-| `uip-precheck` | Critical FS validation, dependency graph, drift detection, readiness checks |
-| `uip-remediate` | Proactive fixes before upgrade (boot, grub, fstab, inhibitors, kernels) |
-| `uip-repos` | Enterprise repositories and subscription lifecycle management |
-| `uip-upgrade` | OS version upgrade execution by ecosystem/version |
-| `uip-reboot` | Controlled reboot with boot/network safety validation |
-| `uip-postcheck` | Final validation, health scoring, lock release |
-| `uip-report` | Operational reports, CAB summary, decision report |
-| `uip-rollback` | Full rollback execution using prepared state and snapshots |
+| `uipCommon` | Shared variables, mappings, credentials loading, breakglass validation |
+| `uipDiscovery` | OS detection, BIOS/UEFI, VM provider detection, topology discovery |
+| `uipSnapshot` | Mandatory VM snapshot creation and rollback preparation |
+| `uipPrecheck` | Critical FS validation, dependency graph, drift detection, readiness checks |
+| `uipRemediate` | Proactive fixes before upgrade (boot, grub, fstab, inhibitors, kernels) |
+| `uipRepos` | Enterprise repositories and subscription lifecycle management |
+| `uipUpgrade` | OS version upgrade execution by ecosystem/version |
+| `uipReboot` | Controlled reboot with boot/network safety validation |
+| `uipPostcheck` | Final validation, health scoring, lock release |
+| `uipReport` | Operational reports, CAB summary, decision report |
+| `uipRollback` | Full rollback execution using prepared state and snapshots |
 
 ---
 
@@ -218,8 +218,8 @@ breakglass-audit.yml
 | Snapshot Only | `ansible-playbook playbooks/uip.yml -i inventory --tags uip_snapshot` |
 | Remediation Only | `ansible-playbook playbooks/uip.yml -i inventory --tags uip_remediate` |
 | Full Pre-upgrade Phase | `ansible-playbook playbooks/uip.yml -i inventory --tags uip_preupgrade` |
-| Full Rollback | `ansible-playbook playbooks/uip-rollback.yml -i inventory` |
-| Targeted Rollback | `ansible-playbook playbooks/uip-rollback.yml -i inventory -l server01` |
+| Full Rollback | `ansible-playbook playbooks/uipRollback.yml -i inventory` |
+| Targeted Rollback | `ansible-playbook playbooks/uipRollback.yml -i inventory -l server01` |
 
 ---
 

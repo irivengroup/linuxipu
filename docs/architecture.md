@@ -20,11 +20,11 @@ Principes :
 
 Rôles principaux :
 
-`uip-common → discovery → snapshot → precheck → remediate → upgrade → reboot → postcheck → report`
+`uipCommon → discovery → snapshot → precheck → remediate → upgrade → reboot → postcheck → report`
 
 et :
 
-`uip-rollback`
+`uipRollback`
 
 
 ---

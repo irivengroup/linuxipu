@@ -1,0 +1,84 @@
+---
+- name: Mark lock as upgrade_started
+  ansible.builtin.copy:
+    dest: "{{ uip_lock_file }}"
+    mode: "0640"
+    content: |
+      id: "{{ inventory_hostname }}-{{ uip_path_key }}"
+      host: "{{ inventory_hostname }}"
+      distro: "{{ uip_os }}"
+      src_ver: "{{ uip_src_ver }}"
+      dst_ver: "{{ uip_dst_ver }}"
+      path: "{{ uip_path_key }}"
+      state: "upgrade_started"
+      repo_mgr: "{{ uip_repo_mgr }}"
+      updated_at: "{{ ansible_date_time.iso8601 }}"
+  tags:
+    - uip_upgrade
+    - uip_postupgrade
+
+- name: Include RHEL 6 to 7 upgrade tasks
+  ansible.builtin.import_tasks: tasks.d/rhel/rhel6_to_7.yml
+  when:
+    - uip_os == "rhel"
+    - uip_src_ver | string == "6"
+    - uip_dst_ver | string == "7"
+  tags:
+    - uip_upgrade
+    - uip_postupgrade
+
+- name: Include RHEL Leapp upgrade tasks
+  ansible.builtin.import_tasks: tasks.d/rhel/leapp.yml
+  when:
+    - uip_os == "rhel"
+    - not (uip_src_ver | string == "6" and uip_dst_ver | string == "7")
+  tags:
+    - uip_upgrade
+    - uip_postupgrade
+
+- name: Include Ubuntu upgrade tasks
+  ansible.builtin.import_tasks: tasks.d/ubuntu/main.yml
+  when: uip_os == "ubuntu"
+  tags:
+    - uip_upgrade
+    - uip_postupgrade
+
+- name: Include Debian upgrade tasks
+  ansible.builtin.import_tasks: tasks.d/debian/main.yml
+  when: uip_os == "debian"
+  tags:
+    - uip_upgrade
+    - uip_postupgrade
+
+- name: Include SUSE upgrade tasks
+  ansible.builtin.import_tasks: tasks.d/suse/main.yml
+  when: uip_os == "sles"
+  tags:
+    - uip_upgrade
+    - uip_postupgrade
+
+- name: Prepare future network state before reboot
+  ansible.builtin.import_tasks: tasks.d/network_future/main.yml
+  when:
+    - uip_network_future_prepare | bool
+  tags:
+    - uip_upgrade
+    - uip_postupgrade
+
+- name: Reboot after OS upgrade
+  ansible.builtin.include_role:
+    name: uipReboot
+    apply:
+      tags:
+        - uip_upgrade
+        - uip_postupgrade
+  vars:
+    uip_reboot_reason: "os_upgrade"
+    uip_reboot_current_step: "uipUpgrade"
+    uip_reboot_next_step: "uipPostcheck"
+  when:
+    - uip_allow_reboot | bool
+    - uip_mode == "enforce"
+  tags:
+    - uip_upgrade
+    - uip_postupgrade
