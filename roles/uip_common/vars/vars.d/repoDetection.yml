@@ -1,0 +1,44 @@
+---
+uip_repo_detect_rules:
+  satellite:
+    files:
+      - /etc/rhsm/rhsm.conf
+      - /etc/yum/pluginconf.d/subscription-manager.conf
+    patterns:
+      - satellite
+      - katello
+      - capsule
+  landscape:
+    files:
+      - /etc/landscape/client.conf
+    patterns:
+      - landscape
+  suse_mgr:
+    files:
+      - /etc/sysconfig/rhn/systemid
+      - /etc/zypp/repos.d/susemanager:channels.repo
+    patterns:
+      - susemanager
+      - suse-manager
+  uyuni:
+    files:
+      - /etc/sysconfig/rhn/systemid
+    patterns:
+      - uyuni
+  artifactory:
+    patterns:
+      - artifactory
+      - jfrog
+  nexus:
+    patterns:
+      - nexus
+      - sonatype
+  pulp:
+    patterns:
+      - pulp
+  airgap:
+    patterns:
+      - file:/
+      - file://
+      - /mnt/repos
+      - /media/repos

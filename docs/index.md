@@ -52,3 +52,5 @@
 - [Linting Policy](linting.md)
 
 - [Vendor Alignment](vendor-alignment.md)
+
+- [Common Variables](common-vars.md)

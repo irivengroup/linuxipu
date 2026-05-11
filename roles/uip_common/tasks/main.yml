@@ -1,63 +1,80 @@
 ---
-- name: Check UIP ecosystem vendor policy file
+- name: Validate UIP common vars.d directory exists
   ansible.builtin.stat:
-    path: "{{ role_path }}/vars/ecosystems.yml"
-  register: uip_common_ecosystems_file
+    path: "{{ uip_common_vars_dir }}"
+  register: uip_common_vars_d_stat
   tags:
     - always
     - uip_common
     - uip_preupgrade
     - uip_postupgrade
 
-- name: Load UIP ecosystem vendor policy variables
-  ansible.builtin.include_vars:
-    file: "{{ role_path }}/vars/ecosystems.yml"
-  when: uip_common_ecosystems_file.stat.exists
+- name: Assert UIP common vars.d directory is present
+  ansible.builtin.assert:
+    that:
+      - uip_common_vars_d_stat.stat.isdir | default(false)
+    fail_msg: "UIP common vars.d directory is missing: {{ uip_common_vars_dir }}"
   tags:
     - always
     - uip_common
     - uip_preupgrade
     - uip_postupgrade
 
-- name: Check UIP service contracts file
+- name: Validate expected UIP common vars.d files exist
   ansible.builtin.stat:
-    path: "{{ role_path }}/vars/services.yml"
-  register: uip_services_file
+    path: "{{ uip_common_vars_dir }}/{{ item }}"
+  loop: "{{ uip_common_vars_files }}"
+  register: uip_common_vars_d_files
   tags:
     - always
     - uip_common
     - uip_preupgrade
     - uip_postupgrade
 
-- name: Load UIP service contracts
-  ansible.builtin.include_vars:
-    file: "{{ role_path }}/vars/services.yml"
-  when: uip_services_file.stat.exists
+- name: Assert expected UIP common vars.d files are present
+  ansible.builtin.assert:
+    that:
+      - uip_common_vars_d_files.results
+        | selectattr('stat.exists', 'equalto', false)
+        | list
+        | length == 0
+    fail_msg: "One or more expected UIP common vars.d files are missing."
   tags:
     - always
     - uip_common
     - uip_preupgrade
     - uip_postupgrade
 
-- name: Check UIP VM provider credentials file
-  ansible.builtin.stat:
-    path: "{{ role_path }}/vars/vmproviders.yml"
-  register: uip_vmproviders_file
-  no_log: true
-  tags:
-    - always
-    - uip_common
-    - uip_preupgrade
-
-- name: Load UIP VM provider credentials when present
+- name: Load UIP common vars.d files
   ansible.builtin.include_vars:
-    file: "{{ role_path }}/vars/vmproviders.yml"
-  when: uip_vmproviders_file.stat.exists
-  no_log: true
+    file: "{{ uip_common_vars_dir }}/{{ item }}"
+  loop: "{{ uip_common_vars_files }}"
+  no_log: "{{ item == 'vmproviders.yml' }}"
   tags:
     - always
     - uip_common
     - uip_preupgrade
+    - uip_postupgrade
+
+- name: Validate expected UIP common variables are provisioned
+  ansible.builtin.assert:
+    that:
+      - uip_paths is defined
+      - uip_paths | length > 0
+      - uip_repo_map is defined
+      - uip_repo_map | length > 0
+      - uip_repo_detect_rules is defined
+      - uip_repo_detect_rules | length > 0
+      - uip_app_contracts is defined
+      - uip_vmproviders is defined
+    fail_msg: >-
+      One or more required UIP common variables were not provisioned from
+      roles/uip_common/vars/vars.d.
+  tags:
+    - always
+    - uip_common
+    - uip_preupgrade
+    - uip_postupgrade
 
 - name: Ensure UIP directories exist
   ansible.builtin.file:

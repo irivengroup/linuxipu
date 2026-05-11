@@ -1,0 +1,142 @@
+---
+uip_paths:
+  rhel:
+    '6':
+      '7':
+        key: rhel:6:7
+        pkg_mgr: yum
+        pre_tool: preupg
+        upg_tool: redhat-upgrade-tool
+        src_name: rhel6
+        dst_name: rhel7
+    '7':
+      '8':
+        key: rhel:7:8
+        pkg_mgr: yum
+        pre_tool: leapp preupgrade
+        upg_tool: leapp
+        src_name: rhel7
+        dst_name: rhel8
+    '8':
+      '9':
+        key: rhel:8:9
+        pkg_mgr: dnf
+        pre_tool: leapp preupgrade
+        upg_tool: leapp
+        src_name: rhel8
+        dst_name: rhel9
+    '9':
+      '10':
+        key: rhel:9:10
+        pkg_mgr: dnf
+        pre_tool: leapp preupgrade
+        upg_tool: leapp
+        src_name: rhel9
+        dst_name: rhel10
+  ubuntu:
+    '18.04':
+      '20.04':
+        key: ubuntu:18.04:20.04
+        pkg_mgr: apt
+        pre_tool: do-release-upgrade -c
+        upg_tool: do-release-upgrade
+        src_name: bionic
+        dst_name: focal
+    '20.04':
+      '22.04':
+        key: ubuntu:20.04:22.04
+        pkg_mgr: apt
+        pre_tool: do-release-upgrade -c
+        upg_tool: do-release-upgrade
+        src_name: focal
+        dst_name: jammy
+    '22.04':
+      '24.04':
+        key: ubuntu:22.04:24.04
+        pkg_mgr: apt
+        pre_tool: do-release-upgrade -c
+        upg_tool: do-release-upgrade
+        src_name: jammy
+        dst_name: noble
+    '24.04':
+      '25.04':
+        key: ubuntu:24.04:25.04
+        pkg_mgr: apt
+        pre_tool: do-release-upgrade -c
+        upg_tool: do-release-upgrade
+        src_name: noble
+        dst_name: plucky
+    '25.04':
+      '26.04':
+        key: ubuntu:25.04:26.04
+        pkg_mgr: apt
+        pre_tool: do-release-upgrade -c
+        upg_tool: do-release-upgrade
+        src_name: plucky
+        dst_name: questing
+  debian:
+    '10':
+      '11':
+        key: debian:10:11
+        pkg_mgr: apt
+        pre_tool: apt-get -s dist-upgrade
+        upg_tool: apt-get dist-upgrade
+        src_name: buster
+        dst_name: bullseye
+    '11':
+      '12':
+        key: debian:11:12
+        pkg_mgr: apt
+        pre_tool: apt-get -s dist-upgrade
+        upg_tool: apt-get dist-upgrade
+        src_name: bullseye
+        dst_name: bookworm
+    '12':
+      '13':
+        key: debian:12:13
+        pkg_mgr: apt
+        pre_tool: apt-get -s dist-upgrade
+        upg_tool: apt-get dist-upgrade
+        src_name: bookworm
+        dst_name: trixie
+    '13':
+      '14':
+        key: debian:13:14
+        pkg_mgr: apt
+        pre_tool: apt-get -s dist-upgrade
+        upg_tool: apt-get dist-upgrade
+        src_name: trixie
+        dst_name: forky
+    '14':
+      '15':
+        key: debian:14:15
+        pkg_mgr: apt
+        pre_tool: apt-get -s dist-upgrade
+        upg_tool: apt-get dist-upgrade
+        src_name: forky
+        dst_name: duke
+  sles:
+    12-sp5:
+      15-sp3:
+        key: sles:12-sp5:15-sp3
+        pkg_mgr: zypper
+        pre_tool: zypper migration --dry-run
+        upg_tool: zypper migration
+        src_name: sles12-sp5
+        dst_name: sles15-sp3
+    15-sp3:
+      15-sp4:
+        key: sles:15-sp3:15-sp4
+        pkg_mgr: zypper
+        pre_tool: zypper migration --dry-run
+        upg_tool: zypper migration
+        src_name: sles15-sp3
+        dst_name: sles15-sp4
+    15-sp4:
+      15-sp5:
+        key: sles:15-sp4:15-sp5
+        pkg_mgr: zypper
+        pre_tool: zypper migration --dry-run
+        upg_tool: zypper migration
+        src_name: sles15-sp4
+        dst_name: sles15-sp5
