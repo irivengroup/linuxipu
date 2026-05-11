@@ -293,4 +293,3 @@ uip_sles_suseconnect_enforce: true
 uip_sles_zypper_migration_enforce: true
 uip_sles_releasever: ""
 uip_sles_allow_module_auto_activation: false
-
