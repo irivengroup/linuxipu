@@ -102,7 +102,10 @@
 
 - name: Detect installed legacy Python 2 RPMs
   ansible.builtin.shell: |
+    set -o pipefail
     rpm -qa | grep -E '^(python2-(libs|pip|setuptools|setuptools-wheel|pip-wheel)-|python2-2\.7\.18)' || true
+  args:
+    executable: /bin/bash
   register: uip_rhel8_python2_legacy_packages
   changed_when: false
   when:
@@ -113,7 +116,10 @@
 
 - name: Remove legacy Python 2 RPMs
   ansible.builtin.shell: |
+    set -o pipefail
     rpm -e --nodeps $(rpm -qa | grep -E '^(python2-(libs|pip|setuptools|setuptools-wheel|pip-wheel)-|python2-2\.7\.18)') || true
+  args:
+    executable: /bin/bash
   register: uip_rhel8_python2_cleanup
   changed_when: "{{ (uip_rhel8_python2_legacy_packages.stdout_lines | default([]) | length) > 0 }}"
   when:
