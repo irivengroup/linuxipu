@@ -1,24 +1,30 @@
 ---
-- name: Include vendor alignment remediation tasks
-  ansible.builtin.import_tasks: tasks.d/vendor_alignment.yml
-  tags:
-    - uip_remediate
-    - uip_preupgrade
-
 - name: Include precheck report parsing tasks
   ansible.builtin.import_tasks: tasks.d/precheck_report.yml
   tags:
     - uip_remediate
     - uip_preupgrade
 
+- name: Include vendor alignment remediation tasks
+  ansible.builtin.import_tasks: tasks.d/vendor_alignment.yml
+  when:
+    - uip_remediate_run_inhibitors | bool
+  tags:
+    - uip_remediate
+    - uip_preupgrade
+
 - name: Include common remediation tasks
   ansible.builtin.import_tasks: tasks.d/common.yml
+  when:
+    - uip_remediate_run_common | bool
   tags:
     - uip_remediate
     - uip_preupgrade
 
 - name: Include fstab remediation tasks
   ansible.builtin.import_tasks: tasks.d/fstab.yml
+  when:
+    - uip_remediate_run_fstab | bool
   tags:
     - uip_remediate
     - uip_remediate_fstab
@@ -26,6 +32,8 @@
 
 - name: Include filesystem remediation tasks
   ansible.builtin.import_tasks: tasks.d/filesystems.yml
+  when:
+    - uip_remediate_run_filesystems | bool
   tags:
     - uip_remediate
     - uip_remediate_fs
@@ -39,6 +47,8 @@
 
 - name: Include disruptive agent remediation tasks
   ansible.builtin.import_tasks: tasks.d/agents.yml
+  when:
+    - uip_remediate_run_agents | bool
   tags:
     - uip_remediate
     - uip_remediate_agents
@@ -52,7 +62,9 @@
 
 - name: Include bootloader backup tasks
   ansible.builtin.import_tasks: tasks.d/bootloader_backup.yml
-  when: uip_bootloader_backup_enabled | bool
+  when:
+    - uip_bootloader_backup_enabled | bool
+    - uip_remediate_run_boot | bool
   tags:
     - uip_remediate
     - uip_remediate_bootloader
@@ -60,7 +72,9 @@
 
 - name: Include RHEL remediation tasks
   ansible.builtin.import_tasks: tasks.d/rhel/main.yml
-  when: uip_os == "rhel"
+  when:
+    - uip_os == "rhel"
+    - uip_remediate_run_inhibitors | bool
   tags:
     - uip_remediate
     - uip_remediate_rhel
@@ -68,7 +82,9 @@
 
 - name: Include Debian remediation tasks
   ansible.builtin.import_tasks: tasks.d/debian/main.yml
-  when: uip_os == "debian"
+  when:
+    - uip_os == "debian"
+    - uip_remediate_run_inhibitors | bool
   tags:
     - uip_remediate
     - uip_remediate_debian
@@ -76,7 +92,9 @@
 
 - name: Include Ubuntu remediation tasks
   ansible.builtin.import_tasks: tasks.d/ubuntu/main.yml
-  when: uip_os == "ubuntu"
+  when:
+    - uip_os == "ubuntu"
+    - uip_remediate_run_inhibitors | bool
   tags:
     - uip_remediate
     - uip_remediate_ubuntu
@@ -84,7 +102,9 @@
 
 - name: Include SUSE remediation tasks
   ansible.builtin.import_tasks: tasks.d/suse/main.yml
-  when: uip_os == "sles"
+  when:
+    - uip_os == "sles"
+    - uip_remediate_run_inhibitors | bool
   tags:
     - uip_remediate
     - uip_remediate_suse

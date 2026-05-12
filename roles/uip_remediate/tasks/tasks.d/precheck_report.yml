@@ -12,6 +12,7 @@
     src: "{{ uip_inhibitors_file }}"
   register: uip_remediate_precheck_report_raw
   when:
+    - uip_remediate_use_precheck_report | bool
     - uip_remediate_precheck_report_stat.stat.exists
   tags:
     - uip_remediate
@@ -19,7 +20,13 @@
 
 - name: Decode precheck inhibitor report
   ansible.builtin.set_fact:
-    uip_remediate_detected_anomalies: "{{ uip_remediate_precheck_report_raw.content | b64decode | from_yaml }}"
+    uip_remediate_detected_anomalies: >-
+      {{
+        uip_remediate_precheck_report_raw.content
+        | b64decode
+        | from_yaml
+        | default([])
+      }}
   when:
     - uip_remediate_precheck_report_raw.content is defined
   tags:
@@ -35,14 +42,115 @@
     - uip_remediate
     - uip_preupgrade
 
-- name: Summarize detected anomalies before remediation
+- name: Normalize detected anomaly categories and identifiers
+  ansible.builtin.set_fact:
+    uip_remediate_detected_categories: >-
+      {{
+        uip_remediate_detected_anomalies
+        | map(attribute='category')
+        | select('defined')
+        | list
+        | unique
+      }}
+    uip_remediate_detected_ids: >-
+      {{
+        uip_remediate_detected_anomalies
+        | map(attribute='id')
+        | select('defined')
+        | list
+        | unique
+      }}
+  tags:
+    - uip_remediate
+    - uip_preupgrade
+
+- name: Build report-driven remediation switchboard
+  ansible.builtin.set_fact:
+    uip_remediate_run_common: >-
+      {{
+        (not uip_remediate_report_driven_only | bool)
+        or (uip_remediate_detected_anomalies | length > 0)
+      }}
+    uip_remediate_run_filesystems: >-
+      {{
+        (not uip_remediate_report_driven_only | bool)
+        or ('filesystem' in uip_remediate_detected_categories)
+      }}
+    uip_remediate_run_fstab: >-
+      {{
+        (not uip_remediate_report_driven_only | bool)
+        or ('filesystem' in uip_remediate_detected_categories)
+        or ('mount' in uip_remediate_detected_categories)
+      }}
+    uip_remediate_run_boot: >-
+      {{
+        (not uip_remediate_report_driven_only | bool)
+        or ('boot' in uip_remediate_detected_categories)
+        or ('kernel' in uip_remediate_detected_categories)
+        or ('grub' in uip_remediate_detected_categories)
+      }}
+    uip_remediate_run_kernel: >-
+      {{
+        (not uip_remediate_report_driven_only | bool)
+        or ('kernel' in uip_remediate_detected_categories)
+        or ('boot' in uip_remediate_detected_categories)
+      }}
+    uip_remediate_run_grub: >-
+      {{
+        (not uip_remediate_report_driven_only | bool)
+        or ('boot' in uip_remediate_detected_categories)
+        or ('grub' in uip_remediate_detected_categories)
+      }}
+    uip_remediate_run_agents: >-
+      {{
+        (not uip_remediate_report_driven_only | bool)
+        or ('agent' in uip_remediate_detected_categories)
+        or ('application' in uip_remediate_detected_categories)
+      }}
+    uip_remediate_run_network: >-
+      {{
+        (not uip_remediate_report_driven_only | bool)
+        or ('network' in uip_remediate_detected_categories)
+      }}
+    uip_remediate_run_repos: >-
+      {{
+        (not uip_remediate_report_driven_only | bool)
+        or ('repository' in uip_remediate_detected_categories)
+      }}
+    uip_remediate_run_inhibitors: >-
+      {{
+        (not uip_remediate_report_driven_only | bool)
+        or (uip_remediate_detected_anomalies | length > 0)
+      }}
+  tags:
+    - uip_remediate
+    - uip_preupgrade
+
+- name: Persist report-driven remediation plan
   ansible.builtin.copy:
-    dest: "{{ uip_report_dir }}/remediation-input.yml"
+    dest: "{{ uip_remediate_action_report_file }}"
     owner: root
     group: root
     mode: "0640"
     content: |
+      source_report: "{{ uip_inhibitors_file }}"
+      report_driven_only: "{{ uip_remediate_report_driven_only }}"
       anomaly_count: "{{ uip_remediate_detected_anomalies | length }}"
+      categories:
+      {{ uip_remediate_detected_categories | to_nice_yaml(indent=2) | indent(2, true) }}
+      ids:
+      {{ uip_remediate_detected_ids | to_nice_yaml(indent=2) | indent(2, true) }}
+      switchboard:
+        common: "{{ uip_remediate_run_common }}"
+        filesystems: "{{ uip_remediate_run_filesystems }}"
+        fstab: "{{ uip_remediate_run_fstab }}"
+        boot: "{{ uip_remediate_run_boot }}"
+        kernel: "{{ uip_remediate_run_kernel }}"
+        grub: "{{ uip_remediate_run_grub }}"
+        agents: "{{ uip_remediate_run_agents }}"
+        network: "{{ uip_remediate_run_network }}"
+        repos: "{{ uip_remediate_run_repos }}"
+        inhibitors: "{{ uip_remediate_run_inhibitors }}"
       anomalies:
       {{ uip_remediate_detected_anomalies | to_nice_yaml(indent=2) | indent(2, true) }}
   tags:

@@ -309,3 +309,7 @@ uip_post_cleanup_kernel_keep: 2
 uip_post_cleanup_fail_on_error: false
 
 uip_post_cleanup_report_file: "{{ uip_report_dir }}/post-cleanup.yml"
+
+uip_remediate_use_precheck_report: true
+uip_remediate_report_driven_only: false
+uip_remediate_action_report_file: "{{ uip_report_dir }}/remediation-actions.yml"
