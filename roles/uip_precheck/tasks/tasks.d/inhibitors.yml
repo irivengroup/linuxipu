@@ -6,6 +6,12 @@
     - uip_precheck
     - uip_preupgrade
 
+- name: Include inhibitor catalog matching tasks
+  ansible.builtin.import_tasks: inhibitors_catalog.yml
+  tags:
+    - uip_precheck
+    - uip_preupgrade
+
 - name: Add filesystem blocker inhibitors
   ansible.builtin.set_fact:
     uip_inhibitors: >-

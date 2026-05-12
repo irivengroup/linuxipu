@@ -9,6 +9,7 @@ uip_common_vars_files:
   - upgradePaths.yml
   - repoMapping.yml
   - repoDetection.yml
+  - inhibitorsCatalog.yml
   - ecosystems.yml
   - services.yml
   - vmproviders.yml

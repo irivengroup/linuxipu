@@ -1,0 +1,139 @@
+---
+uip_inhibitors_catalog:
+  rhel:
+    "7_to_8":
+      - id: leapp_removed_driver_pata_acpi_unload
+        ecosystem: rhel
+        source: leapp
+        upgrade_path: "7_to_8"
+        severity: BLOCKER
+        risk_factor: high
+        match:
+          report_files:
+            - /var/log/leapp/leapp-report.txt
+          title_patterns:
+            - "Leapp detected loaded kernel drivers which have been removed in RHEL 8"
+            - "Detected loaded kernel drivers which have been removed in RHEL 8"
+          summary_patterns:
+            - "pata_acpi"
+          key: f08a07da902958defa4f5c2699fae9ec2eb67c5b
+        category: kernel
+        remediable: true
+        remediation:
+          mode: automated
+          action: unload_kernel_modules
+          modules:
+            - pata_acpi
+          commands:
+            - "modprobe -r pata_acpi"
+            - "rmmod pata_acpi"
+          requires_reboot: false
+          rerun_precheck: true
+        notes:
+          - "Automated remediation unloads pata_acpi when currently loaded."
+          - "If the module is required by active storage, manual review is required."
+
+      - id: leapp_removed_driver_mpt_vmware_controller
+        ecosystem: rhel
+        source: leapp
+        upgrade_path: "7_to_8"
+        severity: BLOCKER
+        risk_factor: high
+        match:
+          report_files:
+            - /var/log/leapp/leapp-report.txt
+          title_patterns:
+            - "Detected loaded kernel drivers which have been removed in RHEL 8"
+            - "Leapp detected loaded kernel drivers which have been removed in RHEL 8"
+          summary_patterns:
+            - "mptbase"
+            - "mptscsih"
+            - "mptspi"
+        category: kernel
+        remediable: partial
+        remediation:
+          mode: guarded
+          action: rebuild_generic_initramfs_for_removed_storage_drivers
+          modules:
+            - mptbase
+            - mptscsih
+            - mptspi
+          commands:
+            - "cp /boot/initramfs-$(uname -r).img /boot/initramfs-$(uname -r).img.bak"
+            - "dracut -N -f"
+            - "dracut -f --regenerate-all"
+          manual_steps:
+            - "On VMware, validate or change the VM SCSI Controller type to VMware Paravirtual."
+            - "Power-cycle the VM only inside an approved maintenance window."
+          requires_reboot: true
+          rerun_precheck: true
+        notes:
+          - "Controller change is hypervisor-side and cannot be safely automated from the guest."
+          - "UIP can back up and rebuild initramfs, but VMware controller conversion remains manual."
+
+      - id: leapp_removed_driver_pata_acpi_disable_acpi
+        ecosystem: rhel
+        source: leapp
+        upgrade_path: "7_to_8"
+        severity: BLOCKER
+        risk_factor: high
+        match:
+          report_files:
+            - /var/log/leapp/leapp-report.txt
+          title_patterns:
+            - "Leapp detected loaded kernel drivers which have been removed in RHEL 8"
+          summary_patterns:
+            - "pata_acpi"
+          key: f08a07da902958defa4f5c2699fae9ec2eb67c5b
+        category: boot
+        remediable: manual
+        remediation:
+          mode: manual_approval_required
+          action: disable_acpi_in_grub
+          grub_args:
+            - noacpi
+            - acpi=off
+          bios_grub_cfg: /boot/grub2/grub.cfg
+          uefi_grub_cfg: /boot/efi/EFI/redhat/grub.cfg
+          commands:
+            - "cp -v /etc/default/grub /etc/default/grub.bak"
+            - "cp -v /boot/grub2/grub.cfg /boot/grub2/grub.cfg.bak"
+            - "cp -v /boot/efi/EFI/redhat/grub.cfg /boot/efi/EFI/redhat/grub.cfg.bak"
+            - "grub2-mkconfig -o <detected grub.cfg>"
+            - "systemctl reboot"
+          requires_reboot: true
+          rerun_precheck: true
+        notes:
+          - "Disabling ACPI is high-impact and can affect hardware discovery and power management."
+          - "UIP catalogs this workaround but does not apply it automatically by default."
+      - id: rhel8_python2_legacy_conflict
+        ecosystem: rhel
+        source: post_upgrade
+        upgrade_path: "7_to_8"
+        severity: MAJOR
+        risk_factor: medium
+        phase: postcheck
+        match:
+          target_context: Generic post-upgrade application or package installation
+          target_os: RHEL 8
+          title_patterns:
+            - "python2 package conflict"
+            - "python2-setuptools-wheel"
+            - "python2-pip-wheel"
+          log_files:
+            - /opt/WCG/WCGinstall.log
+        category: application
+        remediable: true
+        remediation:
+          mode: automated
+          action: remove_legacy_python2_packages
+          commands:
+            - "rpm -e --nodeps $(rpm -qa | grep -E '^(python2-(libs|pip|setuptools|setuptools-wheel|pip-wheel)-|python2-2\\.7\\.18)')"
+          requires_reboot: false
+          rerun_precheck: false
+          post_validation:
+            - "Validate that no python2 legacy RPM remains installed"
+            - "Retry post-upgrade application installation installation"
+        notes:
+          - "Execute after RHEL 8.10 upgrade and before post-upgrade application installation installation."
+          - "Removes Leapp-retained Python 2 RPMs conflicting with Python 3 dependencies."

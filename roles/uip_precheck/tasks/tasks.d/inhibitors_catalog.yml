@@ -1,0 +1,130 @@
+---
+- name: Check Leapp report for catalog matching
+  ansible.builtin.stat:
+    path: /var/log/leapp/leapp-report.txt
+  register: uip_precheck_leapp_report_stat
+  when:
+    - uip_inhibitors_catalog_enabled | bool
+    - uip_os == 'rhel'
+  tags:
+    - uip_precheck
+    - uip_preupgrade
+
+- name: Read Leapp report for catalog matching
+  ansible.builtin.slurp:
+    src: /var/log/leapp/leapp-report.txt
+  register: uip_precheck_leapp_report_raw
+  when:
+    - uip_inhibitors_catalog_enabled | bool
+    - uip_os == 'rhel'
+    - uip_precheck_leapp_report_stat.stat.exists | default(false)
+  tags:
+    - uip_precheck
+    - uip_preupgrade
+
+- name: Decode Leapp report text
+  ansible.builtin.set_fact:
+    uip_precheck_leapp_report_text: >-
+      {{
+        uip_precheck_leapp_report_raw.content
+        | b64decode
+      }}
+  when:
+    - uip_precheck_leapp_report_raw.content is defined
+  tags:
+    - uip_precheck
+    - uip_preupgrade
+
+- name: Initialize catalog inhibitor matches
+  ansible.builtin.set_fact:
+    uip_precheck_catalog_matches: []
+  when:
+    - uip_inhibitors_catalog_enabled | bool
+  tags:
+    - uip_precheck
+    - uip_preupgrade
+
+- name: Match RHEL catalog inhibitors against Leapp report
+  ansible.builtin.set_fact:
+    uip_precheck_catalog_matches: >-
+      {{
+        uip_precheck_catalog_matches
+        + [
+            item
+            | combine(
+                {
+                  'status': 'open',
+                  'matched_report': '/var/log/leapp/leapp-report.txt'
+                }
+              )
+          ]
+      }}
+  loop: "{{ uip_inhibitors_catalog.rhel['7_to_8'] | default([]) }}"
+  when:
+    - uip_inhibitors_catalog_enabled | bool
+    - uip_os == 'rhel'
+    - uip_src_ver | string == '7'
+    - uip_dst_ver | string == '8'
+    - uip_precheck_leapp_report_text is defined
+    - >-
+      (
+        item.match.title_patterns | default([])
+        | select('in', uip_precheck_leapp_report_text)
+        | list
+        | length > 0
+      )
+      or
+      (
+        item.match.summary_patterns | default([])
+        | select('in', uip_precheck_leapp_report_text)
+        | list
+        | length > 0
+      )
+      or
+      (
+        item.match.key | default('') | length > 0
+        and item.match.key in uip_precheck_leapp_report_text
+      )
+  tags:
+    - uip_precheck
+    - uip_preupgrade
+
+- name: Add catalog matches to inhibitor list
+  ansible.builtin.set_fact:
+    uip_inhibitors: >-
+      {{
+        uip_inhibitors | default([])
+        + [
+            {
+              'id': item.id,
+              'severity': item.severity | default('BLOCKER'),
+              'source': item.source | default('catalog'),
+              'category': item.category | default('catalog'),
+              'name': item.id,
+              'message': item.match.title_patterns | default([]) | join('; '),
+              'remediable': item.remediable | default(false),
+              'status': 'open',
+              'catalog_ref': item.id,
+              'remediation_action': item.remediation.action | default('manual')
+            }
+          ]
+      }}
+  loop: "{{ uip_precheck_catalog_matches | default([]) }}"
+  when:
+    - uip_inhibitors_catalog_enabled | bool
+  tags:
+    - uip_precheck
+    - uip_preupgrade
+
+- name: Persist catalog inhibitor matches
+  ansible.builtin.copy:
+    dest: "{{ uip_inhibitors_catalog_report_file }}"
+    owner: root
+    group: root
+    mode: "0640"
+    content: "{{ uip_precheck_catalog_matches | default([]) | to_nice_yaml }}"
+  when:
+    - uip_inhibitors_catalog_enabled | bool
+  tags:
+    - uip_precheck
+    - uip_preupgrade

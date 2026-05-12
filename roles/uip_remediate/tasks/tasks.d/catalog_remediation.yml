@@ -1,0 +1,145 @@
+---
+- name: Build catalog remediation refs from detected anomalies
+  ansible.builtin.set_fact:
+    uip_remediate_catalog_refs: >-
+      {{
+        uip_remediate_detected_anomalies
+        | default([])
+        | map(attribute='catalog_ref')
+        | select('defined')
+        | list
+        | unique
+      }}
+  tags:
+    - uip_remediate
+    - uip_preupgrade
+
+- name: Capture loaded kernel modules for catalog remediation
+  ansible.builtin.command: lsmod
+  register: uip_remediate_catalog_lsmod
+  changed_when: false
+  when:
+    - uip_remediate_catalog_refs | length > 0
+  tags:
+    - uip_remediate
+    - uip_preupgrade
+
+- name: Unload pata_acpi when Leapp catalog detected removed driver
+  community.general.modprobe:
+    name: pata_acpi
+    state: absent
+  register: uip_remediate_catalog_pata_acpi
+  failed_when: false
+  when:
+    - "'leapp_removed_driver_pata_acpi_unload' in uip_remediate_catalog_refs"
+    - uip_remediate_catalog_lsmod.stdout is search('^pata_acpi\\s', multiline=True)
+  tags:
+    - uip_remediate
+    - uip_preupgrade
+
+- name: Backup current initramfs for MPT removed driver workaround
+  ansible.builtin.copy:
+    src: "/boot/initramfs-{{ ansible_kernel }}.img"
+    dest: "/boot/initramfs-{{ ansible_kernel }}.img.uip.bak"
+    remote_src: true
+    owner: root
+    group: root
+    mode: "0600"
+    force: false
+  when:
+    - "'leapp_removed_driver_mpt_vmware_controller' in uip_remediate_catalog_refs"
+    - uip_inhibitors_catalog_apply_guarded | bool
+  tags:
+    - uip_remediate
+    - uip_preupgrade
+
+- name: Build generic initramfs for MPT removed driver workaround
+  ansible.builtin.command: dracut -N -f
+  register: uip_remediate_catalog_dracut_generic
+  changed_when: true
+  failed_when: false
+  when:
+    - "'leapp_removed_driver_mpt_vmware_controller' in uip_remediate_catalog_refs"
+    - uip_inhibitors_catalog_apply_guarded | bool
+  tags:
+    - uip_remediate
+    - uip_preupgrade
+
+- name: Regenerate all initramfs images after MPT workaround
+  ansible.builtin.command: dracut -f --regenerate-all
+  register: uip_remediate_catalog_dracut_regenerate_all
+  changed_when: true
+  failed_when: false
+  when:
+    - "'leapp_removed_driver_mpt_vmware_controller' in uip_remediate_catalog_refs"
+    - uip_inhibitors_catalog_apply_guarded | bool
+  tags:
+    - uip_remediate
+    - uip_preupgrade
+
+- name: Record manual ACPI workaround when catalog matched
+  ansible.builtin.copy:
+    dest: "{{ uip_report_dir }}/manual-remediation-required-acpi.yml"
+    owner: root
+    group: root
+    mode: "0640"
+    content: |
+      required: true
+      catalog_ref: leapp_removed_driver_pata_acpi_disable_acpi
+      reason: "Disabling ACPI is high-impact and requires explicit manual approval."
+      grub_args:
+        - noacpi
+        - acpi=off
+      bios_grub_cfg: /boot/grub2/grub.cfg
+      uefi_grub_cfg: /boot/efi/EFI/redhat/grub.cfg
+  when:
+    - "'leapp_removed_driver_pata_acpi_disable_acpi' in uip_remediate_catalog_refs"
+    - not uip_inhibitors_catalog_apply_manual | bool
+  tags:
+    - uip_remediate
+    - uip_preupgrade
+
+
+- name: Detect installed legacy Python 2 RPMs
+  ansible.builtin.shell: |
+    rpm -qa | grep -E '^(python2-(libs|pip|setuptools|setuptools-wheel|pip-wheel)-|python2-2\.7\.18)' || true
+  register: uip_rhel8_python2_legacy_packages
+  changed_when: false
+  when:
+    - "'rhel8_python2_legacy_conflict' in uip_remediate_catalog_refs"
+  tags:
+    - uip_remediate
+    - uip_postupgrade
+
+- name: Remove legacy Python 2 RPMs
+  ansible.builtin.shell: |
+    rpm -e --nodeps $(rpm -qa | grep -E '^(python2-(libs|pip|setuptools|setuptools-wheel|pip-wheel)-|python2-2\.7\.18)') || true
+  register: uip_rhel8_python2_cleanup
+  changed_when: "{{ (uip_rhel8_python2_legacy_packages.stdout_lines | default([]) | length) > 0 }}"
+  when:
+    - "'rhel8_python2_legacy_conflict' in uip_remediate_catalog_refs"
+    - (uip_rhel8_python2_legacy_packages.stdout_lines | default([]) | length) > 0
+  tags:
+    - uip_remediate
+    - uip_postupgrade
+
+- name: Persist catalog remediation execution report
+  ansible.builtin.copy:
+    dest: "{{ uip_report_dir }}/catalog-remediation.yml"
+    owner: root
+    group: root
+    mode: "0640"
+    content: |
+      catalog_refs:
+      {{ uip_remediate_catalog_refs | default([]) | to_nice_yaml(indent=2) | indent(2, true) }}
+      pata_acpi:
+      {{ uip_remediate_catalog_pata_acpi | default({}) | to_nice_yaml(indent=2) | indent(2, true) }}
+      dracut_generic:
+      {{ uip_remediate_catalog_dracut_generic | default({}) | to_nice_yaml(indent=2) | indent(2, true) }}
+      dracut_regenerate_all:
+      {{ uip_remediate_catalog_dracut_regenerate_all | default({}) | to_nice_yaml(indent=2) | indent(2, true) }}
+  when:
+    - uip_remediate_catalog_refs | default([]) | length > 0
+  tags:
+    - uip_remediate
+    - uip_preupgrade

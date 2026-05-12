@@ -5,6 +5,14 @@
     - uip_remediate
     - uip_preupgrade
 
+
+- name: Include catalog-driven remediation tasks
+  ansible.builtin.import_tasks: tasks.d/catalog_remediation.yml
+  when:
+    - uip_remediate_use_precheck_report | bool
+  tags:
+    - uip_remediate
+    - uip_preupgrade
 - name: Include vendor alignment remediation tasks
   ansible.builtin.import_tasks: tasks.d/vendor_alignment.yml
   when:

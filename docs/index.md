@@ -57,3 +57,5 @@
 
 - [Post-upgrade Cleanup](post-upgrade-cleanup.md)
 - [Report-driven Remediation](report-driven-remediation.md)
+
+- [Inhibitors Catalog](inhibitors-catalog.md)
