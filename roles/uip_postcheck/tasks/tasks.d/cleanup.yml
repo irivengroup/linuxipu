@@ -1,0 +1,179 @@
+---
+- name: Capture running kernel before post-upgrade cleanup
+  ansible.builtin.command: uname -r
+  register: uip_postcheck_cleanup_running_kernel
+  changed_when: false
+  when:
+    - uip_post_cleanup_enabled | bool
+    - uip_post_cleanup_old_kernels | bool
+  tags:
+    - uip_postcheck
+    - uip_postupgrade
+
+- name: Clean old kernels on RHEL 6 and 7
+  ansible.builtin.command: >-
+    package-cleanup --oldkernels
+    --count={{ uip_post_cleanup_kernel_keep }} -y
+  register: uip_postcheck_cleanup_rhel_oldkernels
+  changed_when: >-
+    'No old kernels to remove' not in
+    (uip_postcheck_cleanup_rhel_oldkernels.stdout | default(''))
+  failed_when:
+    - uip_post_cleanup_fail_on_error | bool
+    - uip_postcheck_cleanup_rhel_oldkernels.rc != 0
+  when:
+    - uip_post_cleanup_enabled | bool
+    - uip_post_cleanup_old_kernels | bool
+    - uip_os == 'rhel'
+    - ansible_distribution_major_version | int < 8
+  tags:
+    - uip_postcheck
+    - uip_postupgrade
+
+- name: Clean old kernels on RHEL 8 and newer
+  ansible.builtin.command: >-
+    dnf -y remove --oldinstallonly
+    --setopt installonly_limit={{ uip_post_cleanup_kernel_keep }}
+  register: uip_postcheck_cleanup_rhel_dnf_oldkernels
+  changed_when: >-
+    'Nothing to do' not in
+    (uip_postcheck_cleanup_rhel_dnf_oldkernels.stdout | default(''))
+  failed_when:
+    - uip_post_cleanup_fail_on_error | bool
+    - uip_postcheck_cleanup_rhel_dnf_oldkernels.rc != 0
+  when:
+    - uip_post_cleanup_enabled | bool
+    - uip_post_cleanup_old_kernels | bool
+    - uip_os == 'rhel'
+    - ansible_distribution_major_version | int >= 8
+  tags:
+    - uip_postcheck
+    - uip_postupgrade
+
+- name: Autoremove obsolete packages on RHEL family
+  ansible.builtin.command: "{{ uip_pkg_mgr }} -y autoremove"
+  register: uip_postcheck_cleanup_rhel_autoremove
+  changed_when: >-
+    'Nothing to do' not in
+    (uip_postcheck_cleanup_rhel_autoremove.stdout | default(''))
+  failed_when:
+    - uip_post_cleanup_fail_on_error | bool
+    - uip_postcheck_cleanup_rhel_autoremove.rc != 0
+  when:
+    - uip_post_cleanup_enabled | bool
+    - uip_post_cleanup_old_os_packages | bool
+    - uip_post_cleanup_autoremove | bool
+    - uip_os == 'rhel'
+  tags:
+    - uip_postcheck
+    - uip_postupgrade
+
+- name: Autoremove obsolete packages and kernels on Debian and Ubuntu
+  ansible.builtin.apt:
+    autoremove: true
+    purge: true
+  register: uip_postcheck_cleanup_apt_autoremove
+  failed_when:
+    - uip_post_cleanup_fail_on_error | bool
+    - uip_postcheck_cleanup_apt_autoremove.failed | default(false)
+  when:
+    - uip_post_cleanup_enabled | bool
+    - uip_post_cleanup_autoremove | bool
+    - uip_os in ['debian', 'ubuntu']
+  tags:
+    - uip_postcheck
+    - uip_postupgrade
+
+- name: Clean apt package cache
+  ansible.builtin.apt:
+    autoclean: true
+  register: uip_postcheck_cleanup_apt_autoclean
+  failed_when:
+    - uip_post_cleanup_fail_on_error | bool
+    - uip_postcheck_cleanup_apt_autoclean.failed | default(false)
+  when:
+    - uip_post_cleanup_enabled | bool
+    - uip_post_cleanup_clean_cache | bool
+    - uip_os in ['debian', 'ubuntu']
+  tags:
+    - uip_postcheck
+    - uip_postupgrade
+
+- name: Purge old kernels on SUSE
+  ansible.builtin.command: zypper --non-interactive purge-kernels
+  register: uip_postcheck_cleanup_suse_purge_kernels
+  changed_when: >-
+    'Nothing to do' not in
+    (uip_postcheck_cleanup_suse_purge_kernels.stdout | default(''))
+  failed_when:
+    - uip_post_cleanup_fail_on_error | bool
+    - uip_postcheck_cleanup_suse_purge_kernels.rc != 0
+  when:
+    - uip_post_cleanup_enabled | bool
+    - uip_post_cleanup_old_kernels | bool
+    - uip_os == 'sles'
+  tags:
+    - uip_postcheck
+    - uip_postupgrade
+
+- name: Clean zypper package cache
+  ansible.builtin.command: zypper --non-interactive clean --all
+  register: uip_postcheck_cleanup_suse_clean
+  changed_when: true
+  failed_when:
+    - uip_post_cleanup_fail_on_error | bool
+    - uip_postcheck_cleanup_suse_clean.rc != 0
+  when:
+    - uip_post_cleanup_enabled | bool
+    - uip_post_cleanup_clean_cache | bool
+    - uip_os == 'sles'
+  tags:
+    - uip_postcheck
+    - uip_postupgrade
+
+- name: Verify running kernel artifact still exists after cleanup
+  ansible.builtin.stat:
+    path: "/boot/vmlinuz-{{ uip_postcheck_cleanup_running_kernel.stdout }}"
+  register: uip_postcheck_cleanup_running_kernel_artifact
+  when:
+    - uip_post_cleanup_enabled | bool
+    - uip_post_cleanup_old_kernels | bool
+    - uip_postcheck_cleanup_running_kernel.stdout is defined
+  tags:
+    - uip_postcheck
+    - uip_postupgrade
+
+- name: Assert cleanup preserved running kernel artifact
+  ansible.builtin.assert:
+    that:
+      - uip_postcheck_cleanup_running_kernel_artifact.stat.exists | default(true)
+    fail_msg: >-
+      Post-upgrade cleanup removed or lost the running kernel artifact.
+  when:
+    - uip_post_cleanup_enabled | bool
+    - uip_post_cleanup_old_kernels | bool
+    - uip_postcheck_cleanup_running_kernel_artifact is defined
+  tags:
+    - uip_postcheck
+    - uip_postupgrade
+
+- name: Persist post-upgrade cleanup report
+  ansible.builtin.copy:
+    dest: "{{ uip_post_cleanup_report_file }}"
+    owner: root
+    group: root
+    mode: "0640"
+    content: |
+      enabled: "{{ uip_post_cleanup_enabled }}"
+      os: "{{ uip_os }}"
+      package_manager: "{{ uip_pkg_mgr | default('unknown') }}"
+      running_kernel: "{{ uip_postcheck_cleanup_running_kernel.stdout | default('unknown') }}"
+      kernel_keep: "{{ uip_post_cleanup_kernel_keep }}"
+      old_os_packages_cleanup: "{{ uip_post_cleanup_old_os_packages }}"
+      old_kernels_cleanup: "{{ uip_post_cleanup_old_kernels }}"
+      cache_cleanup: "{{ uip_post_cleanup_clean_cache }}"
+  when:
+    - uip_post_cleanup_enabled | bool
+  tags:
+    - uip_postcheck
+    - uip_postupgrade

@@ -293,3 +293,19 @@ uip_sles_suseconnect_enforce: true
 uip_sles_zypper_migration_enforce: true
 uip_sles_releasever: ""
 uip_sles_allow_module_auto_activation: false
+
+uip_post_cleanup_enabled: true
+
+uip_post_cleanup_old_os_packages: true
+
+uip_post_cleanup_old_kernels: true
+
+uip_post_cleanup_autoremove: true
+
+uip_post_cleanup_clean_cache: true
+
+uip_post_cleanup_kernel_keep: 2
+
+uip_post_cleanup_fail_on_error: false
+
+uip_post_cleanup_report_file: "{{ uip_report_dir }}/post-cleanup.yml"

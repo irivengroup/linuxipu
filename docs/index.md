@@ -54,3 +54,5 @@
 - [Vendor Alignment](vendor-alignment.md)
 
 - [Common Variables](common-vars.md)
+
+- [Post-upgrade Cleanup](post-upgrade-cleanup.md)

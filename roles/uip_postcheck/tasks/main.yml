@@ -171,3 +171,9 @@
   tags:
     - uip_postcheck
     - uip_postupgrade
+
+- name: Include post-upgrade cleanup tasks
+  ansible.builtin.import_tasks: tasks.d/cleanup.yml
+  tags:
+    - uip_postcheck
+    - uip_postupgrade
