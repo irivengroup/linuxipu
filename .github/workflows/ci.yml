@@ -129,13 +129,29 @@ jobs:
       - name: Validate mandatory roles
         run: |
           set -euo pipefail
-          for role in             uip_common             uip_lock             uip_discovery             uip_repos             uip_snapshot             uip_precheck             uip_update             uip_remediate             uip_upgrade             uip_reboot             uip_postcheck             uip_report             uip_rollback
-          do
+          mandatory_roles=(
+            uip_common
+            uip_agents
+            uip_lock
+            uip_discovery
+            uip_repos
+            uip_snapshot
+            uip_precheck
+            uip_update
+            uip_remediate
+            uip_upgrade
+            uip_reboot
+            uip_postcheck
+            uip_report
+            uip_rollback
+          )
+          for role in "${mandatory_roles[@]}"; do
             test -d "roles/${role}" || {
               echo "Missing role: ${role}"
               exit 1
             }
           done
+
 
       - name: Validate transverse tags
         run: |
@@ -164,14 +180,18 @@ jobs:
         run: |
           set -euo pipefail
           test -f roles/uip_common/vars/main.yml
-          grep -q "^uip_paths:" roles/uip_common/vars/main.yml
-          grep -q "^uip_repo_map:" roles/uip_common/vars/main.yml
+          test -f roles/uip_common/vars/vars.d/upgradePaths.yml
+          test -f roles/uip_common/vars/vars.d/repoMapping.yml
+          test -f roles/uip_common/vars/vars.d/repoDetection.yml
+          grep -q "^uip_paths:" roles/uip_common/vars/vars.d/upgradePaths.yml
+          grep -q "^uip_repo_map:" roles/uip_common/vars/vars.d/repoMapping.yml
+          grep -q "^uip_repo_detect_rules:"             roles/uip_common/vars/vars.d/repoDetection.yml
 
       - name: Validate VM provider credentials template
         run: |
           set -euo pipefail
-          test -f roles/uip_common/vars/vmproviders.yml
-          grep -q "^uip_vmproviders:" roles/uip_common/vars/vmproviders.yml
+          test -f roles/uip_common/vars/vars.d/vmproviders.yml
+          grep -q "^uip_vmproviders:"             roles/uip_common/vars/vars.d/vmproviders.yml
 
   package:
     name: Package artifact
@@ -187,7 +207,14 @@ jobs:
       - name: Build archive
         run: |
           set -euo pipefail
-          tar             --exclude='.git'             --exclude='.github'             --exclude='.cache'             --exclude='.venv'             --exclude='*.tar.gz'             --exclude='*.zip'             -czf "${RUNNER_TEMP}/linux-uip.tar.gz" .
+          tar \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='.cache' \
+            --exclude='.venv' \
+            --exclude='*.tar.gz' \
+            --exclude='*.zip' \
+            -czf "${RUNNER_TEMP}/linux-uip.tar.gz" .
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
